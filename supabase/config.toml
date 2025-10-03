@@ -1,1 +1,10 @@
 project_id = "slbzoqgsktawhrbubwcz"
+
+[functions.youtube-transcribe]
+verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+[functions.process-pdf]
+verify_jwt = true

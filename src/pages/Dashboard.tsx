@@ -1,9 +1,38 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Youtube, FileAudio, FileText, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import YouTubeUpload from "@/components/YouTubeUpload";
+import AudioUpload from "@/components/AudioUpload";
+import PdfUpload from "@/components/PdfUpload";
+import NotesList from "@/components/NotesList";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [refreshNotes, setRefreshNotes] = useState(0);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate('/auth');
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
+
+  const handleUploadSuccess = () => {
+    setRefreshNotes(prev => prev + 1);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
@@ -18,7 +47,7 @@ const Dashboard = () => {
           
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">Welcome back!</span>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>
@@ -35,70 +64,33 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Upload Options */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card className="hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2 group-hover:shadow-glow transition-all">
-                <Youtube className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle>YouTube Video</CardTitle>
-              <CardDescription>
-                Paste a YouTube URL to transcribe and summarize
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Start Transcription
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-2 group-hover:shadow-glow transition-all">
-                <FileAudio className="w-6 h-6 text-accent" />
-              </div>
-              <CardTitle>Audio/Video File</CardTitle>
-              <CardDescription>
-                Upload MP3 or MP4 files for processing
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Upload File
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2 group-hover:shadow-glow transition-all">
-                <FileText className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle>PDF Document</CardTitle>
-              <CardDescription>
-                Extract and summarize content from PDFs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Upload PDF
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Upload Tabs */}
+        <Tabs defaultValue="youtube" className="mb-12">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+            <TabsTrigger value="youtube">YouTube</TabsTrigger>
+            <TabsTrigger value="audio">Audio/Video</TabsTrigger>
+            <TabsTrigger value="pdf">PDF</TabsTrigger>
+          </TabsList>
+          
+          <div className="mt-6">
+            <TabsContent value="youtube">
+              <YouTubeUpload onSuccess={handleUploadSuccess} />
+            </TabsContent>
+            
+            <TabsContent value="audio">
+              <AudioUpload onSuccess={handleUploadSuccess} />
+            </TabsContent>
+            
+            <TabsContent value="pdf">
+              <PdfUpload onSuccess={handleUploadSuccess} />
+            </TabsContent>
+          </div>
+        </Tabs>
 
         {/* Recent Notes Section */}
         <div>
-          <h2 className="text-2xl font-bold mb-6">Recent Study Notes</h2>
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">
-                You don't have any study notes yet. Start by uploading your first learning material!
-              </p>
-            </CardContent>
-          </Card>
+          <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
+          <NotesList refreshTrigger={refreshNotes} />
         </div>
       </main>
     </div>
