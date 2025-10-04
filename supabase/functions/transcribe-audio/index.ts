@@ -19,11 +19,26 @@ serve(async (req) => {
       throw new Error('Audio file is required');
     }
 
-    console.log('Processing audio file:', audioFile.name, audioFile.type);
+    console.log('Processing audio file:', audioFile.name, audioFile.type, 'Size:', audioFile.size);
 
-    // Convert file to base64 for Gemini API
+    // Check file size (max 20MB to avoid memory issues)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (audioFile.size > maxSize) {
+      throw new Error('File too large. Maximum size is 20MB');
+    }
+
+    // Convert file to base64 in chunks to avoid memory issues
     const arrayBuffer = await audioFile.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    const chunkSize = 1024 * 1024; // 1MB chunks
+    let base64Audio = '';
+    
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.slice(i, i + chunkSize);
+      base64Audio += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
+
+    console.log('File converted to base64, size:', base64Audio.length);
 
     // Transcribe and summarize with Gemini
     const result = await processAudioWithGemini(base64Audio, audioFile.type);

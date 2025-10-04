@@ -68,12 +68,74 @@ function extractVideoId(url: string): string | null {
 }
 
 async function getYouTubeTranscript(videoId: string): Promise<string> {
-  // In a real implementation, you would use YouTube's API or a transcript service
-  // For this example, we'll return a simulated transcript
+  const TRANSCRIPTION_API_KEY = Deno.env.get('YOUTUBE_TRANSCRIPTION_API_KEY');
+  
+  if (!TRANSCRIPTION_API_KEY) {
+    throw new Error('YOUTUBE_TRANSCRIPTION_API_KEY not configured');
+  }
+
   console.log('Fetching transcript for video:', videoId);
   
-  // Placeholder - in production, integrate with YouTube Transcript API
-  return `This is a simulated transcript for video ${videoId}. In a real implementation, this would fetch the actual video transcript from YouTube's API or a third-party transcript service.`;
+  // Use AssemblyAI to transcribe YouTube video
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  
+  // Submit transcription job
+  const submitResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+    method: 'POST',
+    headers: {
+      'authorization': TRANSCRIPTION_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      audio_url: youtubeUrl,
+    }),
+  });
+
+  if (!submitResponse.ok) {
+    const error = await submitResponse.text();
+    console.error('AssemblyAI submit error:', error);
+    throw new Error('Failed to submit transcription job');
+  }
+
+  const { id: transcriptId } = await submitResponse.json();
+  console.log('Transcription job submitted:', transcriptId);
+
+  // Poll for completion
+  let transcript = '';
+  let attempts = 0;
+  const maxAttempts = 60; // 5 minutes max
+  
+  while (attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    
+    const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+      headers: {
+        'authorization': TRANSCRIPTION_API_KEY,
+      },
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error('Failed to check transcription status');
+    }
+
+    const result = await statusResponse.json();
+    
+    if (result.status === 'completed') {
+      transcript = result.text;
+      break;
+    } else if (result.status === 'error') {
+      throw new Error(`Transcription failed: ${result.error}`);
+    }
+    
+    attempts++;
+    console.log(`Transcription status: ${result.status} (attempt ${attempts}/${maxAttempts})`);
+  }
+
+  if (!transcript) {
+    throw new Error('Transcription timed out');
+  }
+
+  return transcript;
 }
 
 async function summarizeWithGemini(text: string): Promise<string> {

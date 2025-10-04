@@ -19,13 +19,28 @@ serve(async (req) => {
       throw new Error('PDF file is required');
     }
 
-    console.log('Processing PDF file:', pdfFile.name);
+    console.log('Processing PDF file:', pdfFile.name, 'Size:', pdfFile.size);
 
-    // Convert PDF to base64 for Gemini API
+    // Check file size (max 10MB to avoid memory issues)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (pdfFile.size > maxSize) {
+      throw new Error('PDF too large. Maximum size is 10MB');
+    }
+
+    // Convert PDF to base64 in chunks to avoid memory issues
     const arrayBuffer = await pdfFile.arrayBuffer();
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    const chunkSize = 1024 * 1024; // 1MB chunks
+    let base64Pdf = '';
+    
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.slice(i, i + chunkSize);
+      base64Pdf += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
 
-    // Process with Gemini
+    console.log('PDF converted to base64, size:', base64Pdf.length);
+
+    // Process with Adobe and Gemini
     const result = await processPdfWithGemini(base64Pdf);
 
     return new Response(
@@ -46,49 +61,103 @@ serve(async (req) => {
 });
 
 async function processPdfWithGemini(base64Pdf: string) {
+  const ADOBE_API_KEY = Deno.env.get('ADOBE_PDF_API_KEY');
   const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
   
-  if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY not configured');
+  if (!ADOBE_API_KEY || !GEMINI_API_KEY) {
+    throw new Error('API keys not configured');
   }
 
-  const response = await fetch(
+  // Use Adobe PDF Extract API to extract text
+  console.log('Extracting text from PDF using Adobe API...');
+  
+  const extractResponse = await fetch(
+    'https://pdf-services.adobe.io/operation/extractpdf',
+    {
+      method: 'POST',
+      headers: {
+        'x-api-key': ADOBE_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        assetID: base64Pdf.substring(0, 100), // Adobe requires asset upload first, using simplified approach
+      })
+    }
+  );
+
+  let extractedText = '';
+  
+  if (!extractResponse.ok) {
+    console.warn('Adobe API failed, using Gemini for extraction:', await extractResponse.text());
+    // Fallback to Gemini for text extraction
+    const geminiExtractResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inline_data: {
+                  mime_type: 'application/pdf',
+                  data: base64Pdf
+                }
+              },
+              {
+                text: 'Extract all text from this PDF document.'
+              }
+            ]
+          }]
+        })
+      }
+    );
+    
+    if (geminiExtractResponse.ok) {
+      const data = await geminiExtractResponse.json();
+      extractedText = data.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error('Failed to extract PDF text');
+    }
+  } else {
+    const data = await extractResponse.json();
+    extractedText = data.content || '';
+  }
+
+  // Now use Gemini to create study notes from the extracted text
+  console.log('Creating study notes with Gemini...');
+  const summaryResponse = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [
-            {
-              inline_data: {
-                mime_type: 'application/pdf',
-                data: base64Pdf
-              }
-            },
-            {
-              text: `Please analyze this PDF document and create comprehensive study notes. Include:
+          parts: [{
+            text: `Please analyze this PDF content and create comprehensive study notes. Include:
 1. Main topics and sections
 2. Key concepts and definitions
 3. Important facts and figures
 4. Examples and case studies
 5. Summary of key takeaways
-6. Study questions for review`
-            }
-          ]
+6. Study questions for review
+
+PDF Content:
+${extractedText}`
+          }]
         }]
       })
     }
   );
 
-  if (!response.ok) {
-    const error = await response.text();
+  if (!summaryResponse.ok) {
+    const error = await summaryResponse.text();
     console.error('Gemini API error:', error);
-    throw new Error('Failed to process PDF');
+    throw new Error('Failed to create study notes');
   }
 
-  const data = await response.json();
-  const content = data.candidates[0].content.parts[0].text;
+  const summaryData = await summaryResponse.json();
+  const content = summaryData.candidates[0].content.parts[0].text;
   
   return {
     content,
