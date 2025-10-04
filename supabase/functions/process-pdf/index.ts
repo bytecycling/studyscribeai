@@ -21,10 +21,13 @@ serve(async (req) => {
 
     console.log('Processing PDF file:', pdfFile.name, 'Size:', pdfFile.size);
 
-    // Check file size (max 10MB to avoid memory issues)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Check file size (max 20MB to align with app limits)
+    const maxSize = 20 * 1024 * 1024; // 20MB
     if (pdfFile.size > maxSize) {
-      throw new Error('PDF too large. Maximum size is 10MB');
+      return new Response(
+        JSON.stringify({ error: 'PDF too large. Maximum size is 20MB' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Convert PDF to base64 in chunks to avoid memory issues

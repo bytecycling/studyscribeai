@@ -24,7 +24,10 @@ serve(async (req) => {
     // Check file size (max 20MB to avoid memory issues)
     const maxSize = 20 * 1024 * 1024; // 20MB
     if (audioFile.size > maxSize) {
-      throw new Error('File too large. Maximum size is 20MB');
+      return new Response(
+        JSON.stringify({ error: 'File too large. Maximum size is 20MB' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Convert file to base64 in chunks to avoid memory issues
