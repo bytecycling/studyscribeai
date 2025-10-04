@@ -30,16 +30,10 @@ serve(async (req) => {
       );
     }
 
-    // Convert file to base64 in chunks to avoid memory issues
+    // Convert file to base64 safely (avoid call stack overflow)
     const arrayBuffer = await audioFile.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
-    const chunkSize = 1024 * 1024; // 1MB chunks
-    let base64Audio = '';
-    
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.slice(i, i + chunkSize);
-      base64Audio += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
-    }
+    const base64Audio = encodeBase64(bytes);
 
     console.log('File converted to base64, size:', base64Audio.length);
 
@@ -62,6 +56,16 @@ serve(async (req) => {
     );
   }
 });
+
+function encodeBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000; // 32KB chunks to prevent apply/spread overflow
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const sub = bytes.subarray(i, i + CHUNK);
+    binary += String.fromCharCode.apply(null, Array.from(sub));
+  }
+  return btoa(binary);
+}
 
 async function processAudioWithGemini(base64Audio: string, mimeType: string) {
   const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');

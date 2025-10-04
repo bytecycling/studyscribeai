@@ -92,9 +92,12 @@ async function getYouTubeTranscript(videoId: string): Promise<string> {
   });
 
   if (!submitResponse.ok) {
-    const error = await submitResponse.text();
-    console.error('AssemblyAI submit error:', error);
-    throw new Error('Failed to submit transcription job');
+    const errText = await submitResponse.text();
+    console.error('AssemblyAI submit error:', errText);
+    const message = errText.includes('Authentication error')
+      ? 'AssemblyAI authentication failed. Please update YOUTUBE_TRANSCRIPTION_API_KEY.'
+      : 'Failed to submit transcription job';
+    throw new Error(message);
   }
 
   const { id: transcriptId } = await submitResponse.json();

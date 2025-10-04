@@ -30,16 +30,10 @@ serve(async (req) => {
       );
     }
 
-    // Convert PDF to base64 in chunks to avoid memory issues
+    // Convert PDF to base64 safely (avoid call stack overflow)
     const arrayBuffer = await pdfFile.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
-    const chunkSize = 1024 * 1024; // 1MB chunks
-    let base64Pdf = '';
-    
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.slice(i, i + chunkSize);
-      base64Pdf += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
-    }
+    const base64Pdf = encodeBase64(bytes);
 
     console.log('PDF converted to base64, size:', base64Pdf.length);
 
@@ -62,6 +56,17 @@ serve(async (req) => {
     );
   }
 });
+
+function encodeBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000; // 32KB chunks to prevent apply/spread overflow
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const sub = bytes.subarray(i, i + CHUNK);
+    // Using apply with small chunks avoids Maximum call stack size exceeded
+    binary += String.fromCharCode.apply(null, Array.from(sub));
+  }
+  return btoa(binary);
+}
 
 async function processPdfWithGemini(base64Pdf: string) {
   const ADOBE_API_KEY = Deno.env.get('ADOBE_PDF_API_KEY');
