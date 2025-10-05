@@ -8,3 +8,7 @@ verify_jwt = true
 
 [functions.process-pdf]
 verify_jwt = true
+
+[functions.generate-study-pack]
+verify_jwt = true
+

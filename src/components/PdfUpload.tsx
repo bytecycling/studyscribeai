@@ -42,14 +42,25 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
 
       if (error) throw error;
 
+      // Generate full study pack
+      const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
+        body: { text: data.content || data.summary, title: `PDF: ${file.name}` }
+      });
+      if (packError) throw packError;
+
       // Save to database
+      const user = (await supabase.auth.getUser()).data.user;
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
           title: `PDF: ${file.name}`,
-          content: data.summary,
+          content: pack?.notes || data.summary,
+          highlights: pack?.highlights || null,
+          flashcards: pack?.flashcards || null,
+          quiz: pack?.quiz || null,
+          raw_text: data.content || null,
           source_type: 'pdf',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (insertError) throw insertError;

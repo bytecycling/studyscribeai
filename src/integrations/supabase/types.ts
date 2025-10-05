@@ -18,7 +18,11 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          flashcards: Json | null
+          highlights: Json | null
           id: string
+          quiz: Json | null
+          raw_text: string | null
           source_type: string
           source_url: string | null
           title: string
@@ -28,7 +32,11 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          flashcards?: Json | null
+          highlights?: Json | null
           id?: string
+          quiz?: Json | null
+          raw_text?: string | null
           source_type: string
           source_url?: string | null
           title: string
@@ -38,7 +46,11 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          flashcards?: Json | null
+          highlights?: Json | null
           id?: string
+          quiz?: Json | null
+          raw_text?: string | null
           source_type?: string
           source_url?: string | null
           title?: string

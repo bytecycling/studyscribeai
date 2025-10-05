@@ -38,15 +38,26 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
 
       if (error) throw error;
 
+      // Generate full study pack
+      const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
+        body: { text: data.transcript || data.summary, title: `YouTube: ${data.videoId}` }
+      });
+      if (packError) throw packError;
+
       // Save to database
+      const user = (await supabase.auth.getUser()).data.user;
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
           title: `YouTube: ${data.videoId}`,
-          content: data.summary,
+          content: pack?.notes || data.summary,
+          highlights: pack?.highlights || null,
+          flashcards: pack?.flashcards || null,
+          quiz: pack?.quiz || null,
+          raw_text: data.transcript || null,
           source_type: 'youtube',
           source_url: url,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (insertError) throw insertError;

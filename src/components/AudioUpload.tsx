@@ -42,14 +42,25 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
 
       if (error) throw error;
 
+      // Generate full study pack
+      const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
+        body: { text: data.transcription || data.summary, title: `Audio: ${file.name}` }
+      });
+      if (packError) throw packError;
+
       // Save to database
+      const user = (await supabase.auth.getUser()).data.user;
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
           title: `Audio: ${file.name}`,
-          content: data.summary,
+          content: pack?.notes || data.summary,
+          highlights: pack?.highlights || null,
+          flashcards: pack?.flashcards || null,
+          quiz: pack?.quiz || null,
+          raw_text: data.transcription || null,
           source_type: file.type.includes('video') ? 'video' : 'audio',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (insertError) throw insertError;
