@@ -106,7 +106,7 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="audio-file">Select File</Label>
+            <Label htmlFor="audio-file">Select File (Max 20MB)</Label>
             <Input
               id="audio-file"
               type="file"
@@ -117,6 +117,9 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
             {file && (
               <p className="text-sm text-muted-foreground">
                 Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                {file.size > 20 * 1024 * 1024 && (
+                  <span className="text-destructive font-medium"> - File exceeds 20MB limit!</span>
+                )}
               </p>
             )}
           </div>

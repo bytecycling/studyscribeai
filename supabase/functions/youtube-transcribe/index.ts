@@ -68,77 +68,48 @@ function extractVideoId(url: string): string | null {
 }
 
 async function getYouTubeTranscript(videoId: string): Promise<string> {
-  const TRANSCRIPTION_API_KEY = Deno.env.get('YOUTUBE_TRANSCRIPTION_API_KEY');
+  const SUPADATA_API_KEY = Deno.env.get('SUPADATA_API_KEY');
   
-  if (!TRANSCRIPTION_API_KEY) {
-    throw new Error('YOUTUBE_TRANSCRIPTION_API_KEY not configured');
+  if (!SUPADATA_API_KEY) {
+    throw new Error('SUPADATA_API_KEY not configured');
   }
 
   console.log('Fetching transcript for video:', videoId);
   
-  // Use AssemblyAI to transcribe YouTube video
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
   
-  // Submit transcription job
-  const submitResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+  // Use Supadata API to get transcript
+  const response = await fetch('https://api.supadata.ai/v1/transcript', {
     method: 'POST',
     headers: {
-      'authorization': TRANSCRIPTION_API_KEY,
-      'content-type': 'application/json',
+      'Authorization': `Bearer ${SUPADATA_API_KEY}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      audio_url: youtubeUrl,
+      url: youtubeUrl,
+      text: true, // Get plain text instead of timestamped chunks
+      mode: 'auto' // Auto-select best transcription method
     }),
   });
 
-  if (!submitResponse.ok) {
-    const errText = await submitResponse.text();
-    console.error('AssemblyAI submit error:', errText);
-    const message = errText.includes('Authentication error')
-      ? 'AssemblyAI authentication failed. Please update YOUTUBE_TRANSCRIPTION_API_KEY.'
-      : 'Failed to submit transcription job';
-    throw new Error(message);
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('Supadata API error:', errText);
+    throw new Error('Failed to get transcript from Supadata API');
   }
 
-  const { id: transcriptId } = await submitResponse.json();
-  console.log('Transcription job submitted:', transcriptId);
-
-  // Poll for completion
-  let transcript = '';
-  let attempts = 0;
-  const maxAttempts = 60; // 5 minutes max
+  const result = await response.json();
   
-  while (attempts < maxAttempts) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-    
-    const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-      headers: {
-        'authorization': TRANSCRIPTION_API_KEY,
-      },
-    });
-
-    if (!statusResponse.ok) {
-      throw new Error('Failed to check transcription status');
-    }
-
-    const result = await statusResponse.json();
-    
-    if (result.status === 'completed') {
-      transcript = result.text;
-      break;
-    } else if (result.status === 'error') {
-      throw new Error(`Transcription failed: ${result.error}`);
-    }
-    
-    attempts++;
-    console.log(`Transcription status: ${result.status} (attempt ${attempts}/${maxAttempts})`);
+  // Check if we got immediate results or a job_id for async processing
+  if (result.content) {
+    console.log('Got immediate transcript');
+    return result.content;
+  } else if (result.job_id) {
+    // For async processing (large files), we need to poll
+    throw new Error('Video requires async processing. Please try a shorter video.');
+  } else {
+    throw new Error('No transcript content returned');
   }
-
-  if (!transcript) {
-    throw new Error('Transcription timed out');
-  }
-
-  return transcript;
 }
 
 async function summarizeWithGemini(text: string): Promise<string> {
