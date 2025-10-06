@@ -37,12 +37,17 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       });
 
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      const inputText = (data as any)?.transcript || (data as any)?.summary;
+      if (!inputText) throw new Error('No transcript found for this video. It may not have captions.');
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: data.transcript || data.summary, title: `YouTube: ${data.videoId}` }
+        body: { text: inputText, title: `YouTube: ${(data as any)?.videoId || 'Video'}` }
       });
       if (packError) throw packError;
+      if ((pack as any)?.error) throw new Error((pack as any).error);
 
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;

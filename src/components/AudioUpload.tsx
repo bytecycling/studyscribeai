@@ -41,12 +41,17 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       });
 
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      const transcriptText = (data as any)?.transcript || (data as any)?.summary;
+      if (!transcriptText) throw new Error('No transcription returned. Please try another file.');
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: data.transcription || data.summary, title: `Audio: ${file.name}` }
+        body: { text: transcriptText, title: `Audio: ${file.name}` }
       });
       if (packError) throw packError;
+      if ((pack as any)?.error) throw new Error((pack as any).error);
 
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;
@@ -54,11 +59,11 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
         .from('notes')
         .insert({
           title: `Audio: ${file.name}`,
-          content: pack?.notes || data.summary,
-          highlights: pack?.highlights || null,
-          flashcards: pack?.flashcards || null,
-          quiz: pack?.quiz || null,
-          raw_text: data.transcription || null,
+          content: (pack as any)?.notes || (data as any)?.summary,
+          highlights: (pack as any)?.highlights || null,
+          flashcards: (pack as any)?.flashcards || null,
+          quiz: (pack as any)?.quiz || null,
+          raw_text: (data as any)?.transcript || null,
           source_type: file.type.includes('video') ? 'video' : 'audio',
           user_id: user?.id
         });
