@@ -79,17 +79,12 @@ async function getYouTubeTranscript(videoId: string): Promise<string> {
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
   
   // Use Supadata API to get transcript
-  const response = await fetch('https://api.supadata.ai/v1/transcript', {
-    method: 'POST',
+  const endpoint = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(youtubeUrl)}&text=true`;
+  const response = await fetch(endpoint, {
+    method: 'GET',
     headers: {
-      'Authorization': `Bearer ${SUPADATA_API_KEY}`,
-      'Content-Type': 'application/json',
+      'x-api-key': SUPADATA_API_KEY,
     },
-    body: JSON.stringify({
-      url: youtubeUrl,
-      text: true, // Get plain text instead of timestamped chunks
-      mode: 'auto' // Auto-select best transcription method
-    }),
   });
 
   if (!response.ok) {
