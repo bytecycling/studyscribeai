@@ -26,8 +26,8 @@ serve(async (req) => {
       throw new Error('Invalid YouTube URL');
     }
 
-    // Get transcript using YouTube API or third-party service
-    // For now, we'll simulate getting a transcript
+    // Using Supadata API for transcript
+    console.log('Using Supadata API for transcript');
     const transcript = await getYouTubeTranscript(videoId);
     
     // Summarize with Gemini
