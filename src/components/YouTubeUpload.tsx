@@ -42,9 +42,12 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       const inputText = (data as any)?.transcript || (data as any)?.summary;
       if (!inputText) throw new Error('No transcript found for this video. It may not have captions.');
 
+      // Extract video title
+      const videoTitle = (data as any)?.title || `Video ${(data as any)?.videoId || ''}`;
+
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: inputText, title: `YouTube: ${(data as any)?.videoId || 'Video'}` }
+        body: { text: inputText, title: videoTitle }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
@@ -54,7 +57,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: `YouTube: ${data.videoId}`,
+          title: videoTitle,
           content: pack?.notes || data.summary,
           highlights: pack?.highlights || null,
           flashcards: pack?.flashcards || null,

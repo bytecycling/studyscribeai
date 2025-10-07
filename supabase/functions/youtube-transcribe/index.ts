@@ -28,7 +28,7 @@ serve(async (req) => {
 
     // Using Supadata API for transcript
     console.log('Using Supadata API for transcript');
-    const transcript = await getYouTubeTranscript(videoId);
+    const { transcript, title } = await getYouTubeTranscript(videoId);
     
     // Summarize with Gemini
     const summary = await summarizeWithGemini(transcript);
@@ -37,7 +37,8 @@ serve(async (req) => {
       JSON.stringify({ 
         transcript, 
         summary,
-        videoId
+        videoId,
+        title
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -67,7 +68,7 @@ function extractVideoId(url: string): string | null {
   return null;
 }
 
-async function getYouTubeTranscript(videoId: string): Promise<string> {
+async function getYouTubeTranscript(videoId: string): Promise<{ transcript: string; title: string | null }> {
   const SUPADATA_API_KEY = Deno.env.get('SUPADATA_API_KEY');
   
   if (!SUPADATA_API_KEY) {
@@ -98,7 +99,11 @@ async function getYouTubeTranscript(videoId: string): Promise<string> {
   // Check if we got immediate results or a job_id for async processing
   if (result.content) {
     console.log('Got immediate transcript');
-    return result.content;
+    const title = result.metadata?.title || result.title || null;
+    return { 
+      transcript: result.content,
+      title
+    };
   } else if (result.job_id) {
     // For async processing (large files), we need to poll
     throw new Error('Video requires async processing. Please try a shorter video.');

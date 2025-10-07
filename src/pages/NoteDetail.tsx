@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface NoteRow {
   id: string;
@@ -102,8 +103,8 @@ export default function NoteDetail() {
         <div className="mt-6">
           <TabsContent value="notes">
             <Card>
-              <CardContent className="prose max-w-none dark:prose-invert py-6 whitespace-pre-wrap">
-                {note.content}
+              <CardContent className="prose max-w-none dark:prose-invert py-6">
+                <ReactMarkdown>{note.content}</ReactMarkdown>
               </CardContent>
             </Card>
           </TabsContent>

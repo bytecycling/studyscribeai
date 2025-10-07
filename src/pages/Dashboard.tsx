@@ -8,6 +8,7 @@ import YouTubeUpload from "@/components/YouTubeUpload";
 import AudioUpload from "@/components/AudioUpload";
 import PdfUpload from "@/components/PdfUpload";
 import NotesList from "@/components/NotesList";
+import AiChat from "@/components/AiChat";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -55,6 +56,12 @@ const Dashboard = () => {
           </Link>
           
           <div className="flex items-center gap-4">
+            <Link to="/history">
+              <Button variant="ghost" size="sm">
+                <BookOpen className="w-4 h-4 mr-2" />
+                History
+              </Button>
+            </Link>
             <span className="text-sm text-muted-foreground">Welcome back!</span>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -75,10 +82,11 @@ const Dashboard = () => {
 
         {/* Upload Tabs */}
         <Tabs defaultValue="youtube" className="mb-12">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+          <TabsList className="grid w-full grid-cols-4 max-w-3xl mx-auto">
             <TabsTrigger value="youtube">YouTube</TabsTrigger>
             <TabsTrigger value="audio">Audio/Video</TabsTrigger>
             <TabsTrigger value="pdf">PDF</TabsTrigger>
+            <TabsTrigger value="ai">AI Chat</TabsTrigger>
           </TabsList>
           
           <div className="mt-6">
@@ -92,6 +100,10 @@ const Dashboard = () => {
             
             <TabsContent value="pdf">
               <PdfUpload onSuccess={handleUploadSuccess} />
+            </TabsContent>
+            
+            <TabsContent value="ai">
+              <AiChat onSuccess={handleUploadSuccess} />
             </TabsContent>
           </div>
         </Tabs>
