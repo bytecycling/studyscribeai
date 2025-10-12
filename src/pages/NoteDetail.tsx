@@ -230,7 +230,7 @@ export default function NoteDetail() {
           </TabsContent>
 
           <TabsContent value="ai">
-            <AiChat noteId={id} />
+            <AiChat noteId={id} noteContent={note.content} />
           </TabsContent>
 
           <TabsContent value="translate">

@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Loader2, Send } from "lucide-react";
+import { Brain, Loader2, Send, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 
 interface AiChatProps {
   noteId?: string;
+  noteContent?: string;
 }
 
 interface Message {
@@ -16,10 +18,11 @@ interface Message {
   content: string;
 }
 
-const AiChat = ({ noteId }: AiChatProps) => {
+const AiChat = ({ noteId, noteContent }: AiChatProps) => {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,65 +71,95 @@ const AiChat = ({ noteId }: AiChatProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <CardTitle>AI Chat</CardTitle>
-            <CardDescription>Ask questions about your study notes</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ScrollArea className="h-[400px] w-full border rounded-md p-4">
-          {messages.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-8">
-              {noteId 
-                ? "Ask me anything about this study note!"
-                : "Ask me anything about your study notes!"}
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                </div>
-              ))}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Brain className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>AI Chat</CardTitle>
+                <CardDescription>Ask questions about your study notes</CardDescription>
+              </div>
             </div>
-          )}
-        </ScrollArea>
-
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            placeholder="Ask a question about your notes..."
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            disabled={isLoading}
-          />
-          <Button type="submit" disabled={isLoading} size="icon">
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
+            {noteContent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                {showPreview ? "Hide" : "Show"} Notes
+              </Button>
             )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ScrollArea className="h-[400px] w-full border rounded-md p-4">
+            {messages.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-8">
+                {noteId 
+                  ? "Ask me anything about this study note!"
+                  : "Ask me anything about your study notes!"}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+              placeholder="Ask a question about your notes..."
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button type="submit" disabled={isLoading} size="icon">
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {noteContent && showPreview && (
+        <Card className="hidden lg:block">
+          <CardHeader>
+            <CardTitle>Note Preview</CardTitle>
+            <CardDescription>Reference while chatting</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[500px] w-full">
+              <div className="prose max-w-none dark:prose-invert">
+                <ReactMarkdown>{noteContent}</ReactMarkdown>
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
