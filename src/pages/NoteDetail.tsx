@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import AiChat from "@/components/AiChat";
 
 interface NoteRow {
   id: string;
@@ -150,11 +151,12 @@ export default function NoteDetail() {
       </div>
 
       <Tabs defaultValue="notes">
-        <TabsList className="grid w-full max-w-2xl grid-cols-5">
+        <TabsList className="grid w-full max-w-2xl grid-cols-6">
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="highlights">Highlights</TabsTrigger>
           <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
           <TabsTrigger value="quiz">Quiz</TabsTrigger>
+          <TabsTrigger value="ai">AI Chat</TabsTrigger>
           <TabsTrigger value="translate">Translate</TabsTrigger>
         </TabsList>
 
@@ -225,6 +227,10 @@ export default function NoteDetail() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai">
+            <AiChat noteId={id} />
           </TabsContent>
 
           <TabsContent value="translate">

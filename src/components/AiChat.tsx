@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AiChatProps {
-  onSuccess: () => void;
+  noteId?: string;
 }
 
 interface Message {
@@ -16,7 +16,7 @@ interface Message {
   content: string;
 }
 
-const AiChat = ({ onSuccess }: AiChatProps) => {
+const AiChat = ({ noteId }: AiChatProps) => {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -41,7 +41,7 @@ const AiChat = ({ onSuccess }: AiChatProps) => {
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { question, conversationHistory: messages }
+        body: { question, conversationHistory: messages, noteId }
       });
 
       if (error) throw error;
@@ -84,7 +84,9 @@ const AiChat = ({ onSuccess }: AiChatProps) => {
         <ScrollArea className="h-[400px] w-full border rounded-md p-4">
           {messages.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">
-              Ask me anything about your study notes!
+              {noteId 
+                ? "Ask me anything about this study note!"
+                : "Ask me anything about your study notes!"}
             </p>
           ) : (
             <div className="space-y-4">

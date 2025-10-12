@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { question, conversationHistory } = await req.json();
+    const { question, conversationHistory, noteId } = await req.json();
     
     if (!question || typeof question !== "string") {
       return new Response(
@@ -47,11 +47,19 @@ serve(async (req) => {
     );
 
     // Get user's notes
-    const { data: notes, error: notesError } = await supabaseClient
+    let query = supabaseClient
       .from("notes")
-      .select("title, content, highlights, flashcards, quiz, source_type")
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .select("title, content, highlights, flashcards, quiz, source_type");
+
+    if (noteId) {
+      // If noteId is provided, only fetch that specific note
+      query = query.eq("id", noteId).limit(1);
+    } else {
+      // Otherwise fetch user's recent notes
+      query = query.order("created_at", { ascending: false }).limit(10);
+    }
+
+    const { data: notes, error: notesError } = await query;
 
     if (notesError) {
       console.error("Error fetching notes:", notesError);
@@ -62,8 +70,11 @@ serve(async (req) => {
     }
 
     if (!notes || notes.length === 0) {
+      const msg = noteId 
+        ? "This note was not found or you don't have access to it."
+        : "You don't have any study notes yet. Please generate some notes first before asking questions!";
       return new Response(
-        JSON.stringify({ answer: "You don't have any study notes yet. Please generate some notes first before asking questions!" }),
+        JSON.stringify({ answer: msg }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -75,9 +86,9 @@ serve(async (req) => {
       }`
     ).join("\n\n");
 
-    const systemPrompt = `You are a helpful study assistant. Answer questions based ONLY on the user's study notes provided below. Be concise, accurate, and helpful. If the answer isn't in the notes, say so.
+    const systemPrompt = `You are a helpful study assistant. Answer questions based ONLY on the ${noteId ? 'study note' : "user's study notes"} provided below. Be concise, accurate, and helpful. If the answer isn't in the notes, say so.
 
-User's Study Notes:
+${noteId ? 'Study Note:' : "User's Study Notes:"}
 ${notesContext}`;
 
     const messages = [
