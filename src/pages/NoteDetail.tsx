@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Languages } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
 interface NoteRow {
@@ -24,6 +26,24 @@ export default function NoteDetail() {
   const [note, setNote] = useState<NoteRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const { toast } = useToast();
+
+  const languages = [
+    { value: "spanish", label: "Spanish" },
+    { value: "french", label: "French" },
+    { value: "german", label: "German" },
+    { value: "italian", label: "Italian" },
+    { value: "portuguese", label: "Portuguese" },
+    { value: "chinese", label: "Chinese" },
+    { value: "japanese", label: "Japanese" },
+    { value: "korean", label: "Korean" },
+    { value: "arabic", label: "Arabic" },
+    { value: "russian", label: "Russian" },
+    { value: "hindi", label: "Hindi" },
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -59,6 +79,43 @@ export default function NoteDetail() {
     }
   }, [note]);
 
+  const handleTranslate = async () => {
+    if (!selectedLanguage || !note) return;
+
+    setIsTranslating(true);
+    setTranslatedContent(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('translate-note', {
+        body: {
+          content: note.content,
+          targetLanguage: languages.find(l => l.value === selectedLanguage)?.label || selectedLanguage
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setTranslatedContent(data.translatedContent);
+      toast({
+        title: "Success",
+        description: `Translated to ${languages.find(l => l.value === selectedLanguage)?.label}`,
+      });
+    } catch (error: any) {
+      console.error('Translation error:', error);
+      toast({
+        title: "Translation Error",
+        description: error.message || "Failed to translate content",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="container mx-auto px-4 py-10">
@@ -93,11 +150,12 @@ export default function NoteDetail() {
       </div>
 
       <Tabs defaultValue="notes">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-2xl grid-cols-5">
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="highlights">Highlights</TabsTrigger>
           <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
           <TabsTrigger value="quiz">Quiz</TabsTrigger>
+          <TabsTrigger value="translate">Translate</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
@@ -164,6 +222,46 @@ export default function NoteDetail() {
                       )}
                     </div>
                   ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="translate">
+            <Card>
+              <CardContent className="py-6 space-y-4">
+                <div className="flex items-center gap-4">
+                  <Languages className="w-5 h-5 text-primary" />
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleTranslate} 
+                    disabled={!selectedLanguage || isTranslating}
+                  >
+                    {isTranslating ? "Translating..." : "Translate"}
+                  </Button>
+                </div>
+
+                {translatedContent && (
+                  <div className="prose max-w-none dark:prose-invert mt-6">
+                    <ReactMarkdown>{translatedContent}</ReactMarkdown>
+                  </div>
+                )}
+
+                {!translatedContent && !isTranslating && (
+                  <p className="text-muted-foreground text-center py-8">
+                    Select a language and click translate to see your notes in another language
+                  </p>
                 )}
               </CardContent>
             </Card>

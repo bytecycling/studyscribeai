@@ -15,3 +15,6 @@ verify_jwt = true
 [functions.ai-chat]
 verify_jwt = true
 
+[functions.translate-note]
+verify_jwt = true
+

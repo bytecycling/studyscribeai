@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, FileAudio, FileText, Trash2, Eye } from "lucide-react";
+import { Youtube, FileAudio, FileText, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -129,8 +129,8 @@ const NotesList = ({ refreshTrigger }: NotesListProps) => {
               </div>
               <div className="flex gap-2">
                 <Link to={`/note/${note.id}`}>
-                  <Button variant="ghost" size="sm">
-                    <Eye className="w-4 h-4" />
+                  <Button variant="outline" size="sm">
+                    View
                   </Button>
                 </Link>
                 <Button 
