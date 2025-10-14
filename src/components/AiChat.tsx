@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Loader2, Send, Eye, EyeOff } from "lucide-react";
+import { Brain, Loader2, Send, Eye, EyeOff, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +23,38 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const { toast } = useToast();
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!noteId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('note_id', noteId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        
+        if (data) {
+          setMessages(data.map(msg => ({
+            role: msg.role as "user" | "assistant",
+            content: msg.content
+          })));
+        }
+      } catch (error: any) {
+        console.error('Error loading chat history:', error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, [noteId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +74,19 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
     setQuestion("");
 
     try {
+      // Save user message to database
+      if (noteId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('chat_messages').insert({
+            user_id: user.id,
+            note_id: noteId,
+            role: 'user',
+            content: question
+          });
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { question, conversationHistory: messages, noteId }
       });
@@ -55,6 +99,19 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
         content: (data as any)?.answer || "I couldn't generate a response."
       };
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Save assistant message to database
+      if (noteId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('chat_messages').insert({
+            user_id: user.id,
+            note_id: noteId,
+            role: 'assistant',
+            content: assistantMessage.content
+          });
+        }
+      }
 
     } catch (error: any) {
       console.error('Error:', error);
@@ -70,6 +127,32 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
     }
   };
 
+  const clearChat = async () => {
+    if (!noteId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('note_id', noteId);
+      
+      if (error) throw error;
+      
+      setMessages([]);
+      toast({
+        title: "Success",
+        description: "Chat history cleared",
+      });
+    } catch (error: any) {
+      console.error('Error clearing chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear chat history",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card>
@@ -81,29 +164,49 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
               </div>
               <div>
                 <CardTitle>AI Chat</CardTitle>
-                <CardDescription>Ask questions about your study notes</CardDescription>
+                <CardDescription>Ask me to explain, clarify, or go deeper</CardDescription>
               </div>
             </div>
-            {noteContent && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                {showPreview ? "Hide" : "Show"} Notes
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {messages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearChat}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+              {noteContent && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                >
+                  {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                  {showPreview ? "Hide" : "Show"} Notes
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <ScrollArea className="h-[400px] w-full border rounded-md p-4">
-            {messages.length === 0 ? (
+            {loadingHistory ? (
               <p className="text-muted-foreground text-sm text-center py-8">
-                {noteId 
-                  ? "Ask me anything about this study note!"
-                  : "Ask me anything about your study notes!"}
+                Loading chat history...
               </p>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-8 space-y-2">
+                <p className="text-muted-foreground text-sm">
+                  {noteId 
+                    ? "Ask me anything about this study note!"
+                    : "Ask me anything about your study notes!"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  I can explain further, break things down step-by-step, or clarify concepts
+                </p>
+              </div>
             ) : (
               <div className="space-y-4">
                 {messages.map((msg, i) => (
@@ -118,7 +221,13 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
                           : "bg-muted"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      {msg.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -128,10 +237,10 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
 
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
-              placeholder="Ask a question about your notes..."
+              placeholder="Ask me anything... try 'explain this further' or 'break this down step by step'"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || loadingHistory}
             />
             <Button type="submit" disabled={isLoading} size="icon">
               {isLoading ? (
