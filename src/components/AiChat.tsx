@@ -71,6 +71,11 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
     setIsLoading(true);
     const userMessage: Message = { role: "user", content: question };
     setMessages(prev => [...prev, userMessage]);
+    
+    // Add typing indicator
+    const typingMessage: Message = { role: "assistant", content: "..." };
+    setMessages(prev => [...prev, typingMessage]);
+    
     setQuestion("");
 
     try {
@@ -98,7 +103,8 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
         role: "assistant", 
         content: (data as any)?.answer || "I couldn't generate a response."
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      // Remove typing indicator and add real response
+      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
 
       // Save assistant message to database
       if (noteId) {
@@ -115,13 +121,13 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
 
     } catch (error: any) {
       console.error('Error:', error);
+      // Remove typing indicator on error
+      setMessages(prev => prev.slice(0, -2));
       toast({
         title: "Error",
         description: error.message || "Failed to get AI response",
         variant: "destructive",
       });
-      // Remove the user message if failed
-      setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }

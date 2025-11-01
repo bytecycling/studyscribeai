@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import YouTubeUpload from "@/components/YouTubeUpload";
 import AudioUpload from "@/components/AudioUpload";
 import PdfUpload from "@/components/PdfUpload";
+import WebsiteUpload from "@/components/WebsiteUpload";
 import NotesList from "@/components/NotesList";
 
 const Dashboard = () => {
@@ -81,10 +82,11 @@ const Dashboard = () => {
 
         {/* Upload Tabs */}
         <Tabs defaultValue="youtube" className="mb-12">
-          <TabsList className="grid w-full grid-cols-3 max-w-3xl mx-auto">
+          <TabsList className="grid w-full grid-cols-4 max-w-4xl mx-auto">
             <TabsTrigger value="youtube">YouTube</TabsTrigger>
             <TabsTrigger value="audio">Audio/Video</TabsTrigger>
             <TabsTrigger value="pdf">PDF</TabsTrigger>
+            <TabsTrigger value="website">Website</TabsTrigger>
           </TabsList>
           
           <div className="mt-6">
@@ -98,6 +100,10 @@ const Dashboard = () => {
             
             <TabsContent value="pdf">
               <PdfUpload onSuccess={handleUploadSuccess} />
+            </TabsContent>
+
+            <TabsContent value="website">
+              <WebsiteUpload onSuccess={handleUploadSuccess} />
             </TabsContent>
           </div>
         </Tabs>

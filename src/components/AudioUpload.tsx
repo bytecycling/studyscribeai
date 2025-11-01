@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FileAudio, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 interface AudioUploadProps {
   onSuccess: () => void;
@@ -14,6 +15,7 @@ interface AudioUploadProps {
 const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,11 +31,14 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
     }
 
     setIsLoading(true);
+    setProgress(10);
 
     try {
       // Create form data
       const formData = new FormData();
       formData.append('file', file);
+
+      setProgress(30);
 
       // Call the edge function
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
@@ -46,12 +51,16 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       const transcriptText = (data as any)?.transcript || (data as any)?.summary;
       if (!transcriptText) throw new Error('No transcription returned. Please try another file.');
 
+      setProgress(60);
+
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
         body: { text: transcriptText, title: `Audio: ${file.name}` }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
+
+      setProgress(90);
 
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;
@@ -70,6 +79,8 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
 
       if (insertError) throw insertError;
 
+      setProgress(100);
+
       toast({
         title: "Success!",
         description: "File transcribed and saved to your notes",
@@ -87,6 +98,7 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       });
     } finally {
       setIsLoading(false);
+      setProgress(0);
     }
   };
 
@@ -123,6 +135,14 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
               </p>
             )}
           </div>
+          {isLoading && progress > 0 && (
+            <div className="space-y-2">
+              <Progress value={progress} className="w-full" />
+              <p className="text-xs text-center text-muted-foreground">
+                Processing file... {progress}%
+              </p>
+            </div>
+          )}
           <Button type="submit" disabled={isLoading || !file} className="w-full">
             {isLoading ? (
               <>

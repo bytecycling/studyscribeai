@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Youtube, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 interface YouTubeUploadProps {
   onSuccess: () => void;
@@ -14,6 +15,7 @@ interface YouTubeUploadProps {
 const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,8 +31,11 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
     }
 
     setIsLoading(true);
+    setProgress(10);
 
     try {
+      setProgress(30);
+      
       // Call the edge function
       const { data, error } = await supabase.functions.invoke('youtube-transcribe', {
         body: { youtubeUrl: url }
@@ -42,6 +47,8 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       const inputText = (data as any)?.transcript || (data as any)?.summary;
       if (!inputText) throw new Error('No transcript found for this video. It may not have captions.');
 
+      setProgress(60);
+
       // Extract video title
       const videoTitle = (data as any)?.title || `Video ${(data as any)?.videoId || ''}`;
 
@@ -51,6 +58,8 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
+
+      setProgress(90);
 
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;
@@ -70,6 +79,8 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
 
       if (insertError) throw insertError;
 
+      setProgress(100);
+
       toast({
         title: "Success!",
         description: "YouTube video transcribed and saved to your notes",
@@ -87,6 +98,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       });
     } finally {
       setIsLoading(false);
+      setProgress(0);
     }
   };
 
@@ -116,6 +128,14 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
               disabled={isLoading}
             />
           </div>
+          {isLoading && progress > 0 && (
+            <div className="space-y-2">
+              <Progress value={progress} className="w-full" />
+              <p className="text-xs text-center text-muted-foreground">
+                Processing video... {progress}%
+              </p>
+            </div>
+          )}
           <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? (
               <>
