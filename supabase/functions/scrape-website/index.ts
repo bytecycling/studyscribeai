@@ -27,8 +27,17 @@ serve(async (req) => {
       throw new Error('Invalid URL provided');
     }
 
-    // Fetch the webpage
-    const response = await fetch(url, {
+    // Get API key from environment
+    const apiKey = Deno.env.get('WEBSITE_SCRAPER_API_KEY');
+    if (!apiKey) {
+      throw new Error('Website scraper API key not configured');
+    }
+
+    // Use the API to scrape the website
+    const apiUrl = `https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+    
+    console.log('Fetching with ScraperAPI...');
+    const response = await fetch(apiUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; StudyScribe/1.0; +https://studyscribe.ai)',
       },

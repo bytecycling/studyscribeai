@@ -1,9 +1,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import logoImage from "@/assets/studyscribe_logo.webp";
 
 const Terms = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnTo = location.state?.returnTo;
+  const signupData = location.state?.signupData;
+  const step = location.state?.step;
+
+  useEffect(() => {
+    // Store the return state in sessionStorage to preserve it
+    if (returnTo) {
+      sessionStorage.setItem('termsReturnTo', returnTo);
+      sessionStorage.setItem('termsReturnState', JSON.stringify({ signupData, step }));
+    }
+  }, [returnTo, signupData, step]);
+
+  const handleBack = () => {
+    const storedReturnTo = sessionStorage.getItem('termsReturnTo');
+    const storedState = sessionStorage.getItem('termsReturnState');
+    
+    if (storedReturnTo) {
+      const state = storedState ? JSON.parse(storedState) : {};
+      sessionStorage.removeItem('termsReturnTo');
+      sessionStorage.removeItem('termsReturnState');
+      navigate(storedReturnTo, { state });
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-hero">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -13,9 +43,7 @@ const Terms = () => {
         </Link>
         
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-glow">
-            <BookOpen className="w-7 h-7 text-primary-foreground" />
-          </div>
+          <img src={logoImage} alt="StudyScribe.AI Logo" className="w-12 h-12" />
           <h1 className="text-3xl font-bold text-background">StudyScribe.AI</h1>
         </div>
 

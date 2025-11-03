@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SignupData {
   signupMethod: 'email' | 'google' | '';
@@ -19,6 +20,7 @@ interface SignupData {
   referralSource: string;
   educationLevel: string;
   language: string;
+  acceptedTerms: boolean;
 }
 
 const SignupFlow = () => {
@@ -35,15 +37,48 @@ const SignupFlow = () => {
     referralSource: '',
     educationLevel: '',
     language: 'english',
+    acceptedTerms: false,
   });
 
   const handleGoogleSignIn = async () => {
+    if (!signupData.acceptedTerms) {
+      toast({
+        title: "Error",
+        description: "Please accept the Terms of Service and Privacy Policy",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setSignupData({ ...signupData, signupMethod: 'google' });
+      // Move to step 2 for additional info collection
+      setStep(2);
+      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to proceed with Google sign-in",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const completeGoogleSignup = async () => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            referral_source: signupData.referralSource,
+            education_level: signupData.educationLevel,
+            language_preference: signupData.language,
+          }
         },
       });
 
@@ -98,9 +133,7 @@ const SignupFlow = () => {
   };
 
   const nextStep = () => {
-    if (step === 1 && signupData.signupMethod === 'google') {
-      setStep(2);
-    } else if (step === 1 && signupData.signupMethod === 'email') {
+    if (step === 1 && signupData.signupMethod === 'email') {
       setStep(1.5);
     } else {
       setStep(step + 1);
@@ -118,8 +151,8 @@ const SignupFlow = () => {
   };
 
   const canProceed = () => {
-    if (step === 1) return signupData.signupMethod !== '';
-    if (step === 1.5) return signupData.email && signupData.password && signupData.fullName;
+    if (step === 1) return signupData.acceptedTerms;
+    if (step === 1.5) return signupData.email && signupData.password && signupData.fullName && signupData.acceptedTerms;
     if (step === 2) return signupData.referralSource !== '';
     if (step === 3) return signupData.educationLevel !== '';
     if (step === 4) return signupData.language !== '';
@@ -131,7 +164,7 @@ const SignupFlow = () => {
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl">Sign Up</CardTitle>
-          <span className="text-sm text-muted-foreground">Step {Math.floor(step)}/5</span>
+          <span className="text-sm text-muted-foreground">Step {Math.floor(step)}/{signupData.signupMethod === 'google' ? '4' : '4'}</span>
         </div>
         <CardDescription>
           {step === 1 && "Choose how you'd like to sign up"}
@@ -139,7 +172,6 @@ const SignupFlow = () => {
           {step === 2 && "How did you hear about us?"}
           {step === 3 && "What's your education level?"}
           {step === 4 && "Choose your language preference"}
-          {step === 5 && "Review and accept"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -151,7 +183,7 @@ const SignupFlow = () => {
                 variant="outline" 
                 className="w-full" 
                 onClick={handleGoogleSignIn}
-                disabled={isLoading}
+                disabled={isLoading || !signupData.acceptedTerms}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -175,6 +207,7 @@ const SignupFlow = () => {
                 type="button"
                 variant="outline"
                 className="w-full"
+                disabled={!signupData.acceptedTerms}
                 onClick={() => {
                   setSignupData({ ...signupData, signupMethod: 'email' });
                   setTimeout(() => nextStep(), 100);
@@ -182,6 +215,34 @@ const SignupFlow = () => {
               >
                 Continue with Email
               </Button>
+
+              <div className="flex items-start space-x-2 pt-4">
+                <Checkbox 
+                  id="terms" 
+                  checked={signupData.acceptedTerms}
+                  onCheckedChange={(checked) => 
+                    setSignupData({ ...signupData, acceptedTerms: checked === true })
+                  }
+                />
+                <Label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
+                  I accept the{" "}
+                  <Link 
+                    to="/terms" 
+                    state={{ returnTo: '/auth', signupData, step }}
+                    className="text-primary hover:underline"
+                  >
+                    Terms of Service
+                  </Link>
+                  {" "}and{" "}
+                  <Link 
+                    to="/privacy" 
+                    state={{ returnTo: '/auth', signupData, step }}
+                    className="text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                </Label>
+              </div>
             </div>
           )}
 
@@ -218,6 +279,34 @@ const SignupFlow = () => {
                   minLength={6}
                   required
                 />
+              </div>
+
+              <div className="flex items-start space-x-2 pt-2">
+                <Checkbox 
+                  id="terms-email" 
+                  checked={signupData.acceptedTerms}
+                  onCheckedChange={(checked) => 
+                    setSignupData({ ...signupData, acceptedTerms: checked === true })
+                  }
+                />
+                <Label htmlFor="terms-email" className="text-sm leading-tight cursor-pointer">
+                  I accept the{" "}
+                  <Link 
+                    to="/terms" 
+                    state={{ returnTo: '/auth', signupData, step }}
+                    className="text-primary hover:underline"
+                  >
+                    Terms of Service
+                  </Link>
+                  {" "}and{" "}
+                  <Link 
+                    to="/privacy" 
+                    state={{ returnTo: '/auth', signupData, step }}
+                    className="text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                </Label>
               </div>
             </div>
           )}
@@ -264,26 +353,6 @@ const SignupFlow = () => {
             </RadioGroup>
           )}
 
-          {step === 5 && (
-            <div className="space-y-4 text-sm">
-              <p>By clicking "Create Account", you agree to our:</p>
-              <ul className="space-y-2 ml-4">
-                <li>
-                  <Link to="/terms" className="text-primary hover:underline">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy" className="text-primary hover:underline">
-                    Privacy Policy
-                  </Link>
-                </li>
-              </ul>
-              <p className="text-muted-foreground mt-4">
-                You must be at least 9 years old to use StudyScribe. If you are under 18, you need parental permission.
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="flex gap-2">
@@ -299,7 +368,7 @@ const SignupFlow = () => {
             </Button>
           )}
           
-          {step < 5 && (
+          {step < 4 && (
             <Button
               type="button"
               onClick={nextStep}
@@ -311,14 +380,25 @@ const SignupFlow = () => {
             </Button>
           )}
 
-          {step === 5 && (
+          {step === 4 && signupData.signupMethod === 'email' && (
             <Button
               type="button"
               onClick={handleEmailSignup}
-              disabled={isLoading}
+              disabled={isLoading || !canProceed()}
               className="flex-1"
             >
               {isLoading ? "Creating Account..." : "Create Account"}
+            </Button>
+          )}
+
+          {step === 4 && signupData.signupMethod === 'google' && (
+            <Button
+              type="button"
+              onClick={completeGoogleSignup}
+              disabled={isLoading || !canProceed()}
+              className="flex-1"
+            >
+              {isLoading ? "Completing Sign Up..." : "Complete Sign Up"}
             </Button>
           )}
         </div>
