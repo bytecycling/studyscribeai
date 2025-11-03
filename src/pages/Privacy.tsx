@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, ArrowLeft, Lock } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import logoImage from "@/assets/studyscribe_logo.webp";
+import logoImage from "@/assets/studyscribe_logo.png";
 
 const Privacy = () => {
   const location = useLocation();
@@ -42,7 +42,7 @@ const Privacy = () => {
         </Link>
         
         <div className="flex items-center gap-3 mb-8">
-          <img src={logoImage} alt="StudyScribe.AI Logo" className="w-12 h-12" />
+          <img src={logoImage} alt="StudyScribe.AI Logo" className="h-16 w-auto" />
           <h1 className="text-3xl font-bold text-background">Privacy Policy</h1>
         </div>
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from "@/assets/studyscribe_logo.webp";
+import logoImage from "@/assets/studyscribe_logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import YouTubeUpload from "@/components/YouTubeUpload";
 import AudioUpload from "@/components/AudioUpload";
@@ -50,7 +50,7 @@ const Dashboard = () => {
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoImage} alt="StudyScribe.AI Logo" className="w-8 h-8" />
+            <img src={logoImage} alt="StudyScribe.AI Logo" className="h-10 w-auto" />
             <span className="font-bold text-xl">StudyScribe.AI</span>
           </Link>
           

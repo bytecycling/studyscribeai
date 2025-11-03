@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowLeft } from "lucide-react";
 import NotesList from "@/components/NotesList";
-import logoImage from "@/assets/studyscribe_logo.webp";
+import logoImage from "@/assets/studyscribe_logo.png";
 
 export default function History() {
   return (
@@ -11,7 +11,7 @@ export default function History() {
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logoImage} alt="StudyScribe.AI Logo" className="w-8 h-8" />
+            <img src={logoImage} alt="StudyScribe.AI Logo" className="h-10 w-auto" />
             <span className="font-bold text-xl">StudyScribe.AI</span>
           </Link>
           

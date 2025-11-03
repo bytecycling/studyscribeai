@@ -27,20 +27,13 @@ serve(async (req) => {
       throw new Error('Invalid URL provided');
     }
 
-    // Get API key from environment
-    const apiKey = Deno.env.get('WEBSITE_SCRAPER_API_KEY');
-    if (!apiKey) {
-      throw new Error('Website scraper API key not configured');
-    }
-
-    // Use the API to scrape the website
-    const apiUrl = `https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+    // Use scrape.do API to scrape the website
+    const token = '77668e26543b45bcb8c80374a7017771b3d30a8ac7f';
+    const apiUrl = `http://api.scrape.do/?url=${encodeURIComponent(url)}&token=${token}`;
     
-    console.log('Fetching with ScraperAPI...');
+    console.log('Fetching with scrape.do...');
     const response = await fetch(apiUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; StudyScribe/1.0; +https://studyscribe.ai)',
-      },
+      method: 'GET',
     });
 
     if (!response.ok) {

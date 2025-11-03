@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from "@/assets/studyscribe_logo.webp";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
@@ -135,8 +134,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 gradient-hero">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
-          <img src={logoImage} alt="StudyScribe.AI Logo" className="w-12 h-12" />
+        <Link to="/" className="flex items-center justify-center mb-8 hover:opacity-80 transition-opacity">
           <span className="font-bold text-2xl text-background">StudyScribe.AI</span>
         </Link>
 

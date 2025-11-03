@@ -53,8 +53,8 @@ const SignupFlow = () => {
     try {
       setIsLoading(true);
       setSignupData({ ...signupData, signupMethod: 'google' });
-      // Move to step 2 for additional info collection
-      setStep(2);
+      // Move to step 1.5 to show Google signup confirmation
+      setStep(1.5);
       setIsLoading(false);
     } catch (error: any) {
       console.error('Google sign in error:', error);
@@ -133,8 +133,8 @@ const SignupFlow = () => {
   };
 
   const nextStep = () => {
-    if (step === 1 && signupData.signupMethod === 'email') {
-      setStep(1.5);
+    if (step === 1.5) {
+      setStep(2);
     } else {
       setStep(step + 1);
     }
@@ -143,8 +143,6 @@ const SignupFlow = () => {
   const prevStep = () => {
     if (step === 1.5) {
       setStep(1);
-    } else if (step === 2 && signupData.signupMethod === 'google') {
-      setStep(1);
     } else {
       setStep(step - 1);
     }
@@ -152,7 +150,12 @@ const SignupFlow = () => {
 
   const canProceed = () => {
     if (step === 1) return signupData.acceptedTerms;
-    if (step === 1.5) return signupData.email && signupData.password && signupData.fullName && signupData.acceptedTerms;
+    if (step === 1.5 && signupData.signupMethod === 'email') {
+      return signupData.email && signupData.password && signupData.fullName && signupData.acceptedTerms;
+    }
+    if (step === 1.5 && signupData.signupMethod === 'google') {
+      return true; // Google signup confirmation page
+    }
     if (step === 2) return signupData.referralSource !== '';
     if (step === 3) return signupData.educationLevel !== '';
     if (step === 4) return signupData.language !== '';
@@ -168,7 +171,8 @@ const SignupFlow = () => {
         </div>
         <CardDescription>
           {step === 1 && "Choose how you'd like to sign up"}
-          {step === 1.5 && "Enter your details"}
+          {step === 1.5 && signupData.signupMethod === 'email' && "Enter your details"}
+          {step === 1.5 && signupData.signupMethod === 'google' && "Continue with your Google account"}
           {step === 2 && "How did you hear about us?"}
           {step === 3 && "What's your education level?"}
           {step === 4 && "Choose your language preference"}
@@ -246,7 +250,7 @@ const SignupFlow = () => {
             </div>
           )}
 
-          {step === 1.5 && (
+          {step === 1.5 && signupData.signupMethod === 'email' && (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -308,6 +312,14 @@ const SignupFlow = () => {
                   </Link>
                 </Label>
               </div>
+            </div>
+          )}
+
+          {step === 1.5 && signupData.signupMethod === 'google' && (
+            <div className="space-y-4">
+              <p className="text-center text-muted-foreground">
+                You'll be redirected to Google to complete your sign up after providing some additional information.
+              </p>
             </div>
           )}
 
