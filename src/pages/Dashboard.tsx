@@ -10,6 +10,7 @@ import AudioUpload from "@/components/AudioUpload";
 import PdfUpload from "@/components/PdfUpload";
 import WebsiteUpload from "@/components/WebsiteUpload";
 import NotesList from "@/components/NotesList";
+import SettingsMenu from "@/components/SettingsMenu";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const Dashboard = () => {
               </Button>
             </Link>
             <span className="text-sm text-muted-foreground">Welcome back!</span>
+            <SettingsMenu onClearHistory={handleUploadSuccess} />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out

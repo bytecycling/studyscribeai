@@ -29,6 +29,17 @@ const SignupFlow = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  // Check URL params for Google OAuth return
+  useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlStep = params.get('step');
+    const method = params.get('method');
+    if (urlStep && method === 'google') {
+      setStep(parseInt(urlStep));
+      setSignupData(prev => ({ ...prev, signupMethod: 'google' }));
+    }
+  });
+  
   const [signupData, setSignupData] = useState<SignupData>({
     signupMethod: '',
     email: '',
@@ -52,33 +63,11 @@ const SignupFlow = () => {
 
     try {
       setIsLoading(true);
-      setSignupData({ ...signupData, signupMethod: 'google' });
-      // Move to step 1.5 to show Google signup confirmation
-      setStep(1.5);
-      setIsLoading(false);
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to proceed with Google sign-in",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const completeGoogleSignup = async () => {
-    try {
-      setIsLoading(true);
+      // Proceed directly to Google OAuth
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: {
-            referral_source: signupData.referralSource,
-            education_level: signupData.educationLevel,
-            language_preference: signupData.language,
-          }
+          redirectTo: `${window.location.origin}/auth?step=2&method=google`,
         },
       });
 
@@ -88,6 +77,38 @@ const SignupFlow = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const completeGoogleSignup = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Save user preferences to user metadata
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          referral_source: signupData.referralSource,
+          education_level: signupData.educationLevel,
+          language_preference: signupData.language,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome!",
+        description: "Your account has been set up successfully",
+      });
+
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Error saving preferences:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save preferences",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -152,9 +173,6 @@ const SignupFlow = () => {
     if (step === 1) return signupData.acceptedTerms;
     if (step === 1.5 && signupData.signupMethod === 'email') {
       return signupData.email && signupData.password && signupData.fullName && signupData.acceptedTerms;
-    }
-    if (step === 1.5 && signupData.signupMethod === 'google') {
-      return true; // Google signup confirmation page
     }
     if (step === 2) return signupData.referralSource !== '';
     if (step === 3) return signupData.educationLevel !== '';
@@ -315,13 +333,6 @@ const SignupFlow = () => {
             </div>
           )}
 
-          {step === 1.5 && signupData.signupMethod === 'google' && (
-            <div className="space-y-4">
-              <p className="text-center text-muted-foreground">
-                You'll be redirected to Google to complete your sign up after providing some additional information.
-              </p>
-            </div>
-          )}
 
           {step === 2 && (
             <RadioGroup
