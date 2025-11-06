@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, FileAudio, FileText, Trash2 } from "lucide-react";
+import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -22,6 +23,8 @@ interface NotesListProps {
 const NotesList = ({ refreshTrigger }: NotesListProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +77,51 @@ const NotesList = ({ refreshTrigger }: NotesListProps) => {
     }
   };
 
+  const startEditing = (note: Note) => {
+    setEditingId(note.id);
+    setEditTitle(note.title);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditTitle("");
+  };
+
+  const saveTitle = async (id: string) => {
+    if (!editTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "Title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ title: editTitle.trim() })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Note renamed successfully",
+      });
+
+      setEditingId(null);
+      loadNotes();
+    } catch (error: any) {
+      console.error('Error updating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to rename note",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getIcon = (sourceType: string) => {
     switch (sourceType) {
       case 'youtube':
@@ -121,7 +169,27 @@ const NotesList = ({ refreshTrigger }: NotesListProps) => {
                   {getIcon(note.source_type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg truncate">{note.title}</CardTitle>
+                  {editingId === note.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="text-lg font-semibold h-8"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveTitle(note.id);
+                          if (e.key === 'Escape') cancelEditing();
+                        }}
+                      />
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => saveTitle(note.id)}>
+                        <Check className="w-4 h-4 text-green-600" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEditing}>
+                        <X className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <CardTitle className="text-lg truncate">{note.title}</CardTitle>
+                  )}
                   <CardDescription>
                     {new Date(note.created_at).toLocaleDateString()} • {note.source_type}
                   </CardDescription>
@@ -133,6 +201,14 @@ const NotesList = ({ refreshTrigger }: NotesListProps) => {
                     View
                   </Button>
                 </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => startEditing(note)}
+                  disabled={editingId === note.id}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
                 <Button 
                   variant="ghost" 
                   size="sm"

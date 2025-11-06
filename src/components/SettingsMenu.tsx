@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, Languages, Trash2, Sparkles } from "lucide-react";
+import { Settings, Languages, Trash2, Sparkles, Moon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface SettingsMenuProps {
   onClearHistory: () => void;
@@ -31,21 +32,44 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
   const [language, setLanguage] = useState(
     localStorage.getItem('language') || 'english'
   );
+  const [tempLanguage, setTempLanguage] = useState(language);
   const [aiEnabled, setAiEnabled] = useState(
     localStorage.getItem('aiEnabled') !== 'false'
   );
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('darkMode') === 'true'
+  );
   const { toast } = useToast();
 
-  const handleLanguageChange = (newLanguage: string) => {
-    setLanguage(newLanguage);
-    localStorage.setItem('language', newLanguage);
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const handleLanguageConfirm = () => {
+    setLanguage(tempLanguage);
+    localStorage.setItem('language', tempLanguage);
     toast({
       title: "Language updated",
-      description: `Language preference set to ${newLanguage}`,
+      description: `Language preference set to ${tempLanguage}`,
     });
     setShowLanguageDialog(false);
     // Reload to apply language changes
     window.location.reload();
+  };
+
+  const handleDarkModeToggle = (enabled: boolean) => {
+    setDarkMode(enabled);
+    localStorage.setItem('darkMode', enabled.toString());
+    toast({
+      title: enabled ? "Dark mode enabled" : "Dark mode disabled",
+      description: enabled 
+        ? "Dark mode is now active" 
+        : "Dark mode has been disabled",
+    });
   };
 
   const handleAiToggle = (enabled: boolean) => {
@@ -120,10 +144,24 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
               onCheckedChange={handleAiToggle}
             />
           </div>
+
+          <div className="flex items-center justify-between px-2 py-2">
+            <div className="flex items-center gap-2">
+              <Moon className="h-4 w-4" />
+              <span className="text-sm">Dark Mode</span>
+            </div>
+            <Switch
+              checked={darkMode}
+              onCheckedChange={handleDarkModeToggle}
+            />
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
+      <Dialog open={showLanguageDialog} onOpenChange={(open) => {
+        setShowLanguageDialog(open);
+        if (!open) setTempLanguage(language);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Choose Language</DialogTitle>
@@ -131,7 +169,7 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
               Select your preferred language for the interface
             </DialogDescription>
           </DialogHeader>
-          <RadioGroup value={language} onValueChange={handleLanguageChange}>
+          <RadioGroup value={tempLanguage} onValueChange={setTempLanguage}>
             {['English', 'Español', 'Français', '中文', '日本語', 'Bahasa Melayu'].map((lang) => (
               <div key={lang} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50 transition-colors">
                 <RadioGroupItem value={lang.toLowerCase()} id={`lang-${lang}`} />
@@ -139,6 +177,14 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
               </div>
             ))}
           </RadioGroup>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowLanguageDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleLanguageConfirm}>
+              Apply Changes
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

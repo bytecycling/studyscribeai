@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Languages } from "lucide-react";
+import { ArrowLeft, Languages, Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import AiChat from "@/components/AiChat";
@@ -30,6 +31,8 @@ export default function NoteDetail() {
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
   const { toast } = useToast();
 
   const languages = [
@@ -117,6 +120,50 @@ export default function NoteDetail() {
     }
   };
 
+  const startEditing = () => {
+    setEditedContent(note?.content || "");
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditedContent("");
+  };
+
+  const saveContent = async () => {
+    if (!note || !editedContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Content cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ content: editedContent.trim() })
+        .eq('id', note.id);
+
+      if (error) throw error;
+
+      setNote({ ...note, content: editedContent.trim() });
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Note content updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error updating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update note content",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <main className="container mx-auto px-4 py-10">
@@ -163,8 +210,37 @@ export default function NoteDetail() {
         <div className="mt-6">
           <TabsContent value="notes">
             <Card>
-              <CardContent className="prose max-w-none dark:prose-invert py-6">
-                <ReactMarkdown>{note.content}</ReactMarkdown>
+              <CardContent className="py-6">
+                <div className="flex justify-end mb-4 gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" onClick={saveContent}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={cancelEditing}>
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={startEditing}>
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit Note
+                    </Button>
+                  )}
+                </div>
+                {isEditing ? (
+                  <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="min-h-[400px] font-mono text-sm"
+                  />
+                ) : (
+                  <div className="prose max-w-none dark:prose-invert">
+                    <ReactMarkdown>{note.content}</ReactMarkdown>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

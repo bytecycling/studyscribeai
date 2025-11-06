@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,15 +30,26 @@ const SignupFlow = () => {
   const navigate = useNavigate();
   
   // Check URL params for Google OAuth return
-  useState(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlStep = params.get('step');
     const method = params.get('method');
     if (urlStep && method === 'google') {
-      setStep(parseInt(urlStep));
-      setSignupData(prev => ({ ...prev, signupMethod: 'google' }));
+      const checkUser = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Check if they already have preferences set
+          if (user.user_metadata?.language_preference) {
+            navigate('/dashboard');
+          } else {
+            setStep(parseInt(urlStep));
+            setSignupData(prev => ({ ...prev, signupMethod: 'google' }));
+          }
+        }
+      };
+      checkUser();
     }
-  });
+  }, [navigate]);
   
   const [signupData, setSignupData] = useState<SignupData>({
     signupMethod: '',
