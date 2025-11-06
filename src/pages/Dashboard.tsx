@@ -11,10 +11,12 @@ import PdfUpload from "@/components/PdfUpload";
 import WebsiteUpload from "@/components/WebsiteUpload";
 import NotesList from "@/components/NotesList";
 import SettingsMenu from "@/components/SettingsMenu";
+import FolderManager from "@/components/FolderManager";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [refreshNotes, setRefreshNotes] = useState(0);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -62,6 +64,11 @@ const Dashboard = () => {
                 History
               </Button>
             </Link>
+            <Link to="/profile">
+              <Button variant="ghost" size="sm">
+                Profile
+              </Button>
+            </Link>
             <span className="text-sm text-muted-foreground">Welcome back!</span>
             <SettingsMenu onClearHistory={handleUploadSuccess} />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -72,47 +79,59 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-2">Your Study Dashboard</h1>
-          <p className="text-muted-foreground text-lg">
-            Transform your learning materials into comprehensive study notes
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar with folders */}
+          <aside className="lg:col-span-1">
+            <FolderManager 
+              selectedFolderId={selectedFolderId}
+              onFolderSelect={setSelectedFolderId}
+            />
+          </aside>
 
-        {/* Upload Tabs */}
-        <Tabs defaultValue="youtube" className="mb-12">
-          <TabsList className="grid w-full grid-cols-4 max-w-4xl mx-auto">
-            <TabsTrigger value="youtube">YouTube</TabsTrigger>
-            <TabsTrigger value="audio">Audio/Video</TabsTrigger>
-            <TabsTrigger value="pdf">PDF</TabsTrigger>
-            <TabsTrigger value="website">Website</TabsTrigger>
-          </TabsList>
-          
-          <div className="mt-6">
-            <TabsContent value="youtube">
-              <YouTubeUpload onSuccess={handleUploadSuccess} />
-            </TabsContent>
-            
-            <TabsContent value="audio">
-              <AudioUpload onSuccess={handleUploadSuccess} />
-            </TabsContent>
-            
-            <TabsContent value="pdf">
-              <PdfUpload onSuccess={handleUploadSuccess} />
-            </TabsContent>
+          {/* Main content */}
+          <div className="lg:col-span-3">
+            <div className="mb-12">
+              <h1 className="text-4xl font-bold mb-2">Your Study Dashboard</h1>
+              <p className="text-muted-foreground text-lg">
+                Transform your learning materials into comprehensive study notes
+              </p>
+            </div>
 
-            <TabsContent value="website">
-              <WebsiteUpload onSuccess={handleUploadSuccess} />
-            </TabsContent>
+            {/* Upload Tabs */}
+            <Tabs defaultValue="youtube" className="mb-12">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="youtube">YouTube</TabsTrigger>
+                <TabsTrigger value="audio">Audio/Video</TabsTrigger>
+                <TabsTrigger value="pdf">PDF</TabsTrigger>
+                <TabsTrigger value="website">Website</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-6">
+                <TabsContent value="youtube">
+                  <YouTubeUpload onSuccess={handleUploadSuccess} />
+                </TabsContent>
+                
+                <TabsContent value="audio">
+                  <AudioUpload onSuccess={handleUploadSuccess} />
+                </TabsContent>
+                
+                <TabsContent value="pdf">
+                  <PdfUpload onSuccess={handleUploadSuccess} />
+                </TabsContent>
+
+                <TabsContent value="website">
+                  <WebsiteUpload onSuccess={handleUploadSuccess} />
+                </TabsContent>
+              </div>
+            </Tabs>
+
+            {/* Recent Notes Section */}
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
+              <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
+            </div>
           </div>
-        </Tabs>
-
-        {/* Recent Notes Section */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
-          <NotesList refreshTrigger={refreshNotes} />
         </div>
       </main>
     </div>

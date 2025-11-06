@@ -18,9 +18,10 @@ interface Note {
 
 interface NotesListProps {
   refreshTrigger: number;
+  folderId?: string | null;
 }
 
-const NotesList = ({ refreshTrigger }: NotesListProps) => {
+const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -29,14 +30,20 @@ const NotesList = ({ refreshTrigger }: NotesListProps) => {
 
   useEffect(() => {
     loadNotes();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, folderId]);
 
   const loadNotes = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('notes')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (folderId) {
+        query = query.eq('folder_id', folderId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setNotes(data || []);

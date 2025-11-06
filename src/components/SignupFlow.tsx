@@ -21,6 +21,7 @@ interface SignupData {
   educationLevel: string;
   language: string;
   acceptedTerms: boolean;
+  isSignIn: boolean;
 }
 
 const SignupFlow = () => {
@@ -29,20 +30,27 @@ const SignupFlow = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Check URL params for Google OAuth return
+  // Check URL params for Google OAuth return or preferences flow
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlStep = params.get('step');
     const method = params.get('method');
-    if (urlStep && method === 'google') {
+    
+    if (urlStep === 'preferences' || (urlStep && method === 'google')) {
       const checkUser = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           // Check if they already have preferences set
-          if (user.user_metadata?.language_preference) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (profile && profile.education_level && profile.language_preference) {
             navigate('/dashboard');
           } else {
-            setStep(parseInt(urlStep));
+            setStep(2); // Jump to preferences
             setSignupData(prev => ({ ...prev, signupMethod: 'google' }));
           }
         }
@@ -60,10 +68,11 @@ const SignupFlow = () => {
     educationLevel: '',
     language: 'english',
     acceptedTerms: false,
+    isSignIn: false,
   });
 
-  const handleGoogleSignIn = async () => {
-    if (!signupData.acceptedTerms) {
+  const handleGoogleAuth = async () => {
+    if (!signupData.acceptedTerms && !signupData.isSignIn) {
       toast({
         title: "Error",
         description: "Please accept the Terms of Service and Privacy Policy",
@@ -74,44 +83,51 @@ const SignupFlow = () => {
 
     try {
       setIsLoading(true);
-      // Proceed directly to Google OAuth
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth?step=2&method=google`,
+          redirectTo: `${window.location.origin}/auth?step=preferences&method=google`,
         },
       });
 
       if (error) throw error;
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('Google auth error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to sign in with Google",
+        description: error.message || "Failed to authenticate with Google",
         variant: "destructive",
       });
       setIsLoading(false);
     }
   };
 
-  const completeGoogleSignup = async () => {
+  const completePreferences = async () => {
     try {
       setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       
-      // Save user preferences to user metadata
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          referral_source: signupData.referralSource,
+      // Save or update preferences
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
           education_level: signupData.educationLevel,
           language_preference: signupData.language,
-        }
-      });
+          full_name: signupData.fullName || user.user_metadata?.full_name
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) throw error;
 
+      // Set language
+      localStorage.setItem('language', signupData.language);
+
       toast({
         title: "Welcome!",
-        description: "Your account has been set up successfully",
+        description: "Your profile has been set up successfully",
       });
 
       navigate('/dashboard');
@@ -126,37 +142,67 @@ const SignupFlow = () => {
     }
   };
 
-  const handleEmailSignup = async () => {
+  const handleEmailAuth = async () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: signupData.email,
-        password: signupData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: {
-            full_name: signupData.fullName,
-            referral_source: signupData.referralSource,
-            education_level: signupData.educationLevel,
-            language_preference: signupData.language,
+      if (signupData.isSignIn) {
+        // Sign in flow
+        const { error } = await supabase.auth.signInWithPassword({
+          email: signupData.email,
+          password: signupData.password,
+        });
+
+        if (error) throw error;
+
+        // Check if user has preferences, if not redirect to preferences
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!profile || !profile.education_level) {
+            // Redirect to preferences
+            setStep(2);
+            toast({
+              title: "Welcome back!",
+              description: "Please complete your profile",
+            });
+          } else {
+            navigate('/dashboard');
+          }
+        }
+      } else {
+        // Sign up flow
+        const { error } = await supabase.auth.signUp({
+          email: signupData.email,
+          password: signupData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth?step=preferences`,
+            data: {
+              full_name: signupData.fullName,
+            },
           },
-        },
-      });
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Account created!",
-        description: "Welcome to StudyScribe.AI",
-      });
+        toast({
+          title: "Account created!",
+          description: "Please complete your profile",
+        });
 
-      navigate('/dashboard');
+        // Move to preferences
+        setStep(2);
+      }
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create account",
+        description: error.message || "Failed to authenticate",
         variant: "destructive",
       });
     } finally {
@@ -181,13 +227,15 @@ const SignupFlow = () => {
   };
 
   const canProceed = () => {
-    if (step === 1) return signupData.acceptedTerms;
-    if (step === 1.5 && signupData.signupMethod === 'email') {
+    if (step === 1) return signupData.isSignIn || signupData.acceptedTerms;
+    if (step === 1.5) {
+      if (signupData.isSignIn) {
+        return signupData.email && signupData.password;
+      }
       return signupData.email && signupData.password && signupData.fullName && signupData.acceptedTerms;
     }
-    if (step === 2) return signupData.referralSource !== '';
-    if (step === 3) return signupData.educationLevel !== '';
-    if (step === 4) return signupData.language !== '';
+    if (step === 2) return signupData.educationLevel !== '';
+    if (step === 3) return signupData.language !== '';
     return true;
   };
 
@@ -199,12 +247,10 @@ const SignupFlow = () => {
           <span className="text-sm text-muted-foreground">Step {Math.floor(step)}/{signupData.signupMethod === 'google' ? '4' : '4'}</span>
         </div>
         <CardDescription>
-          {step === 1 && "Choose how you'd like to sign up"}
-          {step === 1.5 && signupData.signupMethod === 'email' && "Enter your details"}
-          {step === 1.5 && signupData.signupMethod === 'google' && "Continue with your Google account"}
-          {step === 2 && "How did you hear about us?"}
-          {step === 3 && "What's your education level?"}
-          {step === 4 && "Choose your language preference"}
+          {step === 1 && "Choose how you'd like to authenticate"}
+          {step === 1.5 && (signupData.isSignIn ? "Sign in to your account" : "Create your account")}
+          {step === 2 && "What's your education level?"}
+          {step === 3 && "Choose your language preference"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -215,8 +261,8 @@ const SignupFlow = () => {
                 type="button" 
                 variant="outline" 
                 className="w-full" 
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || !signupData.acceptedTerms}
+                onClick={handleGoogleAuth}
+                disabled={isLoading || (!signupData.acceptedTerms && !signupData.isSignIn)}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -414,25 +460,25 @@ const SignupFlow = () => {
             </Button>
           )}
 
-          {step === 4 && signupData.signupMethod === 'email' && (
+          {step === 1.5 && (
             <Button
               type="button"
-              onClick={handleEmailSignup}
+              onClick={handleEmailAuth}
               disabled={isLoading || !canProceed()}
               className="flex-1"
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? "Processing..." : (signupData.isSignIn ? "Sign In" : "Continue")}
             </Button>
           )}
 
-          {step === 4 && signupData.signupMethod === 'google' && (
+          {step === 3 && (
             <Button
               type="button"
-              onClick={completeGoogleSignup}
+              onClick={completePreferences}
               disabled={isLoading || !canProceed()}
               className="flex-1"
             >
-              {isLoading ? "Completing Sign Up..." : "Complete Sign Up"}
+              {isLoading ? "Saving..." : "Complete Setup"}
             </Button>
           )}
         </div>

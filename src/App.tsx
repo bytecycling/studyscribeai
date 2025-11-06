@@ -11,6 +11,7 @@ import NoteDetail from "./pages/NoteDetail";
 import History from "./pages/History";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/note/:id" element={<NoteDetail />} />
           <Route path="/history" element={<History />} />
           <Route path="/terms" element={<Terms />} />

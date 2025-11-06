@@ -132,10 +132,10 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 gradient-hero">
+    <div className="min-h-screen flex items-center justify-center p-4 dark:bg-gray-950 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center mb-8 hover:opacity-80 transition-opacity">
-          <span className="font-bold text-2xl text-background">StudyScribe.AI</span>
+          <span className="font-bold text-2xl dark:text-white text-primary">StudyScribe.AI</span>
         </Link>
 
         <Tabs defaultValue="signin" className="w-full">
@@ -145,10 +145,10 @@ const Auth = () => {
           </TabsList>
           
           <TabsContent value="signin">
-            <Card className="shadow-elevated">
+            <Card className="shadow-elevated dark:bg-white dark:text-gray-900">
               <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-                <CardDescription className="text-center">
+                <CardTitle className="text-2xl text-center dark:text-gray-900">Welcome Back</CardTitle>
+                <CardDescription className="text-center dark:text-gray-600">
                   Sign in to continue studying
                 </CardDescription>
               </CardHeader>
