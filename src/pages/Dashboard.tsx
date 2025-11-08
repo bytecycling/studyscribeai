@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, LogOut } from "lucide-react";
+import { BookOpen, LogOut, FolderOpen, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [refreshNotes, setRefreshNotes] = useState(0);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -79,58 +80,91 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar with folders */}
-          <aside className="lg:col-span-1">
-            <FolderManager 
-              selectedFolderId={selectedFolderId}
-              onFolderSelect={setSelectedFolderId}
-            />
-          </aside>
+      <main className="container mx-auto px-4 py-12 relative">
+        {/* Floating toggle button */}
+        <Button
+          size="icon"
+          variant="outline"
+          className="fixed left-4 top-24 z-40 shadow-lg hover:scale-110 transition-transform"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          <FolderOpen className="w-5 h-5" />
+        </Button>
 
-          {/* Main content */}
-          <div className="lg:col-span-3">
-            <div className="mb-12">
-              <h1 className="text-4xl font-bold mb-2">Your Study Dashboard</h1>
-              <p className="text-muted-foreground text-lg">
-                Transform your learning materials into comprehensive study notes
-              </p>
-            </div>
+        {/* Overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 animate-fade-in"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-            {/* Upload Tabs */}
-            <Tabs defaultValue="youtube" className="mb-12">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="youtube">YouTube</TabsTrigger>
-                <TabsTrigger value="audio">Audio/Video</TabsTrigger>
-                <TabsTrigger value="pdf">PDF</TabsTrigger>
-                <TabsTrigger value="website">Website</TabsTrigger>
-              </TabsList>
+        {/* Collapsible Sidebar */}
+        <aside 
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-background border-r border-border z-50 p-6 shadow-xl transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Organize</h3>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <FolderManager 
+            selectedFolderId={selectedFolderId}
+            onFolderSelect={(id) => {
+              setSelectedFolderId(id);
+              setSidebarOpen(false);
+            }}
+          />
+        </aside>
+
+        {/* Main content */}
+        <div className="w-full">
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold mb-2">Your Study Dashboard</h1>
+            <p className="text-muted-foreground text-lg">
+              Transform your learning materials into comprehensive study notes
+            </p>
+          </div>
+
+          {/* Upload Tabs */}
+          <Tabs defaultValue="youtube" className="mb-12">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="youtube">YouTube</TabsTrigger>
+              <TabsTrigger value="audio">Audio/Video</TabsTrigger>
+              <TabsTrigger value="pdf">PDF</TabsTrigger>
+              <TabsTrigger value="website">Website</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-6">
+              <TabsContent value="youtube">
+                <YouTubeUpload onSuccess={handleUploadSuccess} />
+              </TabsContent>
               
-              <div className="mt-6">
-                <TabsContent value="youtube">
-                  <YouTubeUpload onSuccess={handleUploadSuccess} />
-                </TabsContent>
-                
-                <TabsContent value="audio">
-                  <AudioUpload onSuccess={handleUploadSuccess} />
-                </TabsContent>
-                
-                <TabsContent value="pdf">
-                  <PdfUpload onSuccess={handleUploadSuccess} />
-                </TabsContent>
+              <TabsContent value="audio">
+                <AudioUpload onSuccess={handleUploadSuccess} />
+              </TabsContent>
+              
+              <TabsContent value="pdf">
+                <PdfUpload onSuccess={handleUploadSuccess} />
+              </TabsContent>
 
-                <TabsContent value="website">
-                  <WebsiteUpload onSuccess={handleUploadSuccess} />
-                </TabsContent>
-              </div>
-            </Tabs>
-
-            {/* Recent Notes Section */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
-              <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
+              <TabsContent value="website">
+                <WebsiteUpload onSuccess={handleUploadSuccess} />
+              </TabsContent>
             </div>
+          </Tabs>
+
+          {/* Recent Notes Section */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
+            <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
           </div>
         </div>
       </main>
