@@ -15,7 +15,7 @@ const Hero = () => {
             <span className="text-sm font-medium text-primary">AI-Powered Study Assistant</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-slide-up">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 pb-2 leading-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-slide-up">
             StudyScribe.AI
           </h1>
           
