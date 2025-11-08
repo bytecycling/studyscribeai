@@ -19,9 +19,13 @@ const Hero = () => {
             StudyScribe.AI
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             Transform YouTube videos, audio files, and PDFs into comprehensive study notes. 
             Create flashcards, take quizzes, and chat with AI about your content.
+          </p>
+          
+          <p className="text-lg md:text-xl text-primary/80 font-medium italic animate-pulse mb-12" style={{ animationDelay: '0.15s' }}>
+            The Brain Behind the Breakthrough
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>

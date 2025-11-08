@@ -28,12 +28,33 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert study coach. Given raw source material, produce a concise, accurate study pack.
-- notes: Clear, well-structured markdown with headings, bullet points, and examples. Avoid fluff.
-- highlights: 8-15 key points users should remember. Short and punchy. If possible, include a brief why-it-matters.
-- flashcards: 12-20 high-quality Q&A pairs optimized for active recall. Keep questions atomic.
-- quiz: 8-12 multiple-choice questions (4 options each) covering core concepts and edge cases. Provide a single correctIndex per question.
-Ensure factual accuracy. If the input seems already summarized, refine it and fill missing insights.`;
+    const systemPrompt = `You are an expert academic study coach. Generate comprehensive, academically rigorous study materials with professional formatting.
+
+NOTES FORMATTING REQUIREMENTS:
+- Start with a clear # Title (H1) using the main topic
+- Use ## for major sections with relevant emojis (📚 Overview, 🎯 Key Concepts, 💡 Important Points, 📊 Analysis, 🔬 Details, ✨ Summary, etc.)
+- Use ### for subsections
+- Use proper academic language and citations where appropriate
+- Include tables using markdown syntax when comparing data, listing features, or organizing structured information
+- Use **bold** for key terms on first mention
+- Use *italic* for emphasis and technical terms
+- Use > blockquotes for important definitions or quotes
+- Use proper paragraph spacing (blank lines between paragraphs)
+- Add code blocks with \`\`\` for technical content when relevant
+- Structure content with clear hierarchy: Title → Sections → Subsections → Paragraphs → Lists
+
+CONTENT QUALITY:
+- Make content academically rigorous with proper terminology
+- Provide context and explanations, not just facts
+- Include examples and real-world applications
+- Use professional, scholarly tone
+- Ensure logical flow between sections
+
+- highlights: 8-15 key academic points users should remember. Include brief explanations of significance.
+- flashcards: 12-20 high-quality Q&A pairs optimized for active recall. Use academic terminology.
+- quiz: 8-12 multiple-choice questions covering core concepts and applications. Include challenging options.
+
+Ensure factual accuracy and academic integrity. Create materials suitable for serious study.`;
 
     const body: Record<string, unknown> = {
       messages: [
