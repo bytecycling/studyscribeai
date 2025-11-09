@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 
 interface AiChatProps {
   noteId?: string;
@@ -229,7 +231,7 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
                     >
                       {msg.role === "assistant" ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                         </div>
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -268,7 +270,7 @@ const AiChat = ({ noteId, noteContent }: AiChatProps) => {
           <CardContent>
             <ScrollArea className="h-[500px] w-full">
               <div className="prose max-w-none dark:prose-invert">
-                <ReactMarkdown>{noteContent}</ReactMarkdown>
+                <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>{noteContent}</ReactMarkdown>
               </div>
             </ScrollArea>
           </CardContent>

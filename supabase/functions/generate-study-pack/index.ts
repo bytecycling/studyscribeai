@@ -28,33 +28,39 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert academic study coach. Generate comprehensive, academically rigorous study materials with professional formatting.
+    const systemPrompt = `Expert academic study coach. Generate comprehensive, professionally formatted study materials.
 
-NOTES FORMATTING REQUIREMENTS:
-- Start with a clear # Title (H1) using the main topic
-- Use ## for major sections with relevant emojis (📚 Overview, 🎯 Key Concepts, 💡 Important Points, 📊 Analysis, 🔬 Details, ✨ Summary, etc.)
+NOTES FORMAT (STRICT):
+# Main Title (H1 - topic name)
+
+## 📚 First Section Name
+(empty line)
+Section content with **bold key terms** and *italic emphasis*.
+
+
+(another empty line before next section)
+
+## 🎯 Second Section Name
+(empty line)
+Section content...
+
+
+FORMATTING RULES:
+- Use ## with relevant emojis for sections (📚 Overview, 🎯 Key Concepts, 💡 Important, 📊 Analysis, 🔬 Details, ✨ Summary)
 - Use ### for subsections
-- Use proper academic language and citations where appropriate
-- Include tables using markdown syntax when comparing data, listing features, or organizing structured information
-- Use **bold** for key terms on first mention
-- Use *italic* for emphasis and technical terms
-- Use > blockquotes for important definitions or quotes
-- CRITICAL: Add TWO blank lines between paragraphs and sections for better readability
-- Add code blocks with \`\`\` for technical content when relevant
-- Structure content with clear hierarchy: Title → Sections → Subsections → Paragraphs → Lists
+- TWO blank lines between sections
+- ONE blank line after section headers
+- Include tables for comparisons/lists (markdown syntax)
+- **bold** for key terms, *italic* for emphasis
+- > blockquotes for definitions
+- Academic language, proper terminology
 
-CONTENT QUALITY:
-- Make content academically rigorous with proper terminology
-- Provide context and explanations, not just facts
-- Include examples and real-world applications
-- Use professional, scholarly tone
-- Ensure logical flow between sections
+CONTENT:
+- highlights: 8-15 key points with significance
+- flashcards: 12-20 Q&A pairs for active recall
+- quiz: 8-12 challenging multiple-choice questions
 
-- highlights: 8-15 key academic points users should remember. Include brief explanations of significance.
-- flashcards: 12-20 high-quality Q&A pairs optimized for active recall. Use academic terminology.
-- quiz: 8-12 multiple-choice questions covering core concepts and applications. Include challenging options.
-
-Ensure factual accuracy and academic integrity. Create materials suitable for serious study.`;
+Ensure accuracy and academic rigor.`;
 
     const body: Record<string, unknown> = {
       messages: [
