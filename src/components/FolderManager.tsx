@@ -80,6 +80,10 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -114,17 +118,25 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
       </div>
 
       <div className="space-y-2">
-        <Button
-          variant={selectedFolderId === null ? "secondary" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => onFolderSelect(null)}
+        <div
+          onDragOver={handleDragOver}
         >
-          <Folder className="w-4 h-4 mr-2" />
-          All Notes
-        </Button>
+          <Button
+            variant={selectedFolderId === null ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => onFolderSelect(null)}
+          >
+            <Folder className="w-4 h-4 mr-2" />
+            All Notes
+          </Button>
+        </div>
 
         {folders.map((folder) => (
-          <div key={folder.id} className="flex items-center gap-2">
+          <div 
+            key={folder.id} 
+            className="flex items-center gap-2"
+            onDragOver={handleDragOver}
+          >
             <Button
               variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
               className="flex-1 justify-start"

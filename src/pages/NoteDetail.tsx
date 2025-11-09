@@ -237,8 +237,10 @@ export default function NoteDetail() {
                     onChange={setEditedContent}
                   />
                 ) : (
-                  <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h1:text-4xl prose-h1:mb-6 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:my-4 prose-p:leading-relaxed prose-table:w-full prose-th:bg-muted prose-th:p-2 prose-td:p-2 prose-td:border">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.content}</ReactMarkdown>
+                  <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h1:text-4xl prose-h1:mb-6 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:my-4 prose-p:leading-relaxed prose-table:w-full prose-th:bg-muted prose-th:p-2 prose-th:border prose-td:p-2 prose-td:border">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {note.content}
+                    </ReactMarkdown>
                   </div>
                 )}
               </CardContent>

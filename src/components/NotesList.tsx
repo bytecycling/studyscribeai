@@ -26,6 +26,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -129,6 +130,47 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     }
   };
 
+  const moveNoteToFolder = async (noteId: string, targetFolderId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ folder_id: targetFolderId })
+        .eq('id', noteId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: targetFolderId ? "Note moved to folder" : "Note moved to all notes",
+      });
+
+      loadNotes();
+    } catch (error: any) {
+      console.error('Error moving note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to move note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDragStart = (noteId: string) => {
+    setDraggedNoteId(noteId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetFolderId: string | null) => {
+    e.preventDefault();
+    if (draggedNoteId) {
+      moveNoteToFolder(draggedNoteId, targetFolderId);
+      setDraggedNoteId(null);
+    }
+  };
+
   const getIcon = (sourceType: string) => {
     switch (sourceType) {
       case 'youtube':
@@ -168,7 +210,14 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   return (
     <div className="grid gap-4">
       {notes.map((note) => (
-        <Card key={note.id} className="hover:shadow-elevated transition-all">
+        <Card 
+          key={note.id} 
+          className="hover:shadow-elevated transition-all cursor-move"
+          draggable
+          onDragStart={() => handleDragStart(note.id)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, folderId)}
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3 flex-1">

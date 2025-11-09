@@ -48,10 +48,17 @@ const Profile = () => {
 
       if (profileData) {
         setProfile({
-          full_name: profileData.full_name || '',
+          full_name: profileData.full_name || user.user_metadata?.full_name || '',
           email: user.email || '',
           education_level: profileData.education_level || '',
           language_preference: profileData.language_preference || 'english'
+        });
+      } else {
+        setProfile({
+          full_name: user.user_metadata?.full_name || '',
+          email: user.email || '',
+          education_level: '',
+          language_preference: 'english'
         });
       }
     } catch (error) {
@@ -239,12 +246,19 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="education">Education Level</Label>
-                <Input
+                <select
                   id="education"
                   value={profile.education_level}
                   onChange={(e) => setProfile({ ...profile, education_level: e.target.value })}
-                  placeholder="e.g., High School, College"
-                />
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Select education level</option>
+                  <option value="high school student">High School Student</option>
+                  <option value="college student">College Student</option>
+                  <option value="undergraduate">Undergraduate</option>
+                  <option value="postgraduate">Postgraduate</option>
+                  <option value="higher education">Higher Education</option>
+                </select>
               </div>
 
               <div className="space-y-2">

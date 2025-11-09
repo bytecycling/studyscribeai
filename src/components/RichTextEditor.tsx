@@ -1,6 +1,7 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bold, Italic, Underline, Highlighter } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface RichTextEditorProps {
   value: string;
@@ -11,6 +12,16 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, className }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
+  const [highlightColor, setHighlightColor] = useState('#fef08a');
+
+  const highlightColors = [
+    { name: 'Yellow', color: '#fef08a' },
+    { name: 'Green', color: '#bbf7d0' },
+    { name: 'Blue', color: '#bfdbfe' },
+    { name: 'Pink', color: '#fbcfe8' },
+    { name: 'Orange', color: '#fed7aa' },
+    { name: 'Purple', color: '#e9d5ff' },
+  ];
 
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
@@ -72,14 +83,21 @@ export default function RichTextEditor({ value, onChange, className }: RichTextE
     handleInput();
   };
 
-  const applyHighlight = () => {
+  const applyHighlight = (color: string) => {
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
       const range = selection.getRangeAt(0);
       const mark = document.createElement('mark');
-      mark.style.backgroundColor = '#fef08a';
+      mark.style.backgroundColor = color;
       mark.style.color = '#000';
-      range.surroundContents(mark);
+      try {
+        range.surroundContents(mark);
+      } catch (e) {
+        // If surroundContents fails, use a different approach
+        const fragment = range.extractContents();
+        mark.appendChild(fragment);
+        range.insertNode(mark);
+      }
       selection.removeAllRanges();
       editorRef.current?.focus();
       handleInput();
@@ -116,15 +134,32 @@ export default function RichTextEditor({ value, onChange, className }: RichTextE
         >
           <Underline className="w-4 h-4" />
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={applyHighlight}
-          title="Highlight"
-        >
-          <Highlighter className="w-4 h-4" />
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              title="Highlight"
+            >
+              <Highlighter className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <div className="flex gap-2">
+              {highlightColors.map((item) => (
+                <button
+                  key={item.color}
+                  type="button"
+                  className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
+                  style={{ backgroundColor: item.color }}
+                  onClick={() => applyHighlight(item.color)}
+                  title={item.name}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <div
         ref={editorRef}

@@ -39,7 +39,7 @@ NOTES FORMATTING REQUIREMENTS:
 - Use **bold** for key terms on first mention
 - Use *italic* for emphasis and technical terms
 - Use > blockquotes for important definitions or quotes
-- Use proper paragraph spacing (blank lines between paragraphs)
+- CRITICAL: Add TWO blank lines between paragraphs and sections for better readability
 - Add code blocks with \`\`\` for technical content when relevant
 - Structure content with clear hierarchy: Title → Sections → Subsections → Paragraphs → Lists
 
