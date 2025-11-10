@@ -69,103 +69,55 @@ function encodeBase64(bytes: Uint8Array): string {
 }
 
 async function processPdfWithGemini(base64Pdf: string) {
-  const ADOBE_API_KEY = Deno.env.get('ADOBE_PDF_API_KEY');
-  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
-  if (!ADOBE_API_KEY || !GEMINI_API_KEY) {
-    throw new Error('API keys not configured');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('AI is not configured on the backend');
   }
 
-  // Use Adobe PDF Extract API to extract text
-  console.log('Extracting text from PDF using Adobe API...');
+  // Use Lovable AI to extract text from PDF
+  console.log('Extracting text from PDF using Lovable AI...');
   
-  const extractResponse = await fetch(
-    'https://pdf-services.adobe.io/operation/extractpdf',
-    {
-      method: 'POST',
-      headers: {
-        'x-api-key': ADOBE_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        assetID: base64Pdf.substring(0, 100), // Adobe requires asset upload first, using simplified approach
-      })
-    }
-  );
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'Extract all text content from this PDF document. Preserve structure, headings, and formatting.'
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:application/pdf;base64,${base64Pdf}`
+            }
+          }
+        ]
+      }]
+    })
+  });
 
-  let extractedText = '';
-  
-  if (!extractResponse.ok) {
-    console.warn('Adobe API failed, using Gemini for extraction:', await extractResponse.text());
-    // Fallback to Gemini for text extraction
-    const geminiExtractResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                inline_data: {
-                  mime_type: 'application/pdf',
-                  data: base64Pdf
-                }
-              },
-              {
-                text: 'Extract all text from this PDF document.'
-              }
-            ]
-          }]
-        })
-      }
-    );
-    
-    if (geminiExtractResponse.ok) {
-      const data = await geminiExtractResponse.json();
-      extractedText = data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error('Failed to extract PDF text');
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Rate limits exceeded, please try again later.');
     }
-  } else {
-    const data = await extractResponse.json();
-    extractedText = data.content || '';
+    if (response.status === 402) {
+      throw new Error('AI credits required. Please add funds to your workspace.');
+    }
+    const error = await response.text();
+    console.error('Lovable AI error:', error);
+    throw new Error('Failed to extract PDF text');
   }
 
-  // Now use Gemini to create study notes from the extracted text
-  console.log('Creating study notes with Gemini...');
-  const summaryResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `Please analyze this PDF content and create comprehensive study notes. Include:
-1. Main topics and sections
-2. Key concepts and definitions
-3. Important facts and figures
-4. Examples and case studies
-5. Summary of key takeaways
-6. Study questions for review
-
-PDF Content:
-${extractedText}`
-          }]
-        }]
-      })
-    }
-  );
-
-  if (!summaryResponse.ok) {
-    const error = await summaryResponse.text();
-    console.error('Gemini API error:', error);
-    throw new Error('Failed to create study notes');
-  }
-
-  const summaryData = await summaryResponse.json();
-  const content = summaryData.candidates[0].content.parts[0].text;
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content || '';
   
   return {
     content,
