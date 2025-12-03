@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,6 +11,7 @@ import rehypeRaw from "rehype-raw";
 import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NoteRow {
   id: string;
@@ -32,6 +33,7 @@ export default function NoteDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const [showSidebar, setShowSidebar] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -136,8 +138,8 @@ export default function NoteDetail() {
   return (
     <main className="h-screen overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Notes Panel - 60% default */}
-        <ResizablePanel defaultSize={60} minSize={30}>
+        {/* Notes Panel */}
+        <ResizablePanel defaultSize={showSidebar ? 60 : 100} minSize={30}>
           <div className="h-full overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -146,7 +148,29 @@ export default function NoteDetail() {
                   {new Date(note.created_at).toLocaleString()} • {note.source_type}
                 </p>
               </div>
-              <Link to="/dashboard"><Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4"/>Back</Button></Link>
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => setShowSidebar(!showSidebar)}
+                      >
+                        {showSidebar ? (
+                          <PanelRightClose className="h-4 w-4" />
+                        ) : (
+                          <PanelRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {showSidebar ? "Hide AI Panel" : "Show AI Panel"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Link to="/dashboard"><Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4"/>Back</Button></Link>
+              </div>
             </div>
 
             <Card>
@@ -190,19 +214,21 @@ export default function NoteDetail() {
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
-
-        {/* AI Sidebar Panel - 40% default */}
-        <ResizablePanel defaultSize={40} minSize={20}>
-          <ResizableSidebar
-            noteId={id}
-            noteContent={note.content}
-            highlights={highlights}
-            flashcards={flashcards}
-            quiz={quiz}
-            rawText={note.raw_text || undefined}
-          />
-        </ResizablePanel>
+        {showSidebar && (
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={20}>
+              <ResizableSidebar
+                noteId={id}
+                noteContent={note.content}
+                highlights={highlights}
+                flashcards={flashcards}
+                quiz={quiz}
+                rawText={note.raw_text || undefined}
+              />
+            </ResizablePanel>
+          </>
+        )}
       </ResizablePanelGroup>
     </main>
   );
