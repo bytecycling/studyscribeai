@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface NoteRow {
   id: string;
@@ -31,7 +32,6 @@ export default function NoteDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -134,78 +134,76 @@ export default function NoteDetail() {
   const quiz = Array.isArray(note.quiz) ? note.quiz : [];
 
   return (
-    <main className="container mx-auto px-4 py-10 relative">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{note.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {new Date(note.created_at).toLocaleString()} • {note.source_type}
-          </p>
-        </div>
-        <Link to="/dashboard"><Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4"/>Back</Button></Link>
-      </div>
-
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'mr-[420px]' : 'mr-0'}`}>
-        <Card>
-          <CardContent className="py-6">
-            <div className="flex justify-end mb-4 gap-2">
-              {isEditing ? (
-                <>
-                  <Button size="sm" onClick={saveContent}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={cancelEditing}>
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" variant="outline" onClick={startEditing}>
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Note
-                </Button>
-              )}
-            </div>
-            {isEditing ? (
-              <RichTextEditor
-                value={editedContent}
-                onChange={setEditedContent}
-              />
-            ) : (
-              <div className="prose prose-lg max-w-none dark:prose-invert">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                >
-                  {note.content}
-                </ReactMarkdown>
+    <main className="h-screen overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        {/* Notes Panel - 60% default */}
+        <ResizablePanel defaultSize={60} minSize={30}>
+          <div className="h-full overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold">{note.title}</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {new Date(note.created_at).toLocaleString()} • {note.source_type}
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              <Link to="/dashboard"><Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4"/>Back</Button></Link>
+            </div>
 
-      {sidebarOpen && (
-        <ResizableSidebar
-          noteId={id}
-          noteContent={note.content}
-          highlights={highlights}
-          flashcards={flashcards}
-          quiz={quiz}
-          rawText={note.raw_text || undefined}
-          onClose={() => setSidebarOpen(false)}
-        />
-      )}
+            <Card>
+              <CardContent className="py-6">
+                <div className="flex justify-end mb-4 gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" onClick={saveContent}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={cancelEditing}>
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={startEditing}>
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit Note
+                    </Button>
+                  )}
+                </div>
+                {isEditing ? (
+                  <RichTextEditor
+                    value={editedContent}
+                    onChange={setEditedContent}
+                  />
+                ) : (
+                  <div className="prose prose-lg max-w-none dark:prose-invert">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    >
+                      {note.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </ResizablePanel>
 
-      {!sidebarOpen && (
-        <Button
-          className="fixed right-4 top-24 z-40"
-          onClick={() => setSidebarOpen(true)}
-        >
-          Open AI Assistant
-        </Button>
-      )}
+        <ResizableHandle withHandle />
+
+        {/* AI Sidebar Panel - 40% default */}
+        <ResizablePanel defaultSize={40} minSize={20}>
+          <ResizableSidebar
+            noteId={id}
+            noteContent={note.content}
+            highlights={highlights}
+            flashcards={flashcards}
+            quiz={quiz}
+            rawText={note.raw_text || undefined}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </main>
   );
 }
