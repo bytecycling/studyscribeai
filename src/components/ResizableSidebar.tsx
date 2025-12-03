@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Layers, HelpCircle, FileType, Languages } from "lucide-react";
+import { MessageSquare, Layers, HelpCircle, Languages } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +20,7 @@ interface ResizableSidebarProps {
   rawText?: string;
 }
 
-type SidebarView = "chat" | "flashcards" | "quiz" | "transcript" | "translate";
+type SidebarView = "chat" | "flashcards" | "quiz" | "translate";
 
 export default function ResizableSidebar({
   noteId,
@@ -91,7 +91,6 @@ export default function ResizableSidebar({
     { id: "chat" as SidebarView, icon: MessageSquare, label: "AI Chat" },
     { id: "flashcards" as SidebarView, icon: Layers, label: "Flashcards" },
     { id: "quiz" as SidebarView, icon: HelpCircle, label: "Quiz" },
-    { id: "transcript" as SidebarView, icon: FileType, label: "Transcript" },
     { id: "translate" as SidebarView, icon: Languages, label: "Translate" },
   ];
 
@@ -170,15 +169,6 @@ export default function ResizableSidebar({
               ) : (
                 <p className="text-muted-foreground">No quiz questions available</p>
               )}
-            </div>
-          )}
-
-          {currentView === "transcript" && (
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Original Transcript</h3>
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="whitespace-pre-wrap text-sm">{rawText || "No transcript available"}</p>
-              </div>
             </div>
           )}
 
