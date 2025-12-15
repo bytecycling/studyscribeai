@@ -264,7 +264,6 @@ export default function NoteDetail() {
                 highlights={highlights}
                 flashcards={flashcards}
                 quiz={quiz}
-                rawText={note.raw_text || undefined}
               />
             </ResizablePanel>
           </>

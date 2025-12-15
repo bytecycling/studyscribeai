@@ -17,7 +17,6 @@ interface ResizableSidebarProps {
   highlights?: any[];
   flashcards?: any[];
   quiz?: any[];
-  rawText?: string;
 }
 
 type SidebarView = "chat" | "flashcards" | "quiz" | "translate";
@@ -28,7 +27,6 @@ export default function ResizableSidebar({
   highlights = [],
   flashcards = [],
   quiz = [],
-  rawText,
 }: ResizableSidebarProps) {
   const [currentView, setCurrentView] = useState<SidebarView>("chat");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
