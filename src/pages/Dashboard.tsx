@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { BookOpen, LogOut, FolderOpen, X, Search } from "lucide-react";
+import { BookOpen, LogOut, FolderOpen, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +18,6 @@ const Dashboard = () => {
   const [refreshNotes, setRefreshNotes] = useState(0);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -165,19 +163,8 @@ const Dashboard = () => {
 
           {/* Recent Notes Section */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Your Study Notes</h2>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search notes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} searchQuery={searchQuery} />
+            <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
+            <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
           </div>
         </div>
       </main>
