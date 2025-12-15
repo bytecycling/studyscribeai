@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,21 +16,27 @@ serve(async (req) => {
     console.log('Processing YouTube URL:', youtubeUrl);
 
     if (!youtubeUrl) {
-      throw new Error('YouTube URL is required');
+      return new Response(
+        JSON.stringify({ error: 'YouTube URL is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Extract video ID from URL
     const videoId = extractVideoId(youtubeUrl);
     if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+      return new Response(
+        JSON.stringify({ error: 'Invalid YouTube URL' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Using Supadata API for transcript
-    console.log('Using Supadata API for transcript');
+    // Get transcript using Supadata API
+    console.log('Fetching transcript for video:', videoId);
     const { transcript, title } = await getYouTubeTranscript(videoId);
     
-    // Summarize with Gemini
-    const summary = await summarizeWithGemini(transcript);
+    // Summarize with Lovable AI
+    const summary = await summarizeWithLovableAI(transcript);
 
     return new Response(
       JSON.stringify({ 
@@ -47,10 +52,7 @@ serve(async (req) => {
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
@@ -72,14 +74,11 @@ async function getYouTubeTranscript(videoId: string): Promise<{ transcript: stri
   const SUPADATA_API_KEY = Deno.env.get('SUPADATA_API_KEY');
   
   if (!SUPADATA_API_KEY) {
-    throw new Error('SUPADATA_API_KEY not configured');
+    throw new Error('YouTube transcription is not configured. Please add SUPADATA_API_KEY.');
   }
 
-  console.log('Fetching transcript for video:', videoId);
-  
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
   
-  // Use Supadata API to get transcript
   const endpoint = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(youtubeUrl)}&text=true`;
   const response = await fetch(endpoint, {
     method: 'GET',
@@ -91,43 +90,43 @@ async function getYouTubeTranscript(videoId: string): Promise<{ transcript: stri
   if (!response.ok) {
     const errText = await response.text();
     console.error('Supadata API error:', errText);
-    throw new Error('Failed to get transcript from Supadata API');
+    throw new Error('Failed to get transcript. The video may not have captions available.');
   }
 
   const result = await response.json();
   
-  // Check if we got immediate results or a job_id for async processing
   if (result.content) {
-    console.log('Got immediate transcript');
+    console.log('Got transcript successfully');
     const title = result.metadata?.title || result.title || null;
     return { 
       transcript: result.content,
       title
     };
   } else if (result.job_id) {
-    // For async processing (large files), we need to poll
     throw new Error('Video requires async processing. Please try a shorter video.');
   } else {
-    throw new Error('No transcript content returned');
+    throw new Error('No transcript content returned. The video may not have captions.');
   }
 }
 
-async function summarizeWithGemini(text: string): Promise<string> {
-  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+async function summarizeWithLovableAI(text: string): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
-  if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY not configured');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('AI is not configured on the backend');
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `Please create comprehensive study notes from the following transcript. Include:
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: `Please create comprehensive study notes from the following transcript. Include:
 1. Main topics and key concepts
 2. Important points and definitions
 3. Examples and applications
@@ -135,18 +134,22 @@ async function summarizeWithGemini(text: string): Promise<string> {
 
 Transcript:
 ${text}`
-          }]
-        }]
-      })
-    }
-  );
+      }]
+    })
+  });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Rate limits exceeded, please try again later.');
+    }
+    if (response.status === 402) {
+      throw new Error('AI credits required. Please add funds to your workspace.');
+    }
     const error = await response.text();
-    console.error('Gemini API error:', error);
+    console.error('Lovable AI error:', error);
     throw new Error('Failed to generate summary');
   }
 
   const data = await response.json();
-  return data.candidates[0].content.parts[0].text;
+  return data.choices?.[0]?.message?.content || '';
 }
