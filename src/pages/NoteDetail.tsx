@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface NoteRow {
   id: string;
@@ -70,17 +71,17 @@ export default function NoteDetail() {
     }
   }, [note]);
 
-  const startEditing = () => {
+  const startEditing = useCallback(() => {
     setEditedContent(note?.content || "");
     setIsEditing(true);
-  };
+  }, [note?.content]);
 
-  const cancelEditing = () => {
+  const cancelEditing = useCallback(() => {
     setIsEditing(false);
     setEditedContent("");
-  };
+  }, []);
 
-  const saveContent = async () => {
+  const saveContent = useCallback(async () => {
     if (!note || !editedContent.trim()) {
       toast({
         title: "Error",
@@ -112,7 +113,25 @@ export default function NoteDetail() {
         variant: "destructive",
       });
     }
-  };
+  }, [note, editedContent, toast]);
+
+  const handleToggleSidebar = useCallback(() => {
+    setShowSidebar(prev => !prev);
+  }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onSave: useCallback(() => {
+      if (isEditing) saveContent();
+    }, [isEditing, saveContent]),
+    onEdit: useCallback(() => {
+      if (!isEditing && note) startEditing();
+    }, [isEditing, note, startEditing]),
+    onToggleSidebar: handleToggleSidebar,
+    onCancel: useCallback(() => {
+      if (isEditing) cancelEditing();
+    }, [isEditing, cancelEditing]),
+  });
 
   if (loading) {
     return (
@@ -165,7 +184,7 @@ export default function NoteDetail() {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {showSidebar ? "Hide AI Panel" : "Show AI Panel"}
+                      {showSidebar ? "Hide AI Panel (⌘B)" : "Show AI Panel (⌘B)"}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -178,20 +197,41 @@ export default function NoteDetail() {
                 <div className="flex justify-end mb-4 gap-2">
                   {isEditing ? (
                     <>
-                      <Button size="sm" onClick={saveContent}>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={cancelEditing}>
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" onClick={saveContent}>
+                              <Save className="w-4 h-4 mr-2" />
+                              Save
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Save (⌘S)</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="outline" onClick={cancelEditing}>
+                              <X className="w-4 h-4 mr-2" />
+                              Cancel
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Cancel (Esc)</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={startEditing}>
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Edit Note
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={startEditing}>
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit Note
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit (⌘E)</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
                 {isEditing ? (

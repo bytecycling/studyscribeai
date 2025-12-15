@@ -16,13 +16,16 @@ serve(async (req) => {
     const audioFile = formData.get('file') as File;
     
     if (!audioFile) {
-      throw new Error('Audio file is required');
+      return new Response(
+        JSON.stringify({ error: 'Audio file is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Processing audio file:', audioFile.name, audioFile.type, 'Size:', audioFile.size);
 
-    // Check file size (max 20MB to avoid memory issues)
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    // Check file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024;
     if (audioFile.size > maxSize) {
       return new Response(
         JSON.stringify({ error: 'File too large. Maximum size is 20MB' }),
@@ -30,15 +33,15 @@ serve(async (req) => {
       );
     }
 
-    // Convert file to base64 safely (avoid call stack overflow)
+    // Convert file to base64
     const arrayBuffer = await audioFile.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     const base64Audio = encodeBase64(bytes);
 
     console.log('File converted to base64, size:', base64Audio.length);
 
-    // Transcribe and summarize with Gemini
-    const result = await processAudioWithGemini(base64Audio, audioFile.type);
+    // Process with Lovable AI
+    const result = await processAudioWithLovableAI(base64Audio, audioFile.type);
 
     return new Response(
       JSON.stringify(result),
@@ -49,16 +52,13 @@ serve(async (req) => {
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
 
 function encodeBase64(bytes: Uint8Array): string {
-  const CHUNK = 0x8000; // 32KB chunks to prevent apply/spread overflow
+  const CHUNK = 0x8000;
   let binary = '';
   for (let i = 0; i < bytes.length; i += CHUNK) {
     const sub = bytes.subarray(i, i + CHUNK);
@@ -67,50 +67,60 @@ function encodeBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-async function processAudioWithGemini(base64Audio: string, mimeType: string) {
-  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+async function processAudioWithLovableAI(base64Audio: string, mimeType: string) {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
-  if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY not configured');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('AI is not configured on the backend');
   }
 
-  // Use Gemini's multimodal capabilities to process audio
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            {
-              inline_data: {
-                mime_type: mimeType,
-                data: base64Audio
-              }
-            },
-            {
-              text: `Please transcribe this audio/video file and create comprehensive study notes. Include:
+  console.log('Processing audio with Lovable AI...');
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `Please transcribe this audio/video file and create comprehensive study notes. Include:
 1. Full transcription
 2. Main topics and key concepts
 3. Important points and definitions
 4. Examples mentioned
 5. Summary of key takeaways`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:${mimeType};base64,${base64Audio}`
             }
-          ]
-        }]
-      })
-    }
-  );
+          }
+        ]
+      }]
+    })
+  });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Rate limits exceeded, please try again later.');
+    }
+    if (response.status === 402) {
+      throw new Error('AI credits required. Please add funds to your workspace.');
+    }
     const error = await response.text();
-    console.error('Gemini API error:', error);
+    console.error('Lovable AI error:', error);
     throw new Error('Failed to process audio');
   }
 
   const data = await response.json();
-  const content = data.candidates[0].content.parts[0].text;
+  const content = data.choices?.[0]?.message?.content || '';
   
   return {
     transcript: content,

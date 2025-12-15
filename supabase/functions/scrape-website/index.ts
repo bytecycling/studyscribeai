@@ -14,7 +14,10 @@ serve(async (req) => {
     const { url } = await req.json();
     
     if (!url) {
-      throw new Error('URL is required');
+      return new Response(
+        JSON.stringify({ error: 'URL is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Scraping website:', url);
@@ -24,31 +27,36 @@ serve(async (req) => {
     try {
       validUrl = new URL(url);
     } catch {
-      throw new Error('Invalid URL provided');
+      return new Response(
+        JSON.stringify({ error: 'Invalid URL provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Use scrape.do API to scrape the website
-    const token = '77668e26543b45bcb8c80374a7017771b3d30a8ac7f';
-    const apiUrl = `http://api.scrape.do/?url=${encodeURIComponent(url)}&token=${token}`;
-    
-    console.log('Fetching with scrape.do...');
-    const response = await fetch(apiUrl, {
-      method: 'GET',
+    // Fetch the website content directly
+    console.log('Fetching website content...');
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; StudyScribe/1.0; +https://studyscribe.app)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.status} ${response.statusText}`);
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch website: ${response.status} ${response.statusText}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const html = await response.text();
 
     // Extract text content from HTML
-    // Remove script and style tags
     let cleanText = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')  // Remove HTML tags
-      .replace(/\s+/g, ' ')       // Normalize whitespace
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
 
     // Extract title
@@ -61,7 +69,10 @@ serve(async (req) => {
     }
 
     if (cleanText.length < 100) {
-      throw new Error('Could not extract sufficient content from this website. It may require authentication or be JavaScript-heavy.');
+      return new Response(
+        JSON.stringify({ error: 'Could not extract sufficient content from this website. It may require authentication or be JavaScript-heavy.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log(`Successfully extracted ${cleanText.length} characters from website`);
@@ -73,21 +84,14 @@ serve(async (req) => {
         title: title,
         url: url,
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error scraping website:', error);
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Failed to scrape website',
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to scrape website' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
