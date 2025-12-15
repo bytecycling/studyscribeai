@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X } from "lucide-react";
+import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X, Search, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -19,15 +19,28 @@ interface Note {
 interface NotesListProps {
   refreshTrigger: number;
   folderId?: string | null;
+  searchQuery?: string;
 }
 
-const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
+const NotesList = ({ refreshTrigger, folderId, searchQuery = "" }: NotesListProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Filter notes based on search query
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim()) return notes;
+    const query = searchQuery.toLowerCase();
+    return notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(query) ||
+        note.content.toLowerCase().includes(query) ||
+        note.source_type.toLowerCase().includes(query)
+    );
+  }, [notes, searchQuery]);
 
   useEffect(() => {
     loadNotes();
@@ -180,6 +193,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
         return <FileAudio className="w-4 h-4" />;
       case 'pdf':
         return <FileText className="w-4 h-4" />;
+      case 'website':
+        return <Globe className="w-4 h-4" />;
       default:
         return <FileText className="w-4 h-4" />;
     }
@@ -207,9 +222,22 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     );
   }
 
+  if (filteredNotes.length === 0 && searchQuery) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <Search className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">
+            No notes found matching "{searchQuery}"
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="grid gap-4">
-      {notes.map((note) => (
+      {filteredNotes.map((note) => (
         <Card 
           key={note.id} 
           className="hover:shadow-elevated transition-all cursor-move"
