@@ -28,16 +28,11 @@ const Hero = () => {
             The Brain Behind the Breakthrough
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="flex justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <Link to="/auth">
               <Button variant="hero" size="lg" className="group">
                 Get Started Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/dashboard">
-              <Button variant="outline" size="lg">
-                View Demo
               </Button>
             </Link>
           </div>
