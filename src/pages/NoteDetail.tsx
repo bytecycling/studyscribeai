@@ -158,7 +158,7 @@ export default function NoteDetail() {
     <main className="h-screen overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
         {/* Notes Panel */}
-        <ResizablePanel defaultSize={showSidebar ? 60 : 100} minSize={30}>
+        <ResizablePanel defaultSize={showSidebar ? 50 : 100} minSize={30}>
           <div className="h-full overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -171,8 +171,8 @@ export default function NoteDetail() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="icon"
                         onClick={() => setShowSidebar(!showSidebar)}
                       >
@@ -188,7 +188,11 @@ export default function NoteDetail() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Link to="/dashboard"><Button variant="ghost"><ArrowLeft className="mr-2 h-4 w-4"/>Back</Button></Link>
+                <Link to="/dashboard">
+                  <Button variant="ghost">
+                    <ArrowLeft className="mr-2 h-4 w-4" />Back
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -235,16 +239,10 @@ export default function NoteDetail() {
                   )}
                 </div>
                 {isEditing ? (
-                  <RichTextEditor
-                    value={editedContent}
-                    onChange={setEditedContent}
-                  />
+                  <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
                   <div className="prose prose-lg max-w-none dark:prose-invert">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    >
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                       {note.content}
                     </ReactMarkdown>
                   </div>
@@ -257,7 +255,7 @@ export default function NoteDetail() {
         {showSidebar && (
           <>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={40} minSize={20}>
+            <ResizablePanel defaultSize={50} minSize={20}>
               <ResizableSidebar
                 noteId={id}
                 noteContent={note.content}
