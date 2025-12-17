@@ -230,4 +230,29 @@ All colors MUST be HSL.
       transform: translateY(0);
     }
   }
+
+  /* Mermaid diagram styles */
+  .mermaid-container {
+    @apply rounded-lg p-4;
+  }
+
+  .mermaid-container svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .mermaid-container .node rect,
+  .mermaid-container .node circle,
+  .mermaid-container .node polygon {
+    fill: hsl(var(--card));
+    stroke: hsl(var(--primary));
+  }
+
+  .mermaid-container .edgePath .path {
+    stroke: hsl(var(--muted-foreground));
+  }
+
+  .mermaid-container .label {
+    color: hsl(var(--foreground));
+  }
 }

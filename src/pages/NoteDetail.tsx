@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeKatex from "rehype-katex";
 import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
+import MermaidDiagram from "@/components/MermaidDiagram";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -244,7 +245,36 @@ export default function NoteDetail() {
                   <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
                   <div className="prose prose-lg max-w-none dark:prose-invert">
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkMath]} 
+                      rehypePlugins={[rehypeRaw, rehypeKatex]}
+                      components={{
+                        code({ node, className, children, ...props }) {
+                          const match = /language-mermaid/.exec(className || '');
+                          if (match) {
+                            return (
+                              <MermaidDiagram 
+                                chart={String(children).replace(/\n$/, '')} 
+                                className="my-4"
+                              />
+                            );
+                          }
+                          return (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        pre({ children }) {
+                          // Check if this pre contains a mermaid code block
+                          const child = children as any;
+                          if (child?.props?.className?.includes('language-mermaid')) {
+                            return <>{children}</>;
+                          }
+                          return <pre>{children}</pre>;
+                        }
+                      }}
+                    >
                       {note.content}
                     </ReactMarkdown>
                   </div>

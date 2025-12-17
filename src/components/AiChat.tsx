@@ -17,6 +17,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import MermaidDiagram from "@/components/MermaidDiagram";
 
 interface AiChatProps {
   noteId?: string;
@@ -230,7 +231,35 @@ const AiChat = ({ noteId }: AiChatProps) => {
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm, remarkMath]} 
+                          rehypePlugins={[rehypeRaw, rehypeKatex]}
+                          components={{
+                            code({ node, className, children, ...props }) {
+                              const match = /language-mermaid/.exec(className || '');
+                              if (match) {
+                                return (
+                                  <MermaidDiagram 
+                                    chart={String(children).replace(/\n$/, '')} 
+                                    className="my-2"
+                                  />
+                                );
+                              }
+                              return (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
+                            pre({ children }) {
+                              const child = children as any;
+                              if (child?.props?.className?.includes('language-mermaid')) {
+                                return <>{children}</>;
+                              }
+                              return <pre>{children}</pre>;
+                            }
+                          }}
+                        >
                           {msg.content}
                         </ReactMarkdown>
                       </div>
