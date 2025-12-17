@@ -7,7 +7,9 @@ import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
+import rehypeKatex from "rehype-katex";
 import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -242,7 +244,7 @@ export default function NoteDetail() {
                   <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
                   <div className="prose prose-lg max-w-none dark:prose-invert">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
                       {note.content}
                     </ReactMarkdown>
                   </div>

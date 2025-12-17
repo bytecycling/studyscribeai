@@ -98,7 +98,22 @@ GUIDELINES:
 3. If asked to "explain further" or "explain more", provide additional context, examples, and detailed explanations beyond what's in the notes
 4. For step-by-step requests, break down concepts into clear, numbered steps
 5. Be conversational, encouraging, and helpful
-6. If a question is completely unrelated to the study material, gently guide the conversation back to the learning content`;
+6. If a question is completely unrelated to the study material, gently guide the conversation back to the learning content
+
+MATH/SCIENCE FORMULA FORMATTING (CRITICAL):
+- Use LaTeX notation for ALL mathematical formulas, equations, and symbols
+- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\alpha + \\beta$
+- Block/display math: wrap in double dollar signs like $$F = ma$$
+- Use proper LaTeX for:
+  * Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\pi$, $\\theta$
+  * Fractions: $\\frac{a}{b}$
+  * Square roots: $\\sqrt{x}$
+  * Exponents/subscripts: $x^2$, $x_i$
+  * Integrals: $\\int_0^\\infty f(x) dx$
+  * Derivatives: $\\frac{d}{dx}$, $\\frac{\\partial f}{\\partial x}$
+  * Sums: $\\sum_{i=1}^{n}$
+  * Vectors: $\\vec{v}$
+  * Chemical formulas: $H_2O$, $CO_2$`;
 
     const messages = [
       { role: "system", content: systemPrompt },

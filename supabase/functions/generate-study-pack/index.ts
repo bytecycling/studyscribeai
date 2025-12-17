@@ -76,10 +76,31 @@ FORMATTING RULES:
 - > blockquotes for definitions only
 - Bullet points (•) for key points list
 
+MATH/SCIENCE FORMULA RULES (CRITICAL):
+- Use LaTeX notation for ALL mathematical formulas, equations, and symbols
+- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\alpha + \\beta$
+- Block/display math: wrap in double dollar signs like $$F = ma$$ or $$\\int_0^\\infty e^{-x^2} dx$$
+- Common symbols to use:
+  * Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\delta$, $\\theta$, $\\pi$, $\\sigma$, $\\omega$
+  * Fractions: $\\frac{a}{b}$
+  * Square roots: $\\sqrt{x}$, $\\sqrt[n]{x}$
+  * Exponents/subscripts: $x^2$, $x_i$, $a^{n+1}$
+  * Integrals: $\\int$, $\\iint$, $\\oint$
+  * Derivatives: $\\frac{d}{dx}$, $\\frac{\\partial f}{\\partial x}$
+  * Sums/products: $\\sum_{i=1}^{n}$, $\\prod_{i=1}^{n}$
+  * Limits: $\\lim_{x \\to \\infty}$
+  * Vectors: $\\vec{v}$, $\\mathbf{F}$
+  * Chemistry: $H_2O$, $CO_2$, $\\rightarrow$, $\\leftrightarrow$
+- Examples:
+  * Newton's law: $F = ma$
+  * Quadratic formula: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+  * Kinetic energy: $KE = \\frac{1}{2}mv^2$
+  * Schrödinger equation: $$i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi$$
+
 CONTENT REQUIREMENTS:
 - highlights: 8-15 critical points with "why" explanations
-- flashcards: 15-20 Q&A pairs covering all concepts
-- quiz: 10-15 challenging multiple choice questions
+- flashcards: 15-20 Q&A pairs covering all concepts (use LaTeX for formulas)
+- quiz: 10-15 challenging multiple choice questions (use LaTeX for formulas in options)
 - Academic rigor with clear, accessible language`;
 
     const body: Record<string, unknown> = {
