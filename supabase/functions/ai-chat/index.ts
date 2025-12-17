@@ -113,7 +113,18 @@ MATH/SCIENCE FORMULA FORMATTING (CRITICAL):
   * Derivatives: $\\frac{d}{dx}$, $\\frac{\\partial f}{\\partial x}$
   * Sums: $\\sum_{i=1}^{n}$
   * Vectors: $\\vec{v}$
-  * Chemical formulas: $H_2O$, $CO_2$`;
+  * Chemical formulas: $H_2O$, $CO_2$
+
+DIAGRAM FORMATTING (MERMAID):
+- When explaining processes, workflows, hierarchies, or relationships, use Mermaid diagrams
+- Wrap diagrams in triple backticks with "mermaid" language identifier:
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action]
+\`\`\`
+- Use appropriate diagram types: flowchart, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, pie, mindmap
+- Include diagrams for: biology processes, chemistry reactions, physics concepts, algorithms, data structures, historical timelines`;
 
     const messages = [
       { role: "system", content: systemPrompt },

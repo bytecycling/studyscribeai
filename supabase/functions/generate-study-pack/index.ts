@@ -97,6 +97,31 @@ MATH/SCIENCE FORMULA RULES (CRITICAL):
   * Kinetic energy: $KE = \\frac{1}{2}mv^2$
   * Schrödinger equation: $$i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi$$
 
+DIAGRAM RULES (MERMAID):
+- When the content involves processes, hierarchies, flows, or relationships, include Mermaid diagrams
+- Wrap diagrams in triple backticks with "mermaid" language identifier:
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+\`\`\`
+- Use appropriate diagram types:
+  * flowchart/graph: for processes, algorithms, workflows
+  * sequenceDiagram: for interactions, API calls, communication
+  * classDiagram: for object relationships, data structures
+  * stateDiagram-v2: for state machines
+  * erDiagram: for database schemas, entity relationships
+  * pie: for proportions, distributions
+  * mindmap: for concept organization
+- Examples:
+  * Biology: cell cycles, metabolic pathways, food chains
+  * Chemistry: reaction mechanisms, molecular structures
+  * Physics: circuit diagrams, force diagrams
+  * Computer Science: algorithms, data structures, system architecture
+  * History: timelines, cause-effect relationships
+  * Business: organizational charts, process flows
+
 CONTENT REQUIREMENTS:
 - highlights: 8-15 critical points with "why" explanations
 - flashcards: 15-20 Q&A pairs covering all concepts (use LaTeX for formulas)
