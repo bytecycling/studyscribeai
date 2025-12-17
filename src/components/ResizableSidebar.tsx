@@ -9,7 +9,9 @@ import DesmosCalculator from "./DesmosCalculator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -276,7 +278,7 @@ export default function ResizableSidebar({
 
               {translatedContent && (
                 <div className="prose prose-sm dark:prose-invert max-w-none mt-6">
-                  <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]}>
                     {translatedContent}
                   </ReactMarkdown>
                 </div>
