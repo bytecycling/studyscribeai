@@ -120,7 +120,7 @@ export default function ResizableSidebar({
     setIsGeneratingQuiz(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-study-pack', {
-        body: { content: noteContent, type: 'quiz' }
+        body: { text: noteContent, title: 'Additional Quiz' }
       });
 
       if (error) throw error;

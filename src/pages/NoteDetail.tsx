@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import rehypeRaw from "rehype-raw";
 import rehypeKatex from "rehype-katex";
 import RichTextEditor from "@/components/RichTextEditor";
 import ResizableSidebar from "@/components/ResizableSidebar";
@@ -244,20 +243,26 @@ export default function NoteDetail() {
                 {isEditing ? (
                   <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
-                  <div className="prose prose-lg max-w-none dark:prose-invert">
+                  <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm, remarkMath]} 
-                      rehypePlugins={[rehypeRaw, rehypeKatex]}
+                      rehypePlugins={[rehypeKatex]}
                       components={{
                         code({ node, className, children, ...props }) {
                           const match = /language-mermaid/.exec(className || '');
+                          const content = String(children).replace(/\n$/, '');
                           if (match) {
                             return (
                               <MermaidDiagram 
-                                chart={String(children).replace(/\n$/, '')} 
+                                chart={content} 
                                 className="my-4"
                               />
                             );
+                          }
+                          // Check if it's an inline code or block
+                          const isInline = !className;
+                          if (isInline) {
+                            return <code {...props}>{children}</code>;
                           }
                           return (
                             <code className={className} {...props}>
@@ -265,13 +270,13 @@ export default function NoteDetail() {
                             </code>
                           );
                         },
-                        pre({ children }) {
+                        pre({ children, ...props }) {
                           // Check if this pre contains a mermaid code block
                           const child = children as any;
                           if (child?.props?.className?.includes('language-mermaid')) {
                             return <>{children}</>;
                           }
-                          return <pre>{children}</pre>;
+                          return <pre {...props}>{children}</pre>;
                         }
                       }}
                     >
