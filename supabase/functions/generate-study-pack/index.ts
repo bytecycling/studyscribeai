@@ -76,29 +76,32 @@ FORMATTING RULES:
 - > blockquotes for definitions only
 - Each list item should be on its own line with - prefix
 
-MATH/SCIENCE FORMULA RULES (CRITICAL):
+MATH/SCIENCE FORMULA RULES (CRITICAL - MUST USE DOUBLE BACKSLASHES):
 - Use LaTeX notation for ALL mathematical formulas, equations, and symbols
-- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\\\alpha + \\\\beta$
+- IMPORTANT: Since this will be JSON encoded, you MUST use DOUBLE BACKSLASHES for all LaTeX commands
+- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\alpha + \\beta$
 - Block/display math: wrap in double dollar signs on their own line:
 
 $$F = ma$$
 
-$$\\\\int_0^\\\\infty e^{-x^2} dx$$
+$$\\int_0^\\infty e^{-x^2} dx$$
 
-- Common symbols to use:
-  - Greek letters: $\\\\alpha$, $\\\\beta$, $\\\\gamma$, $\\\\delta$, $\\\\theta$, $\\\\pi$
-  - Fractions: $\\\\frac{a}{b}$
-  - Square roots: $\\\\sqrt{x}$
+- Common symbols (ALWAYS use double backslashes \\\\):
+  - Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\delta$, $\\theta$, $\\pi$
+  - Fractions: $\\frac{a}{b}$
+  - Square roots: $\\sqrt{x}$
   - Exponents/subscripts: $x^2$, $x_i$
-  - Integrals: $\\\\int$
-  - Derivatives: $\\\\frac{d}{dx}$
-  - Sums: $\\\\sum_{i=1}^{n}$
-  - Chemistry: $H_2O$, $CO_2$, $\\\\rightarrow$
+  - Integrals: $\\int$
+  - Derivatives: $\\frac{d}{dx}$
+  - Sums: $\\sum_{i=1}^{n}$
+  - Chemistry arrows: $\\rightarrow$, $\\leftarrow$, $\\rightleftharpoons$, $\\leftrightarrow$
+  - Chemical formulas: $H_2O$, $CO_2$, $CH_3COOH$
 
 DIAGRAM RULES (MERMAID):
 - When the content involves processes, hierarchies, flows, or relationships, include Mermaid diagrams
 - Wrap diagrams in triple backticks with mermaid language identifier
-- IMPORTANT: Use simple node labels without special characters
+- IMPORTANT: Use simple text labels WITHOUT special characters, parentheses in labels, or LaTeX
+- Keep node labels short and simple - NO chemical formulas or complex text in nodes
 - Example:
 
 \`\`\`mermaid

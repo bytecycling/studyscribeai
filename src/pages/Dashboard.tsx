@@ -20,11 +20,16 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    // Check for dev mode first
+    const isDevMode = localStorage.getItem('devMode') === 'true';
+    if (isDevMode) return; // Skip auth check in dev mode
+
     checkAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+      const devMode = localStorage.getItem('devMode') === 'true';
+      if (!session && !devMode) {
         navigate('/auth');
       }
     });
@@ -33,6 +38,9 @@ const Dashboard = () => {
   }, [navigate]);
 
   const checkAuth = async () => {
+    const isDevMode = localStorage.getItem('devMode') === 'true';
+    if (isDevMode) return; // Skip auth check in dev mode
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate('/auth');
@@ -40,6 +48,7 @@ const Dashboard = () => {
   };
 
   const handleSignOut = async () => {
+    localStorage.removeItem('devMode'); // Clear dev mode on sign out
     await supabase.auth.signOut();
     navigate('/auth');
   };
