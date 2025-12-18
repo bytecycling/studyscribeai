@@ -32,14 +32,16 @@ serve(async (req) => {
 
 # [Topic Title]
 
-Brief Overview
+## Brief Overview
+
 [2-3 sentences explaining the content source and what it covers]
 
-Key Points
-• [Point 1]
-• [Point 2]
-• [Point 3]
-• [Point 4]
+## Key Points
+
+- **Point 1**: [explanation]
+- **Point 2**: [explanation]
+- **Point 3**: [explanation]
+- **Point 4**: [explanation]
 
 ---
 
@@ -51,14 +53,12 @@ Key Points
 
 [Additional paragraphs with proper spacing]
 
-
 | Column 1 | Column 2 | Column 3 |
 |----------|----------|----------|
 | Data     | Data     | Data     |
 | Data     | Data     | Data     |
 
 [Explanation of table if needed]
-
 
 ---
 
@@ -68,64 +68,57 @@ Key Points
 
 FORMATTING RULES:
 - Use --- horizontal rules between major sections
-- Leave 2 blank lines before each --- separator
-- Leave 1 blank line after section headers
+- Leave blank lines before and after headers
+- Use proper markdown lists with - or * (NOT bullet character •)
 - Use tables with borders for comparisons
-- **Bold** key terms in paragraph context
-- Use emojis: 🐚 📚 🔄 🏗️ 💧 🌍 for sections
+- **Bold** key terms, especially in list items
+- Use emojis in section headers
 - > blockquotes for definitions only
-- Bullet points (•) for key points list
+- Each list item should be on its own line with - prefix
 
 MATH/SCIENCE FORMULA RULES (CRITICAL):
 - Use LaTeX notation for ALL mathematical formulas, equations, and symbols
-- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\alpha + \\beta$
-- Block/display math: wrap in double dollar signs like $$F = ma$$ or $$\\int_0^\\infty e^{-x^2} dx$$
+- Inline math: wrap in single dollar signs like $E = mc^2$ or $\\\\alpha + \\\\beta$
+- Block/display math: wrap in double dollar signs on their own line:
+
+$$F = ma$$
+
+$$\\\\int_0^\\\\infty e^{-x^2} dx$$
+
 - Common symbols to use:
-  * Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\delta$, $\\theta$, $\\pi$, $\\sigma$, $\\omega$
-  * Fractions: $\\frac{a}{b}$
-  * Square roots: $\\sqrt{x}$, $\\sqrt[n]{x}$
-  * Exponents/subscripts: $x^2$, $x_i$, $a^{n+1}$
-  * Integrals: $\\int$, $\\iint$, $\\oint$
-  * Derivatives: $\\frac{d}{dx}$, $\\frac{\\partial f}{\\partial x}$
-  * Sums/products: $\\sum_{i=1}^{n}$, $\\prod_{i=1}^{n}$
-  * Limits: $\\lim_{x \\to \\infty}$
-  * Vectors: $\\vec{v}$, $\\mathbf{F}$
-  * Chemistry: $H_2O$, $CO_2$, $\\rightarrow$, $\\leftrightarrow$
-- Examples:
-  * Newton's law: $F = ma$
-  * Quadratic formula: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
-  * Kinetic energy: $KE = \\frac{1}{2}mv^2$
-  * Schrödinger equation: $$i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi$$
+  - Greek letters: $\\\\alpha$, $\\\\beta$, $\\\\gamma$, $\\\\delta$, $\\\\theta$, $\\\\pi$
+  - Fractions: $\\\\frac{a}{b}$
+  - Square roots: $\\\\sqrt{x}$
+  - Exponents/subscripts: $x^2$, $x_i$
+  - Integrals: $\\\\int$
+  - Derivatives: $\\\\frac{d}{dx}$
+  - Sums: $\\\\sum_{i=1}^{n}$
+  - Chemistry: $H_2O$, $CO_2$, $\\\\rightarrow$
 
 DIAGRAM RULES (MERMAID):
 - When the content involves processes, hierarchies, flows, or relationships, include Mermaid diagrams
-- Wrap diagrams in triple backticks with "mermaid" language identifier:
+- Wrap diagrams in triple backticks with mermaid language identifier
+- IMPORTANT: Use simple node labels without special characters
+- Example:
+
 \`\`\`mermaid
 graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Action 1]
-    B -->|No| D[Action 2]
+    A[Start] --> B[Process]
+    B --> C{Decision}
+    C -->|Yes| D[Action 1]
+    C -->|No| E[Action 2]
 \`\`\`
+
 - Use appropriate diagram types:
-  * flowchart/graph: for processes, algorithms, workflows
-  * sequenceDiagram: for interactions, API calls, communication
-  * classDiagram: for object relationships, data structures
-  * stateDiagram-v2: for state machines
-  * erDiagram: for database schemas, entity relationships
-  * pie: for proportions, distributions
-  * mindmap: for concept organization
-- Examples:
-  * Biology: cell cycles, metabolic pathways, food chains
-  * Chemistry: reaction mechanisms, molecular structures
-  * Physics: circuit diagrams, force diagrams
-  * Computer Science: algorithms, data structures, system architecture
-  * History: timelines, cause-effect relationships
-  * Business: organizational charts, process flows
+  - graph TD or graph LR for flowcharts
+  - sequenceDiagram for interactions
+  - classDiagram for relationships
+  - pie for proportions
 
 CONTENT REQUIREMENTS:
 - highlights: 8-15 critical points with "why" explanations
-- flashcards: 15-20 Q&A pairs covering all concepts (use LaTeX for formulas)
-- quiz: 10-15 challenging multiple choice questions (use LaTeX for formulas in options)
+- flashcards: 15-20 Q&A pairs covering all concepts
+- quiz: 10-15 challenging multiple choice questions
 - Academic rigor with clear, accessible language`;
 
     const body: Record<string, unknown> = {
