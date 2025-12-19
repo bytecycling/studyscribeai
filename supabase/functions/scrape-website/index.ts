@@ -51,46 +51,6 @@ serve(async (req) => {
 
     const html = await response.text();
 
-    // Extract images from HTML
-    const images: string[] = [];
-    const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-    let match;
-    
-    while ((match = imgRegex.exec(html)) !== null && images.length < 10) {
-      let imgSrc = match[1];
-      
-      // Skip data URIs, tiny images, and icons
-      if (imgSrc.startsWith('data:')) continue;
-      if (imgSrc.includes('icon') || imgSrc.includes('logo') || imgSrc.includes('avatar')) continue;
-      if (imgSrc.includes('1x1') || imgSrc.includes('pixel')) continue;
-      
-      // Convert relative URLs to absolute
-      if (imgSrc.startsWith('//')) {
-        imgSrc = 'https:' + imgSrc;
-      } else if (imgSrc.startsWith('/')) {
-        imgSrc = `${validUrl.protocol}//${validUrl.host}${imgSrc}`;
-      } else if (!imgSrc.startsWith('http')) {
-        imgSrc = `${validUrl.protocol}//${validUrl.host}/${imgSrc}`;
-      }
-      
-      // Only include common image formats
-      if (imgSrc.match(/\.(jpg|jpeg|png|gif|webp|svg)/i) || imgSrc.includes('image')) {
-        images.push(imgSrc);
-      }
-    }
-
-    // Also try to extract Open Graph images
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-    if (ogImageMatch && ogImageMatch[1]) {
-      let ogImage = ogImageMatch[1];
-      if (!ogImage.startsWith('http')) {
-        ogImage = `${validUrl.protocol}//${validUrl.host}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
-      }
-      if (!images.includes(ogImage)) {
-        images.unshift(ogImage); // Add OG image at the beginning
-      }
-    }
-
     // Extract text content from HTML
     let cleanText = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -115,7 +75,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Successfully extracted ${cleanText.length} characters and ${images.length} images from website`);
+    console.log(`Successfully extracted ${cleanText.length} characters from website`);
 
     return new Response(
       JSON.stringify({
@@ -123,7 +83,6 @@ serve(async (req) => {
         content: cleanText,
         title: title,
         url: url,
-        images: images.slice(0, 5), // Return up to 5 images
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
