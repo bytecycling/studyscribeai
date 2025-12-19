@@ -117,6 +117,7 @@ export type Database = {
           folder_id: string | null
           highlights: Json | null
           id: string
+          images: Json | null
           quiz: Json | null
           raw_text: string | null
           source_type: string
@@ -132,6 +133,7 @@ export type Database = {
           folder_id?: string | null
           highlights?: Json | null
           id?: string
+          images?: Json | null
           quiz?: Json | null
           raw_text?: string | null
           source_type: string
@@ -147,6 +149,7 @@ export type Database = {
           folder_id?: string | null
           highlights?: Json | null
           id?: string
+          images?: Json | null
           quiz?: Json | null
           raw_text?: string | null
           source_type?: string

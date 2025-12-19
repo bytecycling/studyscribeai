@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, LogOut, FolderOpen, X } from "lucide-react";
+import { BookOpen, LogOut, FolderOpen, X, ShieldOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,11 @@ const Dashboard = () => {
   const [refreshNotes, setRefreshNotes] = useState(0);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    setIsDevMode(localStorage.getItem('devMode') === 'true');
+  }, []);
 
   useEffect(() => {
     // Check for dev mode first
@@ -48,9 +53,15 @@ const Dashboard = () => {
   };
 
   const handleSignOut = async () => {
-    localStorage.removeItem('devMode'); // Clear dev mode on sign out
+    localStorage.removeItem('devMode');
     await supabase.auth.signOut();
     navigate('/auth');
+  };
+
+  const handleExitDevMode = () => {
+    localStorage.removeItem('devMode');
+    setIsDevMode(false);
+    navigate('/');
   };
 
   const handleUploadSuccess = () => {
@@ -79,12 +90,21 @@ const Dashboard = () => {
                 Profile
               </Button>
             </Link>
-            <span className="text-sm text-muted-foreground">Welcome back!</span>
+            <span className="text-sm text-muted-foreground">
+              {isDevMode ? 'Developer Mode' : 'Welcome back!'}
+            </span>
             <SettingsMenu onClearHistory={handleUploadSuccess} />
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+            {isDevMode ? (
+              <Button variant="destructive" size="sm" onClick={handleExitDevMode}>
+                <ShieldOff className="w-4 h-4 mr-2" />
+                Exit Dev Mode
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            )}
           </div>
         </div>
       </nav>
