@@ -61,6 +61,9 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
 
       setProgress(90);
 
+      // Extract images from response
+      const extractedImages = (data as any)?.images || [];
+
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;
       const { error: insertError } = await supabase
@@ -74,8 +77,9 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
           raw_text: extractedText,
           source_type: 'website',
           source_url: url,
-          user_id: user?.id
-        });
+          user_id: user?.id,
+          images: extractedImages.length > 0 ? extractedImages : null,
+        } as any);
 
       if (insertError) throw insertError;
 
