@@ -35,6 +35,7 @@ serve(async (req) => {
     const systemPrompt = `You are an expert academic study coach. Create COMPLETE, COMPREHENSIVE study materials.
 
 CRITICAL: You MUST generate the FULL content. Never cut off, truncate, or abbreviate. Include ALL sections from start to finish.
+CRITICAL: The notes MUST end with the literal line: END_OF_NOTES
 
 FORMAT THE NOTES EXACTLY LIKE THIS:
 
@@ -73,6 +74,8 @@ FORMAT THE NOTES EXACTLY LIKE THIS:
 ## Summary
 
 [Final summary paragraph tying everything together]
+
+END_OF_NOTES
 
 FORMATTING RULES:
 - Use --- horizontal rules between major sections
@@ -123,31 +126,41 @@ CONTENT REQUIREMENTS:
 
     const body: Record<string, unknown> = {
       model: "google/gemini-2.5-flash",
+      // Increase output budget to avoid truncated notes
+      max_tokens: 8000,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `${title ? `Title: ${title}\n` : ""}Create comprehensive study materials for this content:\n\n${text}` },
+        {
+          role: "user",
+          content: `${title ? `Title: ${title}\n` : ""}Create comprehensive study materials for this content:\n\n${text}`,
+        },
       ],
       tools: [
         {
           type: "function",
           function: {
             name: "build_study_pack",
-            description: "Return complete structured study materials. MUST include full notes from introduction through summary - never truncate.",
+            description:
+              "Return complete structured study materials. MUST include full notes from introduction through summary and end with END_OF_NOTES.",
             parameters: {
               type: "object",
               properties: {
-                notes: { type: "string", description: "Complete markdown notes with all sections from Brief Overview through Summary. Never truncate." },
+                notes: {
+                  type: "string",
+                  description:
+                    "Complete markdown notes with all sections from Brief Overview through Summary. MUST end with END_OF_NOTES.",
+                },
                 highlights: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
                       text: { type: "string" },
-                      why: { type: "string" }
+                      why: { type: "string" },
                     },
                     required: ["text"],
-                    additionalProperties: false
-                  }
+                    additionalProperties: false,
+                  },
                 },
                 flashcards: {
                   type: "array",
@@ -155,11 +168,11 @@ CONTENT REQUIREMENTS:
                     type: "object",
                     properties: {
                       question: { type: "string" },
-                      answer: { type: "string" }
+                      answer: { type: "string" },
                     },
                     required: ["question", "answer"],
-                    additionalProperties: false
-                  }
+                    additionalProperties: false,
+                  },
                 },
                 quiz: {
                   type: "array",
@@ -167,19 +180,24 @@ CONTENT REQUIREMENTS:
                     type: "object",
                     properties: {
                       question: { type: "string" },
-                      options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
-                      correctIndex: { type: "integer", minimum: 0, maximum: 3 }
+                      options: {
+                        type: "array",
+                        items: { type: "string" },
+                        minItems: 4,
+                        maxItems: 4,
+                      },
+                      correctIndex: { type: "integer", minimum: 0, maximum: 3 },
                     },
                     required: ["question", "options", "correctIndex"],
-                    additionalProperties: false
-                  }
-                }
+                    additionalProperties: false,
+                  },
+                },
               },
               required: ["notes", "highlights", "flashcards", "quiz"],
-              additionalProperties: false
-            }
-          }
-        }
+              additionalProperties: false,
+            },
+          },
+        },
       ],
       tool_choice: { type: "function", function: { name: "build_study_pack" } },
     };

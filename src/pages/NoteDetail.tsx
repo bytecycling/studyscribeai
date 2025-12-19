@@ -27,7 +27,6 @@ interface NoteRow {
   flashcards?: any;
   quiz?: any;
   raw_text?: string | null;
-  images?: string[] | null;
 }
 
 export default function NoteDetail() {
@@ -156,7 +155,6 @@ export default function NoteDetail() {
   const highlights = Array.isArray(note.highlights) ? note.highlights : [];
   const flashcards = Array.isArray(note.flashcards) ? note.flashcards : [];
   const quiz = Array.isArray(note.quiz) ? note.quiz : [];
-  const images = Array.isArray(note.images) ? note.images : [];
 
 
   return (
@@ -288,27 +286,7 @@ export default function NoteDetail() {
                   </div>
                 )}
                 
-                {/* Display extracted images */}
-                {images.length > 0 && !isEditing && (
-                  <div className="mt-6 border-t border-border pt-6">
-                    <h3 className="text-lg font-semibold mb-4">Related Images</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {images.map((img, idx) => (
-                        <div key={idx} className="relative group">
-                          <img 
-                            src={img} 
-                            alt={`Related image ${idx + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border border-border"
-                            loading="lazy"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                
               </CardContent>
             </Card>
           </div>
