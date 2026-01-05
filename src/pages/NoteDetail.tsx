@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -37,6 +37,7 @@ export default function NoteDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [showSidebar, setShowSidebar] = useState(true);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -120,6 +121,63 @@ export default function NoteDetail() {
   const handleToggleSidebar = useCallback(() => {
     setShowSidebar(prev => !prev);
   }, []);
+
+  const handleRegenerateNotes = useCallback(async () => {
+    if (!note?.raw_text) {
+      toast({
+        title: "Cannot Regenerate",
+        description: "No source content available for regeneration",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRegenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-study-pack', {
+        body: { text: note.raw_text, title: note.title }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Update the note in database
+      const { error: updateError } = await supabase
+        .from('notes')
+        .update({
+          content: data.notes,
+          highlights: data.highlights,
+          flashcards: data.flashcards,
+          quiz: data.quiz,
+        })
+        .eq('id', note.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setNote({
+        ...note,
+        content: data.notes,
+        highlights: data.highlights,
+        flashcards: data.flashcards,
+        quiz: data.quiz,
+      });
+
+      toast({
+        title: "Success",
+        description: "Notes regenerated successfully",
+      });
+    } catch (error: any) {
+      console.error('Regenerate error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to regenerate notes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [note, toast]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -228,17 +286,41 @@ export default function NoteDetail() {
                       </TooltipProvider>
                     </>
                   ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={startEditing}>
-                            <Edit2 className="w-4 h-4 mr-2" />
-                            Edit Note
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit (⌘E)</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <>
+                      {note.raw_text && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={handleRegenerateNotes}
+                                disabled={isRegenerating}
+                              >
+                                {isRegenerating ? (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                )}
+                                {isRegenerating ? "Regenerating..." : "Regenerate"}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Regenerate notes from source</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="outline" onClick={startEditing}>
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Edit Note
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit (⌘E)</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </>
                   )}
                 </div>
                 {isEditing ? (

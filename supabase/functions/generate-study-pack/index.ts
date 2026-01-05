@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MAX_RETRIES = 2;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,7 +21,7 @@ serve(async (req) => {
       console.error("generate-study-pack: missing text in request body");
       return new Response(
         JSON.stringify({ error: "Missing 'text' in request body" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -28,257 +30,291 @@ serve(async (req) => {
       console.error("generate-study-pack: LOVABLE_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "AI is not configured on the backend" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const systemPrompt = `You are an expert academic study coach. Create COMPLETE, COMPREHENSIVE study materials.
+    const systemPrompt = `You are an expert academic tutor creating COMPREHENSIVE, ACTIONABLE study materials.
 
-CRITICAL: You MUST generate the FULL content. Never cut off, truncate, or abbreviate. Include ALL sections from start to finish.
-CRITICAL: The notes MUST end with the literal line: END_OF_NOTES
+CRITICAL RULES:
+1. COMPLETE ALL CONTENT - Never truncate, cut off, or abbreviate. Write EVERYTHING.
+2. END WITH: END_OF_NOTES on its own line
+3. Make notes GENUINELY HELPFUL - not just summaries, but teaching materials
 
-FORMAT THE NOTES EXACTLY LIKE THIS:
+FORMAT STRUCTURE:
 
-# [Topic Title]
+# [Clear, Descriptive Title]
 
-## Brief Overview
+## 📋 Overview
+[2-3 sentences: What is this topic? Why does it matter? What will you learn?]
 
-[2-3 sentences explaining the content source and what it covers. This MUST be included.]
-
-## Key Points
-
-- **Point 1**: [detailed explanation]
-- **Point 2**: [detailed explanation]
-- **Point 3**: [detailed explanation]
-- **Point 4**: [detailed explanation]
-- **Point 5**: [detailed explanation]
-
----
-
-## [Section 1 Title] [Emoji]
-
-[Opening paragraph with **bold key terms** and clear explanations]
-
-> [Important definition or quote in blockquote]
-
-[Additional detailed content paragraphs]
+## 🎯 Learning Objectives
+After studying these notes, you should be able to:
+- [Specific, measurable objective 1]
+- [Specific, measurable objective 2]
+- [Specific, measurable objective 3]
 
 ---
 
-## [Section 2 Title] [Emoji]
+## 📚 [First Major Topic] 
 
-[Continue with detailed content for each section]
+### What You Need to Know
+[Clear explanation with **bold key terms**. Explain concepts as if teaching to someone who has never seen this before.]
+
+### Key Concepts
+- **Term 1**: Definition and why it matters
+- **Term 2**: Definition and practical application
+- **Term 3**: Definition with example
+
+### Examples & Applications
+[Concrete examples that illustrate the concepts. Use real-world scenarios.]
+
+> 💡 **Key Insight**: [Important takeaway or common misconception to avoid]
 
 ---
 
-## Summary
+## 📚 [Second Major Topic]
 
-[Final summary paragraph tying everything together]
+[Continue with same structure for each major section]
+
+---
+
+## 🔗 Connections & Relationships
+[How do these concepts relate to each other? What's the bigger picture?]
+
+## ⚠️ Common Mistakes to Avoid
+1. [Mistake 1 and how to avoid it]
+2. [Mistake 2 and how to avoid it]
+3. [Mistake 3 and how to avoid it]
+
+## 📝 Summary
+[Comprehensive summary tying everything together. What are the key takeaways?]
+
+## 🎓 Next Steps
+[What should the student do next to master this material?]
 
 END_OF_NOTES
 
 FORMATTING RULES:
 - Use --- horizontal rules between major sections
+- Use emojis in section headers for visual navigation
+- **Bold** all key terms and definitions
+- Use > blockquotes for important insights and tips
+- Use proper markdown lists with - prefix
+- Use tables for comparisons when helpful
 - Leave blank lines before and after headers
-- Use proper markdown lists with - prefix (NOT bullet character)
-- Use tables with borders for comparisons
-- **Bold** key terms in list items
-- Use emojis in section headers
-- > blockquotes for definitions only
-- Each list item on its own line with - prefix
 
-MATH/SCIENCE FORMULA RULES:
-- Use LaTeX notation for ALL formulas and chemical equations
-- CRITICAL: Use DOUBLE BACKSLASHES for all LaTeX commands in JSON
-- Inline math: $E = mc^2$ or $\\\\alpha + \\\\beta$
+MATH/SCIENCE FORMULAS (when applicable):
+- Inline math: $E = mc^2$ or $\\alpha + \\beta$
 - Block math on own line: $$F = ma$$
-- Chemistry arrows: $\\\\rightarrow$, $\\\\leftarrow$, $\\\\rightleftharpoons$
+- Chemistry arrows: $\\rightarrow$, $\\leftarrow$, $\\rightleftharpoons$
 - Chemical formulas: $H_2O$, $CO_2$, $CH_3COOH$
-- Fractions: $\\\\frac{a}{b}$, Square roots: $\\\\sqrt{x}$
-- Greek letters: $\\\\alpha$, $\\\\beta$, $\\\\gamma$, $\\\\theta$, $\\\\pi$
+- Fractions: $\\frac{a}{b}$, Square roots: $\\sqrt{x}$
+- Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\theta$, $\\pi$
 
-DIAGRAM RULES (MERMAID) - FOLLOW EXACTLY:
-- Only include diagrams when they genuinely help explain concepts
-- Use SIMPLE text labels - NO special characters, NO LaTeX, NO parentheses
-- Keep node text SHORT (1-4 words max)
-- Use letters/numbers for node IDs (A, B, C or node1, node2)
+MERMAID DIAGRAMS (only when helpful):
+- Keep labels SHORT (1-4 words)
+- Use simple text only - NO special characters, NO LaTeX
+- Use letter IDs (A, B, C)
 
-VALID MERMAID EXAMPLE:
+VALID example:
 \`\`\`mermaid
 graph TD
-    A[Reactants] --> B[Reaction]
-    B --> C[Products]
-    B --> D[Energy Released]
+    A[Input] --> B[Process]
+    B --> C[Output]
 \`\`\`
 
-INVALID (DO NOT DO):
-- Node labels with $formula$ or chemical equations
-- Labels with parentheses like (H2O)
-- Special characters in labels
-- Very long text in nodes
+STUDY MATERIALS REQUIREMENTS:
+- highlights: 10-15 key points with explanations of WHY they matter
+- flashcards: 15-25 Q&A pairs testing understanding (not just recall)
+- quiz: 12-18 challenging multiple choice questions with 4 options each
 
-CONTENT REQUIREMENTS:
-- COMPLETE the entire document - never stop mid-section
-- highlights: 8-15 critical points with explanations
-- flashcards: 15-20 Q&A pairs covering all concepts  
-- quiz: 10-15 challenging multiple choice questions with 4 options each
-- Academic rigor with clear, accessible language`;
+QUALITY STANDARDS:
+- Write as if you're the best tutor explaining to a student
+- Include practical examples and applications
+- Anticipate and address common confusion points
+- Make the content engaging and memorable`;
 
-    const body: Record<string, unknown> = {
-      model: "google/gemini-2.5-flash",
-      // Increase output budget to avoid truncated notes
-      max_tokens: 8000,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `${title ? `Title: ${title}\n` : ""}Create comprehensive study materials for this content:\n\n${text}`,
-        },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "build_study_pack",
-            description:
-              "Return complete structured study materials. MUST include full notes from introduction through summary and end with END_OF_NOTES.",
-            parameters: {
-              type: "object",
-              properties: {
-                notes: {
-                  type: "string",
-                  description:
-                    "Complete markdown notes with all sections from Brief Overview through Summary. MUST end with END_OF_NOTES.",
-                },
-                highlights: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      text: { type: "string" },
-                      why: { type: "string" },
-                    },
-                    required: ["text"],
-                    additionalProperties: false,
+    let result = null;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      attempts++;
+      console.log(`generate-study-pack: attempt ${attempts}/${MAX_RETRIES}`);
+
+      const body: Record<string, unknown> = {
+        model: "google/gemini-2.5-flash",
+        max_tokens: 16000,
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `${title ? `Title: ${title}\n` : ""}Create comprehensive, helpful study materials for this content:\n\n${text}`,
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "build_study_pack",
+              description:
+                "Return complete structured study materials. Notes MUST include all sections and end with END_OF_NOTES.",
+              parameters: {
+                type: "object",
+                properties: {
+                  notes: {
+                    type: "string",
+                    description:
+                      "Complete markdown notes from Overview through Summary. MUST end with END_OF_NOTES on its own line.",
                   },
-                },
-                flashcards: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      question: { type: "string" },
-                      answer: { type: "string" },
-                    },
-                    required: ["question", "answer"],
-                    additionalProperties: false,
-                  },
-                },
-                quiz: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      question: { type: "string" },
-                      options: {
-                        type: "array",
-                        items: { type: "string" },
-                        minItems: 4,
-                        maxItems: 4,
+                  highlights: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        text: { type: "string" },
+                        why: { type: "string" },
                       },
-                      correctIndex: { type: "integer", minimum: 0, maximum: 3 },
+                      required: ["text"],
+                      additionalProperties: false,
                     },
-                    required: ["question", "options", "correctIndex"],
-                    additionalProperties: false,
+                  },
+                  flashcards: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        question: { type: "string" },
+                        answer: { type: "string" },
+                      },
+                      required: ["question", "answer"],
+                      additionalProperties: false,
+                    },
+                  },
+                  quiz: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        question: { type: "string" },
+                        options: {
+                          type: "array",
+                          items: { type: "string" },
+                          minItems: 4,
+                          maxItems: 4,
+                        },
+                        correctIndex: { type: "integer", minimum: 0, maximum: 3 },
+                      },
+                      required: ["question", "options", "correctIndex"],
+                      additionalProperties: false,
+                    },
                   },
                 },
+                required: ["notes", "highlights", "flashcards", "quiz"],
+                additionalProperties: false,
               },
-              required: ["notes", "highlights", "flashcards", "quiz"],
-              additionalProperties: false,
             },
           },
+        ],
+        tool_choice: { type: "function", function: { name: "build_study_pack" } },
+      };
+
+      console.log("generate-study-pack: calling AI gateway");
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
         },
-      ],
-      tool_choice: { type: "function", function: { name: "build_study_pack" } },
-    };
+        body: JSON.stringify(body),
+      });
 
-    console.log("generate-study-pack: calling AI gateway");
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+      if (!resp.ok) {
+        const statusCode = resp.status;
+        const errorText = await resp.text();
+        console.error("generate-study-pack: AI gateway error", { status: statusCode, body: errorText });
+        
+        if (statusCode === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (statusCode === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI credits required. Please add funds to your workspace." }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: "AI generation failed" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-    if (!resp.ok) {
-      const statusCode = resp.status;
-      const errorText = await resp.text();
-      console.error("generate-study-pack: AI gateway error", { status: statusCode, body: errorText });
+      const json = await resp.json();
+      const toolCall = json?.choices?.[0]?.message?.tool_calls?.[0];
+      const argsStr = toolCall?.function?.arguments;
       
-      if (statusCode === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (!argsStr || typeof argsStr !== "string") {
+        console.error("generate-study-pack: invalid AI response structure", { json });
+        continue; // Retry
       }
-      if (statusCode === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits required. Please add funds to your workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+
+      let parsed;
+      try {
+        parsed = JSON.parse(argsStr);
+      } catch (e) {
+        console.error("generate-study-pack: failed to parse tool call arguments", { argsStr, error: e });
+        continue; // Retry
       }
-      return new Response(
-        JSON.stringify({ error: "AI generation failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+
+      // Check if notes are complete (ends with END_OF_NOTES)
+      const notesComplete = parsed.notes?.includes("END_OF_NOTES");
+      
+      if (notesComplete) {
+        // Remove the END_OF_NOTES marker from final output
+        parsed.notes = parsed.notes.replace(/\n?END_OF_NOTES\n?/g, '').trim();
+        result = parsed;
+        break;
+      } else {
+        console.warn("generate-study-pack: notes incomplete, retrying...", { 
+          notesLength: parsed.notes?.length,
+          lastChars: parsed.notes?.slice(-100)
+        });
+        // Store partial result in case all retries fail
+        result = parsed;
+      }
     }
 
-    const json = await resp.json();
-    const toolCall = json?.choices?.[0]?.message?.tool_calls?.[0];
-    const argsStr = toolCall?.function?.arguments;
-    
-    if (!argsStr || typeof argsStr !== "string") {
-      console.error("generate-study-pack: invalid AI response structure", { json });
+    if (!result) {
       return new Response(
-        JSON.stringify({ error: "Invalid AI response" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(argsStr);
-    } catch (e) {
-      console.error("generate-study-pack: failed to parse tool call arguments", { argsStr, error: e });
-      return new Response(
-        JSON.stringify({ error: "Failed to parse AI output" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Failed to generate complete notes after multiple attempts" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     console.log("generate-study-pack: success", { 
-      notesLength: parsed.notes?.length,
-      highlightsCount: parsed.highlights?.length,
-      flashcardsCount: parsed.flashcards?.length,
-      quizCount: parsed.quiz?.length
+      notesLength: result.notes?.length,
+      highlightsCount: result.highlights?.length,
+      flashcardsCount: result.flashcards?.length,
+      quizCount: result.quiz?.length
     });
 
     return new Response(
       JSON.stringify({
-        notes: parsed.notes,
-        highlights: parsed.highlights,
-        flashcards: parsed.flashcards,
-        quiz: parsed.quiz,
+        notes: result.notes,
+        highlights: result.highlights,
+        flashcards: result.flashcards,
+        quiz: result.quiz,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("generate-study-pack: unhandled error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Always return 200 with success/error in body
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,21 +24,15 @@ serve(async (req) => {
     const audioFile = formData.get('file') as File;
     
     if (!audioFile) {
-      return new Response(
-        JSON.stringify({ error: 'Audio file is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'Audio file is required' });
     }
 
-    console.log('Processing audio file:', audioFile.name, audioFile.type, 'Size:', audioFile.size);
+    console.log('transcribe-audio: Processing file:', audioFile.name, audioFile.type, 'Size:', audioFile.size);
 
     // Check file size (max 20MB)
     const maxSize = 20 * 1024 * 1024;
     if (audioFile.size > maxSize) {
-      return new Response(
-        JSON.stringify({ error: 'File too large. Maximum size is 20MB' }),
-        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: false, error: 'File too large. Maximum size is 20MB' });
     }
 
     // Convert file to base64
@@ -38,22 +40,29 @@ serve(async (req) => {
     const bytes = new Uint8Array(arrayBuffer);
     const base64Audio = encodeBase64(bytes);
 
-    console.log('File converted to base64, size:', base64Audio.length);
+    console.log('transcribe-audio: File converted to base64, size:', base64Audio.length);
 
     // Process with Lovable AI
-    const result = await processAudioWithLovableAI(base64Audio, audioFile.type);
+    let result;
+    try {
+      result = await processAudioWithLovableAI(base64Audio, audioFile.type);
+    } catch (aiError: any) {
+      console.error('transcribe-audio: AI processing failed', { error: aiError.message });
+      return jsonResponse({ success: false, error: aiError.message });
+    }
 
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({
+      success: true,
+      transcript: result.transcript,
+      summary: result.summary
+    });
 
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('transcribe-audio: Error:', error);
+    return jsonResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -74,7 +83,7 @@ async function processAudioWithLovableAI(base64Audio: string, mimeType: string) 
     throw new Error('AI is not configured on the backend');
   }
 
-  console.log('Processing audio with Lovable AI...');
+  console.log('transcribe-audio: Processing audio with Lovable AI...');
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -108,14 +117,15 @@ async function processAudioWithLovableAI(base64Audio: string, mimeType: string) 
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('transcribe-audio: Lovable AI error:', response.status, errorText);
+    
     if (response.status === 429) {
       throw new Error('Rate limits exceeded, please try again later.');
     }
     if (response.status === 402) {
       throw new Error('AI credits required. Please add funds to your workspace.');
     }
-    const error = await response.text();
-    console.error('Lovable AI error:', error);
     throw new Error('Failed to process audio');
   }
 
