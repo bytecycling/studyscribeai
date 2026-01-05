@@ -6,17 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ApiResponse =
-  | {
-      success: true;
-      transcript: string;
-      summary: string;
-      videoId: string;
-      title: string | null;
-    }
-  | { success: false; error: string };
-
-function jsonOk(body: ApiResponse) {
+// Always return 200 with success/error in body
+function jsonResponse(body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -33,23 +24,41 @@ serve(async (req) => {
     console.log("youtube-transcribe: input", { youtubeUrl });
 
     if (!youtubeUrl || typeof youtubeUrl !== "string") {
-      return jsonOk({ success: false, error: "YouTube URL is required" });
+      return jsonResponse({ success: false, error: "YouTube URL is required" });
     }
 
     const normalizedUrl = normalizeUrl(youtubeUrl);
     const videoId = extractVideoId(normalizedUrl);
 
     if (!videoId) {
-      return jsonOk({ success: false, error: "Invalid YouTube URL" });
+      return jsonResponse({ success: false, error: "Invalid YouTube URL" });
     }
 
     console.log("youtube-transcribe: fetching transcript", { videoId });
-    const { transcript, title } = await getYouTubeTranscript(videoId);
+    
+    let transcript: string;
+    let title: string | null;
+    
+    try {
+      const result = await getYouTubeTranscript(videoId);
+      transcript = result.transcript;
+      title = result.title;
+    } catch (transcriptError: any) {
+      console.error("youtube-transcribe: transcript fetch failed", { error: transcriptError.message });
+      return jsonResponse({ success: false, error: transcriptError.message });
+    }
 
     console.log("youtube-transcribe: summarizing", { videoId, transcriptLength: transcript.length });
-    const summary = await summarizeWithLovableAI(transcript);
+    
+    let summary: string;
+    try {
+      summary = await summarizeWithLovableAI(transcript);
+    } catch (aiError: any) {
+      console.error("youtube-transcribe: AI summarization failed", { error: aiError.message });
+      return jsonResponse({ success: false, error: aiError.message });
+    }
 
-    return jsonOk({
+    return jsonResponse({
       success: true,
       transcript,
       summary,
@@ -59,8 +68,7 @@ serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error occurred";
     console.error("youtube-transcribe: unhandled error", { message, error });
-    // Always return 200 so supabase.functions.invoke doesn't throw a non-2xx error.
-    return jsonOk({ success: false, error: message });
+    return jsonResponse({ success: false, error: message });
   }
 });
 
@@ -72,12 +80,6 @@ function normalizeUrl(input: string) {
 }
 
 function extractVideoId(url: string): string | null {
-  // Supports:
-  // - https://www.youtube.com/watch?v=ID
-  // - https://youtu.be/ID
-  // - https://www.youtube.com/embed/ID
-  // - https://www.youtube.com/shorts/ID
-  // - https://www.youtube.com/live/ID
   const patterns = [
     /(?:youtube\.com\/watch\?v=)([^&\n?#]+)/,
     /(?:youtu\.be\/)([^&\n?#]+)/,
@@ -91,7 +93,6 @@ function extractVideoId(url: string): string | null {
     if (match?.[1]) return match[1];
   }
 
-  // As a fallback, try parsing v= from query string
   try {
     const u = new URL(url);
     const v = u.searchParams.get("v");
@@ -115,6 +116,8 @@ async function getYouTubeTranscript(
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
   const endpoint = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(youtubeUrl)}&text=true`;
 
+  console.log("youtube-transcribe: calling supadata API");
+  
   const response = await fetch(endpoint, {
     method: "GET",
     headers: {
@@ -128,11 +131,12 @@ async function getYouTubeTranscript(
       status: response.status,
       body: errText,
     });
-    throw new Error(
-      response.status === 429
-        ? "Transcript service rate-limited. Please try again in a minute."
-        : "Failed to get transcript. The video may not have captions available."
-    );
+    
+    if (response.status === 429) {
+      throw new Error("Transcript service rate-limited. Please try again in a minute.");
+    }
+    
+    throw new Error("Failed to get transcript. The video may not have captions available.");
   }
 
   const result = await response.json();
@@ -194,4 +198,3 @@ async function summarizeWithLovableAI(text: string): Promise<string> {
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
-

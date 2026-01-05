@@ -228,8 +228,28 @@ export default function ResizableSidebar({
               {flashcards.length > 0 ? (
                 flashcards.map((card: any, i: number) => (
                   <div key={i} className="border border-border rounded-lg p-4 space-y-2">
-                    <p className="font-medium">Q: {card.question}</p>
-                    <p className="text-muted-foreground">A: {card.answer}</p>
+                    <div className="font-medium">
+                      <span className="text-primary">Q: </span>
+                      <span className="prose prose-sm dark:prose-invert inline">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkMath]} 
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {card.question}
+                        </ReactMarkdown>
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      <span className="text-secondary-foreground">A: </span>
+                      <span className="prose prose-sm dark:prose-invert inline">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkMath]} 
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {card.answer}
+                        </ReactMarkdown>
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (
