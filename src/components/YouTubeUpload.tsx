@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Youtube, Loader2 } from "lucide-react";
+import { Youtube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
+import GeneratingLoader from "./GeneratingLoader";
 
 interface YouTubeUploadProps {
   onSuccess: () => void;
@@ -116,37 +116,26 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="youtube-url">YouTube URL</Label>
-            <Input
-              id="youtube-url"
-              type="url"
-              placeholder="https://youtube.com/watch?v=..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          {isLoading && progress > 0 && (
+        {isLoading && progress > 0 ? (
+          <GeneratingLoader progress={progress} title={url} />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Progress value={progress} className="w-full" />
-              <p className="text-xs text-center text-muted-foreground">
-                Processing video... {progress}%
-              </p>
+              <Label htmlFor="youtube-url">YouTube URL</Label>
+              <Input
+                id="youtube-url"
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
-          )}
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              "Generate Notes"
-            )}
-          </Button>
-        </form>
+            <Button type="submit" disabled={isLoading} className="w-full">
+              Generate Notes
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );
