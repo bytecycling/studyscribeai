@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import AiChat from "./AiChat";
 import InteractiveQuiz from "./InteractiveQuiz";
 import DesmosCalculator from "./DesmosCalculator";
+import FlashcardItem from "./FlashcardItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -14,7 +15,6 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
 interface ResizableSidebarProps {
   noteId?: string;
   noteContent: string;
@@ -225,32 +225,15 @@ export default function ResizableSidebar({
           {currentView === "flashcards" && (
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Flashcards</h3>
+              <p className="text-xs text-muted-foreground">Click on a card to reveal the answer</p>
               {flashcards.length > 0 ? (
                 flashcards.map((card: any, i: number) => (
-                  <div key={i} className="border border-border rounded-lg p-4 space-y-2">
-                    <div className="font-medium">
-                      <span className="text-primary">Q: </span>
-                      <span className="prose prose-sm dark:prose-invert inline">
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkMath]} 
-                          rehypePlugins={[rehypeKatex]}
-                        >
-                          {card.question}
-                        </ReactMarkdown>
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground">
-                      <span className="text-secondary-foreground">A: </span>
-                      <span className="prose prose-sm dark:prose-invert inline">
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkMath]} 
-                          rehypePlugins={[rehypeKatex]}
-                        >
-                          {card.answer}
-                        </ReactMarkdown>
-                      </span>
-                    </div>
-                  </div>
+                  <FlashcardItem
+                    key={i}
+                    question={card.question}
+                    answer={card.answer}
+                    index={i}
+                  />
                 ))
               ) : (
                 <p className="text-muted-foreground">No flashcards available</p>

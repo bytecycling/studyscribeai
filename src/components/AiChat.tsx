@@ -18,7 +18,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import MermaidDiagram from "@/components/MermaidDiagram";
-
+import TypingIndicator from "./TypingIndicator";
 interface AiChatProps {
   noteId?: string;
   noteContent?: string;
@@ -84,8 +84,8 @@ const AiChat = ({ noteId }: AiChatProps) => {
     const userMessage: Message = { role: "user", content: question };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Add typing indicator
-    const typingMessage: Message = { role: "assistant", content: "..." };
+    // Add typing indicator placeholder
+    const typingMessage: Message = { role: "assistant", content: "___TYPING___" };
     setMessages((prev) => [...prev, typingMessage]);
 
     const submittedQuestion = question;
@@ -230,39 +230,43 @@ const AiChat = ({ noteId }: AiChatProps) => {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm, remarkMath]} 
-                          rehypePlugins={[rehypeRaw, rehypeKatex]}
-                          components={{
-                            code({ node, className, children, ...props }) {
-                              const match = /language-mermaid/.exec(className || '');
-                              if (match) {
+                      msg.content === "___TYPING___" ? (
+                        <TypingIndicator />
+                      ) : (
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm, remarkMath]} 
+                            rehypePlugins={[rehypeRaw, rehypeKatex]}
+                            components={{
+                              code({ node, className, children, ...props }) {
+                                const match = /language-mermaid/.exec(className || '');
+                                if (match) {
+                                  return (
+                                    <MermaidDiagram 
+                                      chart={String(children).replace(/\n$/, '')} 
+                                      className="my-2"
+                                    />
+                                  );
+                                }
                                 return (
-                                  <MermaidDiagram 
-                                    chart={String(children).replace(/\n$/, '')} 
-                                    className="my-2"
-                                  />
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
                                 );
+                              },
+                              pre({ children }) {
+                                const child = children as any;
+                                if (child?.props?.className?.includes('language-mermaid')) {
+                                  return <>{children}</>;
+                                }
+                                return <pre>{children}</pre>;
                               }
-                              return (
-                                <code className={className} {...props}>
-                                  {children}
-                                </code>
-                              );
-                            },
-                            pre({ children }) {
-                              const child = children as any;
-                              if (child?.props?.className?.includes('language-mermaid')) {
-                                return <>{children}</>;
-                              }
-                              return <pre>{children}</pre>;
-                            }
-                          }}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      )
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     )}
