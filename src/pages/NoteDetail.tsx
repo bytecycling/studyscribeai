@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,6 +15,7 @@ import MermaidDiagram from "@/components/MermaidDiagram";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import GeneratingLoader from "@/components/GeneratingLoader";
 
 interface NoteRow {
   id: string;
@@ -38,6 +39,7 @@ export default function NoteDetail() {
   const [editedContent, setEditedContent] = useState("");
   const [showSidebar, setShowSidebar] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenProgress, setRegenProgress] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -133,49 +135,64 @@ export default function NoteDetail() {
     }
 
     setIsRegenerating(true);
+    setRegenProgress(10);
+
+    const interval = window.setInterval(() => {
+      setRegenProgress((p) => {
+        if (p >= 92) return 92;
+        const next = p + (p < 60 ? 6 : 3);
+        return Math.min(next, 92);
+      });
+    }, 450);
+
     try {
-      const { data, error } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: note.raw_text, title: note.title }
+      const { data, error } = await supabase.functions.invoke("generate-study-pack", {
+        body: { text: note.raw_text, title: note.title },
       });
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
 
-      // Update the note in database
+      setRegenProgress(98);
+
       const { error: updateError } = await supabase
-        .from('notes')
+        .from("notes")
         .update({
-          content: data.notes,
-          highlights: data.highlights,
-          flashcards: data.flashcards,
-          quiz: data.quiz,
+          content: (data as any).notes,
+          highlights: (data as any).highlights,
+          flashcards: (data as any).flashcards,
+          quiz: (data as any).quiz,
         })
-        .eq('id', note.id);
+        .eq("id", note.id);
 
       if (updateError) throw updateError;
 
-      // Update local state
       setNote({
         ...note,
-        content: data.notes,
-        highlights: data.highlights,
-        flashcards: data.flashcards,
-        quiz: data.quiz,
+        content: (data as any).notes,
+        highlights: (data as any).highlights,
+        flashcards: (data as any).flashcards,
+        quiz: (data as any).quiz,
       });
 
+      setRegenProgress(100);
       toast({
         title: "Success",
         description: "Notes regenerated successfully",
       });
     } catch (error: any) {
-      console.error('Regenerate error:', error);
+      console.error("Regenerate error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to regenerate notes",
         variant: "destructive",
       });
     } finally {
-      setIsRegenerating(false);
+      window.clearInterval(interval);
+      window.setTimeout(() => {
+        setIsRegenerating(false);
+        setRegenProgress(0);
+      }, 250);
     }
   }, [note, toast]);
 
@@ -297,12 +314,8 @@ export default function NoteDetail() {
                                 onClick={handleRegenerateNotes}
                                 disabled={isRegenerating}
                               >
-                                {isRegenerating ? (
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="w-4 h-4 mr-2" />
-                                )}
-                                {isRegenerating ? "Regenerating..." : "Regenerate"}
+                                <RefreshCw className={isRegenerating ? "w-4 h-4 mr-2 animate-spin" : "w-4 h-4 mr-2"} />
+                                {isRegenerating ? "Regenerating…" : "Regenerate"}
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Regenerate notes from source</TooltipContent>
@@ -323,7 +336,9 @@ export default function NoteDetail() {
                     </>
                   )}
                 </div>
-                {isEditing ? (
+                {isRegenerating && regenProgress > 0 ? (
+                  <GeneratingLoader progress={regenProgress} title={note.title} />
+                ) : isEditing ? (
                   <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
                   <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
