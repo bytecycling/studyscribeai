@@ -21,3 +21,5 @@ verify_jwt = true
 [functions.scrape-website]
 verify_jwt = true
 
+[functions.continue-notes]
+verify_jwt = true

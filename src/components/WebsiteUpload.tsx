@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, Loader2 } from "lucide-react";
+import { Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import GeneratingLoader from "./GeneratingLoader";
@@ -12,10 +12,24 @@ interface WebsiteUploadProps {
   onSuccess: () => void;
 }
 
+// Check if notes are complete
+function isNotesComplete(content: string): boolean {
+  if (!content) return false;
+  const lowerContent = content.toLowerCase();
+  return (
+    lowerContent.includes("## 📝 summary") ||
+    lowerContent.includes("## summary") ||
+    lowerContent.includes("## 🎓 next steps") ||
+    lowerContent.includes("## next steps") ||
+    lowerContent.includes("end_of_notes")
+  );
+}
+
 const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,9 +46,10 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
 
     setIsLoading(true);
     setProgress(10);
+    setStatusText("Scraping website...");
 
     try {
-      setProgress(30);
+      setProgress(25);
       
       // Call the edge function to scrape website
       const { data, error } = await supabase.functions.invoke('scrape-website', {
@@ -44,7 +59,8 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      setProgress(60);
+      setProgress(40);
+      setStatusText("Generating notes...");
 
       const extractedText = (data as any)?.content || (data as any)?.text;
       if (!extractedText) throw new Error('No content could be extracted from this website.');
@@ -59,7 +75,25 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
 
+      setProgress(70);
+
+      let finalNotes = (pack as any)?.notes || extractedText;
+
+      // Auto-continue if notes are incomplete
+      if (!isNotesComplete(finalNotes)) {
+        setStatusText("Completing notes...");
+        
+        const { data: contData, error: contError } = await supabase.functions.invoke('continue-notes', {
+          body: { currentNotes: finalNotes, rawText: extractedText, title: pageTitle }
+        });
+        
+        if (!contError && !(contData as any)?.error) {
+          finalNotes = (contData as any)?.notes || finalNotes;
+        }
+      }
+
       setProgress(90);
+      setStatusText("Saving...");
 
       // Save to database
       const user = (await supabase.auth.getUser()).data.user;
@@ -67,7 +101,7 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
         .from('notes')
         .insert({
           title: pageTitle,
-          content: (pack as any)?.notes || extractedText,
+          content: finalNotes,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,
           quiz: (pack as any)?.quiz || null,
@@ -99,6 +133,7 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
     } finally {
       setIsLoading(false);
       setProgress(0);
+      setStatusText("");
     }
   };
 
