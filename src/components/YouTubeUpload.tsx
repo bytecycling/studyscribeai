@@ -12,6 +12,19 @@ interface YouTubeUploadProps {
   onSuccess: () => void;
 }
 
+// Check if notes are complete
+function isNotesComplete(content: string): boolean {
+  if (!content) return false;
+  const lowerContent = content.toLowerCase();
+  return (
+    lowerContent.includes("## 📝 summary") ||
+    lowerContent.includes("## summary") ||
+    lowerContent.includes("## 🎓 next steps") ||
+    lowerContent.includes("## next steps") ||
+    lowerContent.includes("end_of_notes")
+  );
+}
+
 const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +47,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
     setProgress(10);
 
     try {
-      setProgress(30);
+      setProgress(25);
       
       // Call the edge function
       const { data, error } = await supabase.functions.invoke('youtube-transcribe', {
@@ -47,7 +60,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       const inputText = (data as any)?.transcript || (data as any)?.summary;
       if (!inputText) throw new Error('No transcript found for this video. It may not have captions.');
 
-      setProgress(60);
+      setProgress(45);
 
       // Extract video title
       const videoTitle = (data as any)?.title || `Video ${(data as any)?.videoId || ''}`;
@@ -59,6 +72,21 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
 
+      setProgress(70);
+
+      let finalNotes = pack?.notes || data.summary;
+
+      // Auto-continue if notes are incomplete
+      if (!isNotesComplete(finalNotes)) {
+        const { data: contData, error: contError } = await supabase.functions.invoke('continue-notes', {
+          body: { currentNotes: finalNotes, rawText: inputText, title: videoTitle }
+        });
+        
+        if (!contError && !(contData as any)?.error) {
+          finalNotes = (contData as any)?.notes || finalNotes;
+        }
+      }
+
       setProgress(90);
 
       // Save to database
@@ -67,7 +95,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
         .from('notes')
         .insert({
           title: videoTitle,
-          content: pack?.notes || data.summary,
+          content: finalNotes,
           highlights: pack?.highlights || null,
           flashcards: pack?.flashcards || null,
           quiz: pack?.quiz || null,
