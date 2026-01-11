@@ -34,15 +34,16 @@ interface NoteRow {
 // Check if notes are complete (has proper ending sections)
 function isNotesComplete(content: string): boolean {
   if (!content) return false;
-  const lowerContent = content.toLowerCase();
-  // Check for key ending sections that indicate completeness
-  const hasEnding = 
-    lowerContent.includes("## 📝 summary") ||
-    lowerContent.includes("## summary") ||
-    lowerContent.includes("## 🎓 next steps") ||
-    lowerContent.includes("## next steps") ||
-    lowerContent.includes("end_of_notes");
-  return hasEnding;
+  const lower = content.toLowerCase();
+
+  // Strong signal if the generation included an explicit end marker
+  if (lower.includes("end_of_notes")) return true;
+
+  // Otherwise require BOTH ending sections to avoid false-positives
+  const hasSummary = lower.includes("## 📝 summary") || lower.includes("## summary");
+  const hasNextSteps = lower.includes("## 🎓 next steps") || lower.includes("## next steps");
+
+  return hasSummary && hasNextSteps;
 }
 
 // Extract keywords from text for coverage checking
