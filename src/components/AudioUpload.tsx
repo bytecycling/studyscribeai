@@ -3,13 +3,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileAudio, Loader2 } from "lucide-react";
+import { FileAudio } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
+import GeneratingLoader from "./GeneratingLoader";
 
 interface AudioUploadProps {
   onSuccess: () => void;
+}
+
+// Check if notes are complete
+function isNotesComplete(content: string): boolean {
+  if (!content) return false;
+  const lowerContent = content.toLowerCase();
+  return (
+    lowerContent.includes("## 📝 summary") ||
+    lowerContent.includes("## summary") ||
+    lowerContent.includes("## 🎓 next steps") ||
+    lowerContent.includes("## next steps") ||
+    lowerContent.includes("end_of_notes")
+  );
 }
 
 const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
@@ -30,6 +43,15 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       return;
     }
 
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File exceeds 20MB limit",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setProgress(10);
 
@@ -38,7 +60,7 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      setProgress(30);
+      setProgress(25);
 
       // Call the edge function
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
@@ -51,14 +73,36 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       const transcriptText = (data as any)?.transcript || (data as any)?.summary;
       if (!transcriptText) throw new Error('No transcription returned. Please try another file.');
 
-      setProgress(60);
+      setProgress(50);
+
+      const audioTitle = `Audio: ${file.name}`;
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: transcriptText, title: `Audio: ${file.name}` }
+        body: { text: transcriptText, title: audioTitle }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
+
+      setProgress(70);
+
+      let finalNotes = (pack as any)?.notes || transcriptText;
+
+      // Auto-continue if notes are incomplete
+      if (!isNotesComplete(finalNotes)) {
+        console.log('AudioUpload: Notes incomplete, auto-continuing...');
+        
+        const { data: contData, error: contError } = await supabase.functions.invoke('continue-notes', {
+          body: { currentNotes: finalNotes, rawText: transcriptText, title: audioTitle }
+        });
+        
+        if (!contError && !(contData as any)?.error) {
+          finalNotes = (contData as any)?.notes || finalNotes;
+          console.log('AudioUpload: Auto-continue completed, isComplete:', (contData as any)?.isComplete);
+        } else {
+          console.warn('AudioUpload: Auto-continue failed', contError || (contData as any)?.error);
+        }
+      }
 
       setProgress(90);
 
@@ -67,12 +111,12 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: `Audio: ${file.name}`,
-          content: (pack as any)?.notes || (data as any)?.summary,
+          title: audioTitle,
+          content: finalNotes,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,
           quiz: (pack as any)?.quiz || null,
-          raw_text: (data as any)?.transcript || null,
+          raw_text: transcriptText,
           source_type: file.type.includes('video') ? 'video' : 'audio',
           user_id: user?.id
         });
@@ -116,44 +160,33 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="audio-file">Select File (Max 20MB)</Label>
-            <Input
-              id="audio-file"
-              type="file"
-              accept="audio/*,video/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              disabled={isLoading}
-            />
-            {file && (
-              <p className="text-sm text-muted-foreground">
-                Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                {file.size > 20 * 1024 * 1024 && (
-                  <span className="text-destructive font-medium"> - File exceeds 20MB limit!</span>
-                )}
-              </p>
-            )}
-          </div>
-          {isLoading && progress > 0 && (
+        {isLoading && progress > 0 ? (
+          <GeneratingLoader progress={progress} title={file?.name || "Audio"} />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Progress value={progress} className="w-full" />
-              <p className="text-xs text-center text-muted-foreground">
-                Processing file... {progress}%
-              </p>
+              <Label htmlFor="audio-file">Select File (Max 20MB)</Label>
+              <Input
+                id="audio-file"
+                type="file"
+                accept="audio/*,video/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={isLoading}
+              />
+              {file && (
+                <p className="text-sm text-muted-foreground">
+                  Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  {file.size > 20 * 1024 * 1024 && (
+                    <span className="text-destructive font-medium"> - File exceeds 20MB limit!</span>
+                  )}
+                </p>
+              )}
             </div>
-          )}
-          <Button type="submit" disabled={isLoading || !file} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              "Generate Notes"
-            )}
-          </Button>
-        </form>
+            <Button type="submit" disabled={isLoading || !file} className="w-full">
+              Generate Notes
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );
