@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X } from "lucide-react";
+import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X, PlayCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -11,6 +12,7 @@ interface Note {
   id: string;
   title: string;
   content: string;
+  raw_text?: string | null;
   source_type: string;
   source_url?: string;
   created_at: string;
@@ -27,6 +29,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
+  const [continuingId, setContinuingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -185,6 +188,70 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     }
   };
 
+  const isNotesComplete = useMemo(() => {
+    return (content: string): boolean => {
+      if (!content) return false;
+      const lower = content.toLowerCase();
+      if (lower.includes("end_of_notes")) return true;
+      const hasSummary = lower.includes("## 📝 summary") || lower.includes("## summary");
+      const hasNextSteps = lower.includes("## 🎓 next steps") || lower.includes("## next steps");
+      return hasSummary && hasNextSteps;
+    };
+  }, []);
+
+  const continueNote = async (note: Note) => {
+    if (!note.raw_text || !note.content) {
+      toast({
+        title: "Cannot Continue",
+        description: "This note has no saved source text to continue from.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setContinuingId(note.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("continue-notes", {
+        body: {
+          currentNotes: note.content,
+          rawText: note.raw_text,
+          title: note.title,
+        },
+      });
+
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      const newNotes = (data as any).notes as string;
+      const isComplete = Boolean((data as any).isComplete);
+
+      const { error: updateError } = await supabase
+        .from("notes")
+        .update({ content: newNotes })
+        .eq("id", note.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: isComplete ? "Notes Completed!" : "Notes Extended",
+        description: isComplete
+          ? "This note is now complete."
+          : "Extended, but it may still be incomplete—run Continue again if needed.",
+      });
+
+      await loadNotes();
+    } catch (e: any) {
+      console.error("continueNote error", e);
+      toast({
+        title: "Error",
+        description: e.message || "Failed to continue note",
+        variant: "destructive",
+      });
+    } finally {
+      setContinuingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -237,14 +304,21 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                         }}
                       />
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => saveTitle(note.id)}>
-                        <Check className="w-4 h-4 text-green-600" />
+                        <Check className="w-4 h-4" />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={cancelEditing}>
-                        <X className="w-4 h-4 text-destructive" />
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
                   ) : (
-                    <CardTitle className="text-lg truncate">{note.title}</CardTitle>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CardTitle className="text-lg truncate">{note.title}</CardTitle>
+                      {!isNotesComplete(note.content) && (
+                        <Badge variant="secondary" className="shrink-0">
+                          Incomplete
+                        </Badge>
+                      )}
+                    </div>
                   )}
                   <CardDescription>
                     {new Date(note.created_at).toLocaleDateString()} • {note.source_type}
@@ -252,21 +326,32 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                 </div>
               </div>
               <div className="flex gap-2">
+                {!isNotesComplete(note.content) && note.raw_text && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => continueNote(note)}
+                    disabled={continuingId === note.id}
+                  >
+                    <PlayCircle className={continuingId === note.id ? "w-4 h-4 mr-2 animate-pulse" : "w-4 h-4 mr-2"} />
+                    {continuingId === note.id ? "Continuing…" : "Continue"}
+                  </Button>
+                )}
                 <Link to={`/note/${note.id}`}>
                   <Button variant="outline" size="sm">
                     View
                   </Button>
                 </Link>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => startEditing(note)}
                   disabled={editingId === note.id}
                 >
                   <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => deleteNote(note.id)}
                 >
