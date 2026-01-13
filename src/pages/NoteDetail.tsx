@@ -29,6 +29,8 @@ interface NoteRow {
   flashcards?: any;
   quiz?: any;
   raw_text?: string | null;
+  is_complete?: boolean;
+  activity_log?: any[];
 }
 
 // Check if notes are complete (has proper ending sections)

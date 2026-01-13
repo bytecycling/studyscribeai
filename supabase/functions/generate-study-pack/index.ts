@@ -9,6 +9,13 @@ const corsHeaders = {
 const MAX_INITIAL_ATTEMPTS = 2;
 const MAX_CONTINUATIONS = 4;
 
+interface ActivityLogEntry {
+  timestamp: string;
+  action: string;
+  status: "success" | "error" | "info";
+  details?: string;
+}
+
 function endsWithEndMarker(notes: string): boolean {
   return /\bEND_OF_NOTES\s*$/.test((notes || "").trim());
 }
@@ -61,16 +68,24 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const activityLog: ActivityLogEntry[] = [];
+  const logActivity = (action: string, status: "success" | "error" | "info", details?: string) => {
+    activityLog.push({
+      timestamp: new Date().toISOString(),
+      action,
+      status,
+      details,
+    });
+    console.log(`generate-study-pack: ${action} - ${status}${details ? `: ${details}` : ""}`);
+  };
+
   try {
     const { text, title } = await req.json();
-    console.log("generate-study-pack: received request", {
-      title,
-      textLength: text?.length,
-    });
+    logActivity("request_received", "info", `title=${title}, textLength=${text?.length}`);
 
     if (!text || typeof text !== "string") {
-      console.error("generate-study-pack: missing text in request body");
-      return new Response(JSON.stringify({ error: "Missing 'text' in request body" }), {
+      logActivity("validation_error", "error", "Missing text in request body");
+      return new Response(JSON.stringify({ error: "Missing 'text' in request body", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -78,8 +93,8 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("generate-study-pack: LOVABLE_API_KEY not configured");
-      return new Response(JSON.stringify({ error: "AI is not configured on the backend" }), {
+      logActivity("config_error", "error", "LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "AI is not configured on the backend", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -181,7 +196,7 @@ REMEMBER: END WITH: END_OF_NOTES`;
 
     // 1) Initial attempt(s) to get full pack
     for (let attempt = 1; attempt <= MAX_INITIAL_ATTEMPTS; attempt++) {
-      console.log(`generate-study-pack: initial attempt ${attempt}/${MAX_INITIAL_ATTEMPTS}`);
+      logActivity("initial_generation_attempt", "info", `attempt ${attempt}/${MAX_INITIAL_ATTEMPTS}`);
 
       const body: Record<string, unknown> = {
         model: "google/gemini-2.5-flash",
@@ -260,7 +275,8 @@ REMEMBER: END WITH: END_OF_NOTES`;
 
       const json = await callGateway({ apiKey: LOVABLE_API_KEY, body });
       if (json?.__httpError) {
-        return new Response(JSON.stringify({ error: json.message }), {
+        logActivity("gateway_error", "error", json.message);
+        return new Response(JSON.stringify({ error: json.message, activityLog }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -270,31 +286,30 @@ REMEMBER: END WITH: END_OF_NOTES`;
       const argsStr = toolCall?.function?.arguments;
 
       if (!argsStr || typeof argsStr !== "string") {
-        console.error("generate-study-pack: invalid tool response structure", { json });
+        logActivity("invalid_response", "error", "Invalid tool response structure");
         continue;
       }
 
       try {
         initialPack = JSON.parse(argsStr);
       } catch (e) {
-        console.error("generate-study-pack: failed to parse tool args", e);
+        logActivity("parse_error", "error", "Failed to parse tool arguments");
         initialPack = null;
         continue;
       }
 
       if (typeof initialPack?.notes === "string" && endsWithEndMarker(initialPack.notes)) {
         initialPack.notes = stripTrailingEndMarker(initialPack.notes);
+        logActivity("initial_generation_complete", "success", `Notes length: ${initialPack.notes.length}`);
         break;
       }
 
-      console.warn("generate-study-pack: initial notes incomplete", {
-        notesLength: initialPack?.notes?.length,
-        lastChars: typeof initialPack?.notes === "string" ? initialPack.notes.slice(-120) : null,
-      });
+      logActivity("initial_generation_incomplete", "info", `Notes length: ${initialPack?.notes?.length}, missing END_OF_NOTES`);
     }
 
     if (!initialPack || typeof initialPack.notes !== "string") {
-      return new Response(JSON.stringify({ error: "Failed to generate notes" }), {
+      logActivity("generation_failed", "error", "Failed to generate notes after all attempts");
+      return new Response(JSON.stringify({ error: "Failed to generate notes", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -303,12 +318,10 @@ REMEMBER: END WITH: END_OF_NOTES`;
     // 2) If notes are still cut off, keep continuing server-side until END_OF_NOTES
     let fullNotes = initialPack.notes;
     if (!endsWithEndMarker(fullNotes)) {
-      console.log("generate-study-pack: continuing cut-off notes server-side", {
-        currentLength: fullNotes.length,
-      });
+      logActivity("starting_continuations", "info", `Current length: ${fullNotes.length}`);
 
       for (let c = 1; c <= MAX_CONTINUATIONS; c++) {
-        console.log(`generate-study-pack: continuation ${c}/${MAX_CONTINUATIONS}`);
+        logActivity("continuation_attempt", "info", `continuation ${c}/${MAX_CONTINUATIONS}`);
 
         const tail = fullNotes.slice(-1800);
 
@@ -359,7 +372,8 @@ CRITICAL:
 
         const contJson = await callGateway({ apiKey: LOVABLE_API_KEY, body: contBody });
         if (contJson?.__httpError) {
-          return new Response(JSON.stringify({ error: contJson.message }), {
+          logActivity("continuation_gateway_error", "error", contJson.message);
+          return new Response(JSON.stringify({ error: contJson.message, activityLog }), {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -368,7 +382,7 @@ CRITICAL:
         const contToolCall = contJson?.choices?.[0]?.message?.tool_calls?.[0];
         const contArgsStr = contToolCall?.function?.arguments;
         if (!contArgsStr || typeof contArgsStr !== "string") {
-          console.error("generate-study-pack: invalid continuation tool response", { contJson });
+          logActivity("continuation_invalid_response", "error", "Invalid continuation tool response");
           continue;
         }
 
@@ -376,46 +390,45 @@ CRITICAL:
         try {
           contParsed = JSON.parse(contArgsStr);
         } catch (e) {
-          console.error("generate-study-pack: failed to parse continuation tool args", e);
+          logActivity("continuation_parse_error", "error", "Failed to parse continuation tool args");
           continue;
         }
 
         const continuationText = contParsed?.continuation;
         if (typeof continuationText !== "string" || !continuationText.trim()) {
-          console.warn("generate-study-pack: empty continuation");
+          logActivity("continuation_empty", "info", "Empty continuation received");
           continue;
         }
 
         // Append with a newline boundary
         fullNotes = `${fullNotes.trim()}\n\n${continuationText.trim()}`;
+        logActivity("continuation_appended", "success", `New length: ${fullNotes.length}`);
 
         if (endsWithEndMarker(fullNotes)) {
           fullNotes = stripTrailingEndMarker(fullNotes);
+          logActivity("continuation_complete", "success", "END_OF_NOTES marker found");
           break;
         }
       }
     }
 
-    if (!endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`)) {
-      // If we still didn't finish, fail loudly rather than saving cut-off notes.
-      console.error("generate-study-pack: failed to reach END_OF_NOTES after continuations", {
-        notesLength: fullNotes.length,
-      });
+    // Check final completion status
+    const isComplete = endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`) || 
+                       (fullNotes.toLowerCase().includes("## 📝 summary") && 
+                        fullNotes.toLowerCase().includes("## 🎓 next steps"));
+
+    if (!isComplete) {
+      logActivity("generation_incomplete", "error", `Failed to reach END_OF_NOTES after ${MAX_CONTINUATIONS} continuations`);
       return new Response(
         JSON.stringify({
-          error:
-            "Generation was cut off. Please try again (the backend will continue until completion).",
+          error: "Generation was cut off. Please try again (the backend will continue until completion).",
+          activityLog,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("generate-study-pack: success", {
-      notesLength: fullNotes.length,
-      highlightsCount: initialPack.highlights?.length,
-      flashcardsCount: initialPack.flashcards?.length,
-      quizCount: initialPack.quiz?.length,
-    });
+    logActivity("generation_success", "success", `Final notes length: ${fullNotes.length}`);
 
     return new Response(
       JSON.stringify({
@@ -423,13 +436,15 @@ CRITICAL:
         highlights: initialPack.highlights,
         flashcards: initialPack.flashcards,
         quiz: initialPack.quiz,
+        isComplete: true,
+        activityLog,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    console.error("generate-study-pack: unhandled error", e);
+    logActivity("unhandled_error", "error", e instanceof Error ? e.message : "Unknown error");
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", activityLog }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

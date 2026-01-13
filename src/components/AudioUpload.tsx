@@ -12,19 +12,6 @@ interface AudioUploadProps {
   onSuccess: () => void;
 }
 
-// Check if notes are complete
-function isNotesComplete(content: string): boolean {
-  if (!content) return false;
-  const lowerContent = content.toLowerCase();
-  return (
-    lowerContent.includes("## 📝 summary") ||
-    lowerContent.includes("## summary") ||
-    lowerContent.includes("## 🎓 next steps") ||
-    lowerContent.includes("## next steps") ||
-    lowerContent.includes("end_of_notes")
-  );
-}
-
 const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,24 +71,13 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
 
-      setProgress(70);
+      // Check if generation was complete
+      const isComplete = Boolean((pack as any)?.isComplete);
+      const activityLog = (pack as any)?.activityLog || [];
 
-      let finalNotes = (pack as any)?.notes || transcriptText;
-
-      // Auto-continue if notes are incomplete
-      if (!isNotesComplete(finalNotes)) {
-        console.log('AudioUpload: Notes incomplete, auto-continuing...');
-        
-        const { data: contData, error: contError } = await supabase.functions.invoke('continue-notes', {
-          body: { currentNotes: finalNotes, rawText: transcriptText, title: audioTitle }
-        });
-        
-        if (!contError && !(contData as any)?.error) {
-          finalNotes = (contData as any)?.notes || finalNotes;
-          console.log('AudioUpload: Auto-continue completed, isComplete:', (contData as any)?.isComplete);
-        } else {
-          console.warn('AudioUpload: Auto-continue failed', contError || (contData as any)?.error);
-        }
+      if (!isComplete) {
+        // If not complete, throw an error - don't save incomplete notes
+        throw new Error("Notes generation was incomplete. Please try again.");
       }
 
       setProgress(90);
@@ -112,14 +88,16 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
         .from('notes')
         .insert({
           title: audioTitle,
-          content: finalNotes,
+          content: (pack as any)?.notes || transcriptText,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,
           quiz: (pack as any)?.quiz || null,
           raw_text: transcriptText,
           source_type: file.type.includes('video') ? 'video' : 'audio',
-          user_id: user?.id
-        });
+          user_id: user?.id,
+          is_complete: true,
+          activity_log: activityLog as any,
+        } as any);
 
       if (insertError) throw insertError;
 

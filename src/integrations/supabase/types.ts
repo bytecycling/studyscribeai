@@ -111,6 +111,7 @@ export type Database = {
       }
       notes: {
         Row: {
+          activity_log: Json | null
           content: string
           created_at: string
           flashcards: Json | null
@@ -118,6 +119,7 @@ export type Database = {
           highlights: Json | null
           id: string
           images: Json | null
+          is_complete: boolean
           quiz: Json | null
           raw_text: string | null
           source_type: string
@@ -127,6 +129,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activity_log?: Json | null
           content: string
           created_at?: string
           flashcards?: Json | null
@@ -134,6 +137,7 @@ export type Database = {
           highlights?: Json | null
           id?: string
           images?: Json | null
+          is_complete?: boolean
           quiz?: Json | null
           raw_text?: string | null
           source_type: string
@@ -143,6 +147,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activity_log?: Json | null
           content?: string
           created_at?: string
           flashcards?: Json | null
@@ -150,6 +155,7 @@ export type Database = {
           highlights?: Json | null
           id?: string
           images?: Json | null
+          is_complete?: boolean
           quiz?: Json | null
           raw_text?: string | null
           source_type?: string

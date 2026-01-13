@@ -12,19 +12,6 @@ interface YouTubeUploadProps {
   onSuccess: () => void;
 }
 
-// Check if notes are complete
-function isNotesComplete(content: string): boolean {
-  if (!content) return false;
-  const lowerContent = content.toLowerCase();
-  return (
-    lowerContent.includes("## 📝 summary") ||
-    lowerContent.includes("## summary") ||
-    lowerContent.includes("## 🎓 next steps") ||
-    lowerContent.includes("## next steps") ||
-    lowerContent.includes("end_of_notes")
-  );
-}
-
 const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -72,19 +59,13 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
 
-      setProgress(70);
+      // Check if generation was complete
+      const isComplete = Boolean((pack as any)?.isComplete);
+      const activityLog = (pack as any)?.activityLog || [];
 
-      let finalNotes = pack?.notes || data.summary;
-
-      // Auto-continue if notes are incomplete
-      if (!isNotesComplete(finalNotes)) {
-        const { data: contData, error: contError } = await supabase.functions.invoke('continue-notes', {
-          body: { currentNotes: finalNotes, rawText: inputText, title: videoTitle }
-        });
-        
-        if (!contError && !(contData as any)?.error) {
-          finalNotes = (contData as any)?.notes || finalNotes;
-        }
+      if (!isComplete) {
+        // If not complete, throw an error - don't save incomplete notes
+        throw new Error("Notes generation was incomplete. Please try again.");
       }
 
       setProgress(90);
@@ -95,15 +76,17 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
         .from('notes')
         .insert({
           title: videoTitle,
-          content: finalNotes,
-          highlights: pack?.highlights || null,
-          flashcards: pack?.flashcards || null,
-          quiz: pack?.quiz || null,
-          raw_text: data.transcript || null,
+          content: (pack as any)?.notes || inputText,
+          highlights: (pack as any)?.highlights || null,
+          flashcards: (pack as any)?.flashcards || null,
+          quiz: (pack as any)?.quiz || null,
+          raw_text: inputText,
           source_type: 'youtube',
           source_url: url,
-          user_id: user?.id
-        });
+          user_id: user?.id,
+          is_complete: true,
+          activity_log: activityLog as any,
+        } as any);
 
       if (insertError) throw insertError;
 
