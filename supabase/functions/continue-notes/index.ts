@@ -8,6 +8,13 @@ const corsHeaders = {
 
 const MAX_CONTINUATIONS = 5;
 
+interface ActivityLogEntry {
+  timestamp: string;
+  action: string;
+  status: "success" | "error" | "info";
+  details?: string;
+}
+
 function endsWithEndMarker(notes: string): boolean {
   return /\bEND_OF_NOTES\s*$/.test((notes || "").trim());
 }
@@ -56,23 +63,32 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const activityLog: ActivityLogEntry[] = [];
+  const logActivity = (action: string, status: "success" | "error" | "info", details?: string) => {
+    activityLog.push({
+      timestamp: new Date().toISOString(),
+      action,
+      status,
+      details,
+    });
+    console.log(`continue-notes: ${action} - ${status}${details ? `: ${details}` : ""}`);
+  };
+
   try {
     const { currentNotes, rawText, title } = await req.json();
-    console.log("continue-notes: received request", {
-      title,
-      currentNotesLength: currentNotes?.length,
-      rawTextLength: rawText?.length,
-    });
+    logActivity("request_received", "info", `title=${title}, currentNotesLength=${currentNotes?.length}, rawTextLength=${rawText?.length}`);
 
     if (!currentNotes || typeof currentNotes !== "string") {
-      return new Response(JSON.stringify({ error: "Missing 'currentNotes' in request body" }), {
+      logActivity("validation_error", "error", "Missing currentNotes");
+      return new Response(JSON.stringify({ error: "Missing 'currentNotes' in request body", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (!rawText || typeof rawText !== "string") {
-      return new Response(JSON.stringify({ error: "Missing 'rawText' in request body" }), {
+      logActivity("validation_error", "error", "Missing rawText");
+      return new Response(JSON.stringify({ error: "Missing 'rawText' in request body", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -80,7 +96,8 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI is not configured on the backend" }), {
+      logActivity("config_error", "error", "LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "AI is not configured on the backend", activityLog }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -88,9 +105,9 @@ serve(async (req) => {
 
     // If already complete, just return
     if (endsWithEndMarker(currentNotes)) {
-      console.log("continue-notes: notes already complete");
+      logActivity("already_complete", "success", "Notes already have END_OF_NOTES marker");
       return new Response(
-        JSON.stringify({ notes: stripTrailingEndMarker(currentNotes), isComplete: true }),
+        JSON.stringify({ notes: stripTrailingEndMarker(currentNotes), isComplete: true, activityLog }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -98,7 +115,7 @@ serve(async (req) => {
     let fullNotes = currentNotes;
 
     for (let c = 1; c <= MAX_CONTINUATIONS; c++) {
-      console.log(`continue-notes: continuation ${c}/${MAX_CONTINUATIONS}`);
+      logActivity("continuation_attempt", "info", `continuation ${c}/${MAX_CONTINUATIONS}`);
 
       const tail = fullNotes.slice(-2000);
 
@@ -156,7 +173,8 @@ FORMATTING TO MATCH:
 
       const contJson = await callGateway({ apiKey: LOVABLE_API_KEY, body: contBody });
       if (contJson?.__httpError) {
-        return new Response(JSON.stringify({ error: contJson.message }), {
+        logActivity("gateway_error", "error", contJson.message);
+        return new Response(JSON.stringify({ error: contJson.message, activityLog }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -165,7 +183,7 @@ FORMATTING TO MATCH:
       const contToolCall = contJson?.choices?.[0]?.message?.tool_calls?.[0];
       const contArgsStr = contToolCall?.function?.arguments;
       if (!contArgsStr || typeof contArgsStr !== "string") {
-        console.error("continue-notes: invalid continuation tool response", { contJson });
+        logActivity("invalid_response", "error", "Invalid continuation tool response");
         continue;
       }
 
@@ -173,40 +191,39 @@ FORMATTING TO MATCH:
       try {
         contParsed = JSON.parse(contArgsStr);
       } catch (e) {
-        console.error("continue-notes: failed to parse continuation tool args", e);
+        logActivity("parse_error", "error", "Failed to parse continuation tool args");
         continue;
       }
 
       const continuationText = contParsed?.continuation;
       if (typeof continuationText !== "string" || !continuationText.trim()) {
-        console.warn("continue-notes: empty continuation");
+        logActivity("empty_continuation", "info", "Empty continuation received");
         continue;
       }
 
       fullNotes = `${fullNotes.trim()}\n\n${continuationText.trim()}`;
+      logActivity("continuation_appended", "success", `New length: ${fullNotes.length}`);
 
       if (endsWithEndMarker(fullNotes)) {
         fullNotes = stripTrailingEndMarker(fullNotes);
-        console.log("continue-notes: completed after continuation", { finalLength: fullNotes.length });
+        logActivity("continuation_complete", "success", "END_OF_NOTES marker found");
         return new Response(
-          JSON.stringify({ notes: fullNotes, isComplete: true }),
+          JSON.stringify({ notes: fullNotes, isComplete: true, activityLog }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
 
     // Return partial but mark as incomplete
-    console.warn("continue-notes: max continuations reached, still incomplete", {
-      notesLength: fullNotes.length,
-    });
+    logActivity("max_continuations_reached", "info", `Still incomplete after ${MAX_CONTINUATIONS} continuations`);
     return new Response(
-      JSON.stringify({ notes: fullNotes, isComplete: false }),
+      JSON.stringify({ notes: fullNotes, isComplete: false, activityLog }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    console.error("continue-notes: unhandled error", e);
+    logActivity("unhandled_error", "error", e instanceof Error ? e.message : "Unknown error");
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", activityLog }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
+import GeneratingLoader from "./GeneratingLoader";
 
 interface PdfUploadProps {
   onSuccess: () => void;
@@ -49,11 +49,24 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
 
       setProgress(60);
 
+      const pdfTitle = `PDF: ${file.name}`;
+      const pdfContent = (data as any)?.content || (data as any)?.summary;
+
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: data.content || data.summary, title: `PDF: ${file.name}` }
+        body: { text: pdfContent, title: pdfTitle }
       });
       if (packError) throw packError;
+      if ((pack as any)?.error) throw new Error((pack as any).error);
+
+      // Check if generation was complete
+      const isComplete = Boolean((pack as any)?.isComplete);
+      const activityLog = (pack as any)?.activityLog || [];
+
+      if (!isComplete) {
+        // If not complete, throw an error - don't save incomplete notes
+        throw new Error("Notes generation was incomplete. Please try again.");
+      }
 
       setProgress(90);
 
@@ -62,15 +75,17 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: `PDF: ${file.name}`,
-          content: pack?.notes || data.summary,
-          highlights: pack?.highlights || null,
-          flashcards: pack?.flashcards || null,
-          quiz: pack?.quiz || null,
-          raw_text: data.content || null,
+          title: pdfTitle,
+          content: (pack as any)?.notes || pdfContent,
+          highlights: (pack as any)?.highlights || null,
+          flashcards: (pack as any)?.flashcards || null,
+          quiz: (pack as any)?.quiz || null,
+          raw_text: pdfContent,
           source_type: 'pdf',
-          user_id: user?.id
-        });
+          user_id: user?.id,
+          is_complete: true,
+          activity_log: activityLog as any,
+        } as any);
 
       if (insertError) throw insertError;
 
@@ -111,41 +126,30 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="pdf-file">Select PDF</Label>
-            <Input
-              id="pdf-file"
-              type="file"
-              accept=".pdf"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              disabled={isLoading}
-            />
-            {file && (
-              <p className="text-sm text-muted-foreground">
-                Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
-          </div>
-          {isLoading && progress > 0 && (
+        {isLoading && progress > 0 ? (
+          <GeneratingLoader progress={progress} title={file?.name || "PDF"} />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Progress value={progress} className="w-full" />
-              <p className="text-xs text-center text-muted-foreground">
-                Processing PDF... {progress}%
-              </p>
+              <Label htmlFor="pdf-file">Select PDF</Label>
+              <Input
+                id="pdf-file"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={isLoading}
+              />
+              {file && (
+                <p className="text-sm text-muted-foreground">
+                  Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              )}
             </div>
-          )}
-          <Button type="submit" disabled={isLoading || !file} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              "Generate Notes"
-            )}
-          </Button>
-        </form>
+            <Button type="submit" disabled={isLoading || !file} className="w-full">
+              Generate Notes
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );
