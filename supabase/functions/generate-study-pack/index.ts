@@ -80,8 +80,8 @@ serve(async (req) => {
   };
 
   try {
-    const { text, title } = await req.json();
-    logActivity("request_received", "info", `title=${title}, textLength=${text?.length}`);
+    const { text, title, sourceType } = await req.json();
+    logActivity("request_received", "info", `title=${title}, sourceType=${sourceType || "unknown"}, textLength=${text?.length}`);
 
     if (!text || typeof text !== "string") {
       logActivity("validation_error", "error", "Missing text in request body");
@@ -100,7 +100,45 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are an expert academic tutor creating COMPREHENSIVE, ACTIONABLE study materials.
+    const isWebsite = String(sourceType || "").toLowerCase() === "website";
+
+    const systemPrompt = isWebsite
+      ? `You are a careful study-note writer.
+
+GOAL: Produce CLEAR, CONCISE, ORGANIZED notes based ONLY on the provided website text.
+
+STRICT RULES (NO CONFUSION):
+- Use ONLY facts explicitly present in the source.
+- If a detail is not in the source, DO NOT add it.
+- Prefer short bullet points over paragraphs (Outline Method).
+- Use clear headings and hierarchy. Leave white space.
+- Keep notes NOT TOO LONG: target ~700–1200 words total. If the source is huge, include only the most important points.
+- End with the literal line: END_OF_NOTES
+
+REQUIRED STRUCTURE:
+# [Clear Title]
+
+## 📋 Key Takeaways
+- 5–9 bullets, each 1 sentence
+
+## 🧩 Main Points (Outline)
+- Use bullets with nested bullets for supporting details
+
+## ❓ Questions to Review
+- 5–8 short questions
+
+## 📝 Summary
+- 3–5 bullets
+
+END_OF_NOTES
+
+STUDY MATERIALS (keep concise):
+- highlights: 8–12
+- flashcards: 10–16
+- quiz: 8–12
+
+REMEMBER: End with END_OF_NOTES.`
+      : `You are an expert academic tutor creating COMPREHENSIVE, ACTIONABLE study materials.
 
 ##############################################
 # ABSOLUTE CRITICAL REQUIREMENT - READ THIS #

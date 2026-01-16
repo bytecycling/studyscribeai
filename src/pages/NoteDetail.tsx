@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import GeneratingLoader from "@/components/GeneratingLoader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ActivityLogViewer from "@/components/ActivityLogViewer";
 
 interface NoteRow {
   id: string;
@@ -86,10 +87,11 @@ export default function NoteDetail() {
   const [continueProgress, setContinueProgress] = useState(0);
   const { toast } = useToast();
 
-  // Check if notes are complete
+  // Check if notes are complete (prefer persisted flag; fallback to content markers)
   const notesComplete = useMemo(() => {
+    if (note?.is_complete === true) return true;
     return note?.content ? isNotesComplete(note.content) : false;
-  }, [note?.content]);
+  }, [note?.content, note?.is_complete]);
 
   // Check source coverage
   const sourceCoverage = useMemo(() => {
@@ -208,7 +210,15 @@ export default function NoteDetail() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
+      const isComplete = Boolean((data as any)?.isComplete);
+      if (!isComplete) throw new Error("Generation was incomplete. Please try again.");
+
       setRegenProgress(98);
+
+      const mergedLog = [
+        ...(Array.isArray(note.activity_log) ? (note.activity_log as any[]) : []),
+        ...(((data as any)?.activityLog as any[]) || []),
+      ];
 
       const { error: updateError } = await supabase
         .from("notes")
@@ -217,6 +227,8 @@ export default function NoteDetail() {
           highlights: (data as any).highlights,
           flashcards: (data as any).flashcards,
           quiz: (data as any).quiz,
+          is_complete: true,
+          activity_log: mergedLog as any,
         })
         .eq("id", note.id);
 
@@ -228,6 +240,8 @@ export default function NoteDetail() {
         highlights: (data as any).highlights,
         flashcards: (data as any).flashcards,
         quiz: (data as any).quiz,
+        is_complete: true,
+        activity_log: mergedLog,
       });
 
       setRegenProgress(100);
@@ -288,22 +302,31 @@ export default function NoteDetail() {
       setContinueProgress(98);
 
       const newNotes = (data as any).notes;
-      const isComplete = (data as any).isComplete;
+      const isComplete = Boolean((data as any).isComplete);
+
+      const mergedLog = [
+        ...(Array.isArray(note.activity_log) ? (note.activity_log as any[]) : []),
+        ...(((data as any)?.activityLog as any[]) || []),
+      ];
 
       const { error: updateError } = await supabase
         .from("notes")
-        .update({ content: newNotes })
+        .update({
+          content: newNotes,
+          is_complete: isComplete,
+          activity_log: mergedLog as any,
+        })
         .eq("id", note.id);
 
       if (updateError) throw updateError;
 
-      setNote({ ...note, content: newNotes });
+      setNote({ ...note, content: newNotes, is_complete: isComplete, activity_log: mergedLog });
       setContinueProgress(100);
 
       toast({
         title: isComplete ? "Notes Completed!" : "Notes Extended",
-        description: isComplete 
-          ? "Notes have been fully completed" 
+        description: isComplete
+          ? "Notes have been fully completed"
           : "Notes extended but may still be incomplete. Try again if needed.",
       });
     } catch (error: any) {
@@ -435,12 +458,11 @@ export default function NoteDetail() {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="default"
                                 onClick={handleContinueWriting}
                                 disabled={isContinuing}
-                                className="bg-primary"
                               >
                                 <PlayCircle className={isContinuing ? "w-4 h-4 mr-2 animate-pulse" : "w-4 h-4 mr-2"} />
                                 {isContinuing ? "Continuing…" : "Continue Writing"}
@@ -506,49 +528,45 @@ export default function NoteDetail() {
                 ) : isEditing ? (
                   <RichTextEditor value={editedContent} onChange={setEditedContent} />
                 ) : (
-                  <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm, remarkMath]} 
-                      rehypePlugins={[rehypeKatex]}
-                      components={{
-                        code({ node, className, children, ...props }) {
-                          const match = /language-mermaid/.exec(className || '');
-                          const content = String(children).replace(/\n$/, '');
-                          if (match) {
+                  <>
+                    <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                        components={{
+                          code({ node, className, children, ...props }) {
+                            const match = /language-mermaid/.exec(className || "");
+                            const content = String(children).replace(/\n$/, "");
+                            if (match) {
+                              return <MermaidDiagram chart={content} className="my-4" />;
+                            }
+                            const isInline = !className;
+                            if (isInline) {
+                              return <code {...props}>{children}</code>;
+                            }
                             return (
-                              <MermaidDiagram 
-                                chart={content} 
-                                className="my-4"
-                              />
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
                             );
-                          }
-                          // Check if it's an inline code or block
-                          const isInline = !className;
-                          if (isInline) {
-                            return <code {...props}>{children}</code>;
-                          }
-                          return (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                        pre({ children, ...props }) {
-                          // Check if this pre contains a mermaid code block
-                          const child = children as any;
-                          if (child?.props?.className?.includes('language-mermaid')) {
-                            return <>{children}</>;
-                          }
-                          return <pre {...props}>{children}</pre>;
-                        }
-                      }}
-                    >
-                      {note.content}
-                    </ReactMarkdown>
-                  </div>
+                          },
+                          pre({ children, ...props }) {
+                            const child = children as any;
+                            if (child?.props?.className?.includes("language-mermaid")) {
+                              return <>{children}</>;
+                            }
+                            return <pre {...props}>{children}</pre>;
+                          },
+                        }}
+                      >
+                        {note.content}
+                      </ReactMarkdown>
+                    </div>
+
+                    <ActivityLogViewer activityLog={note.activity_log as any} />
+                  </>
                 )}
-                
-                
+
               </CardContent>
             </Card>
           </div>
