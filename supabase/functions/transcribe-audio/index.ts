@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,6 +21,23 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return jsonResponse({ success: false, error: 'Authentication required' }, 401);
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return jsonResponse({ success: false, error: 'Invalid authentication' }, 401);
+    }
+
     const formData = await req.formData();
     const audioFile = formData.get('file') as File;
     
@@ -27,7 +45,7 @@ serve(async (req) => {
       return jsonResponse({ success: false, error: 'Audio file is required' });
     }
 
-    console.log('transcribe-audio: Processing file:', audioFile.name, audioFile.type, 'Size:', audioFile.size);
+    console.log('transcribe-audio: Processing file:', audioFile.name, audioFile.type, 'Size:', audioFile.size, 'User:', user.id);
 
     // Check file size (max 20MB)
     const maxSize = 20 * 1024 * 1024;

@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,9 +8,9 @@ const corsHeaders = {
 };
 
 // Always return 200 with success/error in body
-function jsonResponse(body: Record<string, unknown>) {
+function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
@@ -20,8 +21,25 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return jsonResponse({ success: false, error: "Authentication required" }, 401);
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return jsonResponse({ success: false, error: "Invalid authentication" }, 401);
+    }
+
     const { youtubeUrl } = await req.json();
-    console.log("youtube-transcribe: input", { youtubeUrl });
+    console.log("youtube-transcribe: input", { youtubeUrl, userId: user.id });
 
     if (!youtubeUrl || typeof youtubeUrl !== "string") {
       return jsonResponse({ success: false, error: "YouTube URL is required" });
