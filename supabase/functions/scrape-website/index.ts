@@ -63,9 +63,9 @@ serve(async (req) => {
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const title = titleMatch ? titleMatch[1].trim() : validUrl.hostname;
 
-    // Limit content size
-    if (cleanText.length > 50000) {
-      cleanText = cleanText.substring(0, 50000) + '...';
+    // Limit content size (keep it intentionally smaller to avoid overlong / cut-off notes)
+    if (cleanText.length > 20000) {
+      cleanText = cleanText.substring(0, 20000) + '...';
     }
 
     if (cleanText.length < 100) {

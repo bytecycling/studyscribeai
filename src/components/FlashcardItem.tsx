@@ -34,10 +34,16 @@ export default function FlashcardItem({ question, answer, index }: FlashcardItem
           <div className="text-xs text-muted-foreground mb-2 font-medium">
             Card {index + 1} • Click to flip
           </div>
-          <div className="font-medium text-foreground">
-            <span className="text-primary font-bold">Q: </span>
-            <span className="prose prose-sm dark:prose-invert inline">
-              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+          <div className="text-foreground">
+            <span className="text-primary font-bold">Question: </span>
+            <span className="prose prose-sm dark:prose-invert inline prose-p:my-0 prose-p:leading-snug">
+              <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                }}
+              >
                 {question}
               </ReactMarkdown>
             </span>
@@ -55,9 +61,15 @@ export default function FlashcardItem({ question, answer, index }: FlashcardItem
             Answer • Click to flip back
           </div>
           <div className="text-foreground">
-            <span className="text-primary font-bold">A: </span>
-            <span className="prose prose-sm dark:prose-invert inline">
-              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+            <span className="text-primary font-bold">Answer: </span>
+            <span className="prose prose-sm dark:prose-invert inline prose-p:my-0 prose-p:leading-snug">
+              <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                }}
+              >
                 {answer}
               </ReactMarkdown>
             </span>

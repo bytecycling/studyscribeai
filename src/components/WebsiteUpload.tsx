@@ -53,7 +53,7 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: extractedText, title: pageTitle }
+        body: { text: extractedText, title: pageTitle, sourceType: 'website' }
       });
       
       if (packError) throw packError;
