@@ -9,6 +9,7 @@ import { ArrowLeft, Save, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoImage from "@/assets/studyscribe_logo.png";
+import { logError } from "@/utils/logger";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      logError('Profile.loadProfile', error);
     }
   };
 
@@ -98,7 +99,7 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logError('Profile.loadStats', error);
     }
   };
 

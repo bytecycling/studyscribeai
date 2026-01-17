@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { logError } from "@/utils/logger";
 
 interface SignupData {
   signupMethod: 'email' | 'google' | '';
@@ -93,7 +94,7 @@ const SignupFlow = () => {
 
       if (error) throw error;
     } catch (error: any) {
-      console.error('Google auth error:', error);
+      logError('SignupFlow.googleAuth', error);
       toast({
         title: "Error",
         description: error.message || "Failed to authenticate with Google",
@@ -133,7 +134,7 @@ const SignupFlow = () => {
 
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Error saving preferences:', error);
+      logError('SignupFlow.preferences', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save preferences",
@@ -200,7 +201,7 @@ const SignupFlow = () => {
         setStep(2);
       }
     } catch (error: any) {
-      console.error('Auth error:', error);
+      logError('SignupFlow.emailAuth', error);
       toast({
         title: "Error",
         description: error.message || "Failed to authenticate",

@@ -19,6 +19,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import MermaidDiagram from "@/components/MermaidDiagram";
 import TypingIndicator from "./TypingIndicator";
+import { logError } from "@/utils/logger";
 interface AiChatProps {
   noteId?: string;
   noteContent?: string;
@@ -59,7 +60,7 @@ const AiChat = ({ noteId }: AiChatProps) => {
           );
         }
       } catch (error: any) {
-        console.error("Error loading chat history:", error);
+        logError('AiChat.loadHistory', error);
       } finally {
         setLoadingHistory(false);
       }
@@ -137,7 +138,7 @@ const AiChat = ({ noteId }: AiChatProps) => {
         }
       }
     } catch (error: any) {
-      console.error("Error:", error);
+      logError('AiChat.submit', error);
       // Remove typing indicator on error
       setMessages((prev) => prev.slice(0, -2));
       toast({
@@ -167,7 +168,7 @@ const AiChat = ({ noteId }: AiChatProps) => {
         description: "Chat history cleared",
       });
     } catch (error: any) {
-      console.error("Error clearing chat:", error);
+      logError('AiChat.clearChat', error);
       toast({
         title: "Error",
         description: "Failed to clear chat history",

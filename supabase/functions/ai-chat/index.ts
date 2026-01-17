@@ -15,11 +15,40 @@ serve(async (req) => {
   try {
     const { question, conversationHistory, noteId } = await req.json();
     
+    // Input validation
     if (!question || typeof question !== "string") {
       return new Response(
         JSON.stringify({ error: "Missing 'question' in request body" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Validate question length (max 5000 chars)
+    if (question.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: "Question too long. Maximum 5000 characters allowed." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate conversation history
+    let validatedHistory: any[] = [];
+    if (Array.isArray(conversationHistory)) {
+      if (conversationHistory.length > 100) {
+        return new Response(
+          JSON.stringify({ error: "Conversation history too long. Maximum 100 messages." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      validatedHistory = conversationHistory.map((msg) => {
+        if (!msg || typeof msg.role !== "string" || typeof msg.content !== "string") {
+          return null;
+        }
+        return {
+          role: msg.role,
+          content: String(msg.content).substring(0, 10000),
+        };
+      }).filter(Boolean);
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -128,8 +157,8 @@ graph TD
 
     const messages = [
       { role: "system", content: systemPrompt },
-      ...(conversationHistory || []),
-      { role: "user", content: question }
+      ...validatedHistory,
+      { role: "user", content: question.trim() }
     ];
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

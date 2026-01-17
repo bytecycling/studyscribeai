@@ -108,8 +108,8 @@ serve(async (req) => {
 
     logActivity("auth_success", "info", `user=${user.id}`);
     const { text, title, sourceType } = await req.json();
-    logActivity("request_received", "info", `title=${title}, sourceType=${sourceType || "unknown"}, textLength=${text?.length}`);
 
+    // Input validation
     if (!text || typeof text !== "string") {
       logActivity("validation_error", "error", "Missing text in request body");
       return new Response(JSON.stringify({ error: "Missing 'text' in request body", activityLog }), {
@@ -117,6 +117,21 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Validate text length (max 100KB)
+    const MAX_TEXT_LENGTH = 100000;
+    if (text.length > MAX_TEXT_LENGTH) {
+      logActivity("validation_error", "error", `Text too long: ${text.length} chars`);
+      return new Response(JSON.stringify({ error: `Text too long. Maximum ${MAX_TEXT_LENGTH} characters allowed.`, activityLog }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate title length (max 500 chars)
+    const validTitle = title && typeof title === "string" ? title.substring(0, 500) : "Untitled";
+
+    logActivity("request_received", "info", `title=${validTitle}, sourceType=${sourceType || "unknown"}, textLength=${text.length}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

@@ -37,12 +37,40 @@ serve(async (req) => {
 
     const { content, targetLanguage } = await req.json();
 
-    if (!content || !targetLanguage) {
+    // Input validation
+    if (!content || typeof content !== 'string') {
       return new Response(
-        JSON.stringify({ error: 'Content and target language are required' }),
+        JSON.stringify({ error: 'Content is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    if (!targetLanguage || typeof targetLanguage !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Target language is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate content length (max 50KB)
+    const MAX_CONTENT_LENGTH = 50000;
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate target language length (max 50 chars)
+    if (targetLanguage.length > 50) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid target language' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const validContent = content.trim();
+    const validLanguage = targetLanguage.trim();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -53,7 +81,7 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a professional translator. Translate the following study notes content to ${targetLanguage}. Maintain the markdown formatting and structure. Keep technical terms accurate.`;
+    const systemPrompt = `You are a professional translator. Translate the following study notes content to ${validLanguage}. Maintain the markdown formatting and structure. Keep technical terms accurate.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -65,7 +93,7 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: content }
+          { role: 'user', content: validContent }
         ],
       }),
     });

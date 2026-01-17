@@ -39,13 +39,31 @@ serve(async (req) => {
     }
 
     const { youtubeUrl } = await req.json();
-    console.log("youtube-transcribe: input", { youtubeUrl, userId: user.id });
+    console.log("youtube-transcribe: input", { userId: user.id });
 
+    // Input validation
     if (!youtubeUrl || typeof youtubeUrl !== "string") {
       return jsonResponse({ success: false, error: "YouTube URL is required" });
     }
 
-    const normalizedUrl = normalizeUrl(youtubeUrl);
+    // Validate URL length (max 2000 chars - reasonable URL limit)
+    if (youtubeUrl.length > 2000) {
+      return jsonResponse({ success: false, error: "URL too long" });
+    }
+
+    const trimmedUrl = youtubeUrl.trim();
+    
+    // Validate protocol
+    const normalizedUrl = normalizeUrl(trimmedUrl);
+    if (!normalizedUrl.match(/^https?:\/\//i)) {
+      return jsonResponse({ success: false, error: "URL must use HTTP or HTTPS protocol" });
+    }
+
+    // Validate it's actually a YouTube URL
+    if (!normalizedUrl.match(/youtube\.com|youtu\.be/i)) {
+      return jsonResponse({ success: false, error: "Invalid YouTube URL" });
+    }
+
     const videoId = extractVideoId(normalizedUrl);
 
     if (!videoId) {

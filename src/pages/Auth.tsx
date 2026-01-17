@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import SignupFlow from "@/components/SignupFlow";
 import { Eye, EyeOff } from "lucide-react";
+import { logError } from "@/utils/logger";
 
 const Auth = () => {
   const { toast } = useToast();
@@ -66,7 +67,7 @@ const Auth = () => {
 
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      logError('Auth.signUp', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create account",
@@ -100,7 +101,7 @@ const Auth = () => {
 
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      logError('Auth.signIn', error);
       toast({
         title: "Error",
         description: error.message || "Failed to sign in",
@@ -123,7 +124,7 @@ const Auth = () => {
 
       if (error) throw error;
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      logError('Auth.googleSignIn', error);
       toast({
         title: "Error",
         description: error.message || "Failed to sign in with Google",

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Youtube, FileAudio, FileText, Trash2, Edit2, Check, X, PlayCircle, RefreshCw, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { logError } from "@/utils/logger";
 
 interface Note {
   id: string;
@@ -59,7 +60,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       if (error) throw error;
       setNotes((data as Note[]) || []);
     } catch (error: any) {
-      console.error('Error loading notes:', error);
+      logError('NotesList.loadNotes', error);
       toast({
         title: "Error",
         description: "Failed to load notes",
@@ -86,7 +87,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
 
       loadNotes();
     } catch (error: any) {
-      console.error('Error deleting note:', error);
+      logError('NotesList.deleteNote', error);
       toast({
         title: "Error",
         description: "Failed to delete note",
@@ -131,7 +132,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       setEditingId(null);
       loadNotes();
     } catch (error: any) {
-      console.error('Error updating note:', error);
+      logError('NotesList.saveTitle', error);
       toast({
         title: "Error",
         description: "Failed to rename note",
@@ -156,7 +157,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
 
       loadNotes();
     } catch (error: any) {
-      console.error('Error moving note:', error);
+      logError('NotesList.moveNote', error);
       toast({
         title: "Error",
         description: "Failed to move note",
@@ -253,7 +254,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       await loadNotes();
       return isComplete;
     } catch (e: any) {
-      console.error("continueNote error", e);
+      logError('NotesList.continueNote', e);
       if (showToast) {
         toast({
           title: "Error",

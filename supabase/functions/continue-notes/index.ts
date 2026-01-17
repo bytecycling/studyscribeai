@@ -104,8 +104,8 @@ serve(async (req) => {
     logActivity("auth_success", "info", `user=${user.id}`);
 
     const { currentNotes, rawText, title } = await req.json();
-    logActivity("request_received", "info", `title=${title}, currentNotesLength=${currentNotes?.length}, rawTextLength=${rawText?.length}`);
 
+    // Input validation
     if (!currentNotes || typeof currentNotes !== "string") {
       logActivity("validation_error", "error", "Missing currentNotes");
       return new Response(JSON.stringify({ error: "Missing 'currentNotes' in request body", activityLog }), {
@@ -121,6 +121,30 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Validate input lengths
+    const MAX_NOTES_LENGTH = 200000;
+    const MAX_RAW_TEXT_LENGTH = 100000;
+    const MAX_TITLE_LENGTH = 500;
+
+    if (currentNotes.length > MAX_NOTES_LENGTH) {
+      logActivity("validation_error", "error", `currentNotes too long: ${currentNotes.length}`);
+      return new Response(JSON.stringify({ error: `Notes too long. Maximum ${MAX_NOTES_LENGTH} characters allowed.`, activityLog }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (rawText.length > MAX_RAW_TEXT_LENGTH) {
+      logActivity("validation_error", "error", `rawText too long: ${rawText.length}`);
+      return new Response(JSON.stringify({ error: `Source text too long. Maximum ${MAX_RAW_TEXT_LENGTH} characters allowed.`, activityLog }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const validTitle = title && typeof title === "string" ? title.substring(0, MAX_TITLE_LENGTH) : "";
+    logActivity("request_received", "info", `title=${validTitle}, currentNotesLength=${currentNotes.length}, rawTextLength=${rawText.length}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
