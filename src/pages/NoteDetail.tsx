@@ -425,88 +425,61 @@ export default function NoteDetail() {
 
             <Card>
               <CardContent className="py-6">
-                <div className="flex justify-end mb-4 gap-2">
-                  {isEditing ? (
-                    <>
+                {!isEditing && (
+                  <div className="flex justify-end mb-4 gap-2">
+                    {/* Continue Writing button - shows when notes are incomplete */}
+                    {note.raw_text && !notesComplete && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="sm" onClick={saveContent}>
-                              <Save className="w-4 h-4 mr-2" />
-                              Save
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={handleContinueWriting}
+                              disabled={isContinuing}
+                            >
+                              <PlayCircle className={isContinuing ? "w-4 h-4 mr-2 animate-pulse" : "w-4 h-4 mr-2"} />
+                              {isContinuing ? "Continuing…" : "Continue Writing"}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Save (⌘S)</TooltipContent>
+                          <TooltipContent>Continue generating incomplete notes</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                    )}
+                    {note.raw_text && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="sm" variant="outline" onClick={cancelEditing}>
-                              <X className="w-4 h-4 mr-2" />
-                              Cancel
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={handleRegenerateNotes}
+                              disabled={isRegenerating || isContinuing}
+                            >
+                              <RefreshCw className={isRegenerating ? "w-4 h-4 mr-2 animate-spin" : "w-4 h-4 mr-2"} />
+                              {isRegenerating ? "Regenerating…" : "Regenerate"}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Cancel (Esc)</TooltipContent>
+                          <TooltipContent>Regenerate notes from source</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    </>
-                  ) : (
-                    <>
-                      {/* Continue Writing button - shows when notes are incomplete */}
-                      {note.raw_text && !notesComplete && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={handleContinueWriting}
-                                disabled={isContinuing}
-                              >
-                                <PlayCircle className={isContinuing ? "w-4 h-4 mr-2 animate-pulse" : "w-4 h-4 mr-2"} />
-                                {isContinuing ? "Continuing…" : "Continue Writing"}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Continue generating incomplete notes</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      {note.raw_text && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={handleRegenerateNotes}
-                                disabled={isRegenerating || isContinuing}
-                              >
-                                <RefreshCw className={isRegenerating ? "w-4 h-4 mr-2 animate-spin" : "w-4 h-4 mr-2"} />
-                                {isRegenerating ? "Regenerating…" : "Regenerate"}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Regenerate notes from source</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button size="sm" variant="outline" onClick={startEditing} disabled={isContinuing}>
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Edit Note
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit (⌘E)</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </>
-                  )}
-                </div>
+                    )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={startEditing} disabled={isContinuing}>
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit Note
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit (⌘E)</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
 
                 {/* Incomplete notes warning */}
-                {!notesComplete && note.raw_text && !isRegenerating && !isContinuing && (
+                {!notesComplete && note.raw_text && !isRegenerating && !isContinuing && !isEditing && (
                   <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
                     <AlertTitle className="text-amber-500">Notes Incomplete</AlertTitle>
@@ -526,7 +499,12 @@ export default function NoteDetail() {
                 ) : isRegenerating && regenProgress > 0 ? (
                   <GeneratingLoader progress={regenProgress} title={note.title} />
                 ) : isEditing ? (
-                  <RichTextEditor value={editedContent} onChange={setEditedContent} />
+                  <RichTextEditor 
+                    value={editedContent} 
+                    onChange={setEditedContent}
+                    onSave={saveContent}
+                    onCancel={cancelEditing}
+                  />
                 ) : (
                   <>
                     <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
