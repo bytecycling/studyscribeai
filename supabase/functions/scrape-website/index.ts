@@ -97,19 +97,29 @@ serve(async (req) => {
 
     const { url } = await req.json();
     
-    if (!url) {
+    // Input validation
+    if (!url || typeof url !== 'string') {
       return new Response(
         JSON.stringify({ error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Scraping website:', url, 'for user:', user.id);
+    // Validate URL length (max 2000 chars)
+    if (url.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: 'URL too long' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const trimmedUrl = url.trim();
+    console.log('Scraping website for user:', user.id);
 
     // Validate URL format
     let validUrl: URL;
     try {
-      validUrl = new URL(url);
+      validUrl = new URL(trimmedUrl);
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid URL provided' }),
@@ -118,7 +128,7 @@ serve(async (req) => {
     }
 
     // SSRF Protection
-    const urlSafetyCheck = isUrlSafe(url);
+    const urlSafetyCheck = isUrlSafe(trimmedUrl);
     if (!urlSafetyCheck.safe) {
       return new Response(
         JSON.stringify({ error: urlSafetyCheck.reason }),
@@ -133,7 +143,7 @@ serve(async (req) => {
 
     let response: Response;
     try {
-      response = await fetch(url, {
+      response = await fetch(trimmedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; StudyScribe/1.0; +https://studyscribe.app)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -192,7 +202,7 @@ serve(async (req) => {
         success: true,
         content: cleanText,
         title: title,
-        url: url,
+        url: trimmedUrl,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

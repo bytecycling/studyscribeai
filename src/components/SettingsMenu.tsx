@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Settings, Languages, Trash2, Sparkles, Moon } from "lucide-react";
 import {
@@ -21,7 +21,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { logError } from "@/utils/logger";
 
 interface SettingsMenuProps {
   onClearHistory: () => void;
@@ -102,6 +102,7 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
 
       onClearHistory();
     } catch (error: any) {
+      logError('SettingsMenu.clearHistory', error);
       toast({
         title: "Error",
         description: error.message || "Failed to clear history",
