@@ -49,11 +49,11 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
       const extractedText = (data as any)?.content || (data as any)?.text;
       if (!extractedText) throw new Error('No content could be extracted from this website.');
 
-      const pageTitle = (data as any)?.title || new URL(url).hostname;
+      const pageTitleFallback = (data as any)?.title || new URL(url).hostname;
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: extractedText, title: pageTitle, sourceType: 'website' }
+        body: { text: extractedText, title: pageTitleFallback, sourceType: 'website' }
       });
       
       if (packError) throw packError;
@@ -68,6 +68,9 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
         throw new Error("Notes generation was incomplete. Please try again.");
       }
 
+      // Use AI-generated title if available
+      const finalTitle = (pack as any)?.suggestedTitle || pageTitleFallback;
+
       setProgress(90);
 
       // Save to database
@@ -75,7 +78,7 @@ const WebsiteUpload = ({ onSuccess }: WebsiteUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: pageTitle,
+          title: finalTitle,
           content: (pack as any)?.notes || extractedText,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,

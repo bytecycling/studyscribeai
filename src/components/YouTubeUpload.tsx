@@ -49,12 +49,12 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
 
       setProgress(45);
 
-      // Extract video title
-      const videoTitle = (data as any)?.title || `Video ${(data as any)?.videoId || ''}`;
+      // Extract video title as fallback
+      const videoTitleFallback = (data as any)?.title || `Video ${(data as any)?.videoId || ''}`;
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: inputText, title: videoTitle }
+        body: { text: inputText, title: videoTitleFallback }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
@@ -68,6 +68,9 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
         throw new Error("Notes generation was incomplete. Please try again.");
       }
 
+      // Use AI-generated title if available
+      const finalTitle = (pack as any)?.suggestedTitle || videoTitleFallback;
+
       setProgress(90);
 
       // Save to database
@@ -75,7 +78,7 @@ const YouTubeUpload = ({ onSuccess }: YouTubeUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: videoTitle,
+          title: finalTitle,
           content: (pack as any)?.notes || inputText,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,
