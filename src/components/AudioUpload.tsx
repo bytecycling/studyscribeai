@@ -62,11 +62,11 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
 
       setProgress(50);
 
-      const audioTitle = `Audio: ${file.name}`;
+      const audioTitleFallback = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: transcriptText, title: audioTitle }
+        body: { text: transcriptText, title: audioTitleFallback }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
@@ -80,6 +80,9 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
         throw new Error("Notes generation was incomplete. Please try again.");
       }
 
+      // Use AI-generated title if available
+      const finalTitle = (pack as any)?.suggestedTitle || audioTitleFallback;
+
       setProgress(90);
 
       // Save to database
@@ -87,7 +90,7 @@ const AudioUpload = ({ onSuccess }: AudioUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: audioTitle,
+          title: finalTitle,
           content: (pack as any)?.notes || transcriptText,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,

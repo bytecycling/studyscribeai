@@ -20,10 +20,9 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange, className, onSave, onCancel }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const isUpdatingRef = useRef(false);
-  const [selectedFont, setSelectedFont] = useState('Arial');
+  const isInitializedRef = useRef(false);
+  const [selectedFont, setSelectedFont] = useState('Arial, sans-serif');
   const [selectedSize, setSelectedSize] = useState('16px');
-  const [selectedTextType, setSelectedTextType] = useState('paragraph');
 
   const fonts = [
     { name: 'Clarika', value: 'Clarika, sans-serif' },
@@ -55,241 +54,304 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
     { name: 'Violet', color: '#8B5CF6' },
   ];
 
-  // Convert markdown to HTML for display
-  const convertMarkdownToHtml = useCallback((markdown: string): string => {
-    if (!markdown) return '';
+  // Convert markdown to HTML for WYSIWYG display
+  const markdownToHtml = useCallback((markdown: string): string => {
+    if (!markdown) return '<p><br></p>';
     
-    let html = markdown
-      // Headers - convert to styled divs
-      .replace(/^### (.+)$/gm, '<h3 style="font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.75rem;">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 style="font-size: 1.5rem; font-weight: 700; margin: 2rem 0 1rem;">$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 1.5rem;">$1</h1>')
-      // Bold and italic
-      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong style="color: #7C77F4;">$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/_(.+?)_/g, '<u>$1</u>')
-      // Highlights
-      .replace(/==(.+?)==/g, '<mark style="background-color: #fef08a; padding: 0.125rem 0.25rem; border-radius: 0.25rem;">$1</mark>')
-      // Blockquotes
-      .replace(/^> (.+)$/gm, '<blockquote style="border-left: 4px solid #7C77F4; padding-left: 1rem; margin: 1rem 0; font-style: italic;">$1</blockquote>')
+    let html = markdown;
+    
+    // Process line by line for block elements
+    const lines = html.split('\n');
+    const processedLines: string[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      
       // Horizontal rules
-      .replace(/^---$/gm, '<hr style="border-top: 2px solid hsl(240 10% 90%); margin: 2rem 0;">')
+      if (/^---+$/.test(line.trim())) {
+        processedLines.push('<hr style="border: none; border-top: 2px solid #e5e7eb; margin: 1.5rem 0;">');
+        continue;
+      }
+      
+      // Headers - convert # to actual styled headings
+      if (/^### (.+)$/.test(line)) {
+        const content = line.replace(/^### /, '');
+        processedLines.push(`<h3 style="font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; color: inherit;">${processInlineStyles(content)}</h3>`);
+        continue;
+      }
+      if (/^## (.+)$/.test(line)) {
+        const content = line.replace(/^## /, '');
+        processedLines.push(`<h2 style="font-size: 1.5rem; font-weight: 700; margin: 1.25rem 0 0.75rem; color: inherit;">${processInlineStyles(content)}</h2>`);
+        continue;
+      }
+      if (/^# (.+)$/.test(line)) {
+        const content = line.replace(/^# /, '');
+        processedLines.push(`<h1 style="font-size: 2rem; font-weight: 700; margin: 0 0 1rem; color: inherit;">${processInlineStyles(content)}</h1>`);
+        continue;
+      }
+      
+      // Blockquotes
+      if (/^> (.+)$/.test(line)) {
+        const content = line.replace(/^> /, '');
+        processedLines.push(`<blockquote style="border-left: 4px solid #7C77F4; padding-left: 1rem; margin: 1rem 0; font-style: italic; color: #6b7280;">${processInlineStyles(content)}</blockquote>`);
+        continue;
+      }
+      
       // Bullet lists
-      .replace(/^- (.+)$/gm, '<li style="margin: 0.5rem 0; margin-left: 1.5rem; list-style-type: disc;">$1</li>')
+      if (/^[-*] (.+)$/.test(line)) {
+        const content = line.replace(/^[-*] /, '');
+        processedLines.push(`<div style="display: flex; margin: 0.25rem 0;"><span style="margin-right: 0.5rem; margin-left: 1.5rem;">•</span><span>${processInlineStyles(content)}</span></div>`);
+        continue;
+      }
+      
       // Numbered lists
-      .replace(/^\d+\. (.+)$/gm, '<li style="margin: 0.5rem 0; margin-left: 1.5rem; list-style-type: decimal;">$1</li>')
+      if (/^\d+\. (.+)$/.test(line)) {
+        const match = line.match(/^(\d+)\. (.+)$/);
+        if (match) {
+          processedLines.push(`<div style="display: flex; margin: 0.25rem 0;"><span style="margin-right: 0.5rem; margin-left: 1.5rem;">${match[1]}.</span><span>${processInlineStyles(match[2])}</span></div>`);
+        }
+        continue;
+      }
+      
       // Tables - basic support
-      .replace(/\|(.+)\|/g, (match) => {
-        const cells = match.split('|').filter(c => c.trim());
-        const cellHtml = cells.map(c => `<td style="border: 1px solid hsl(240 10% 90%); padding: 0.5rem;">${c.trim()}</td>`).join('');
-        return `<tr>${cellHtml}</tr>`;
-      })
-      // Line breaks
-      .replace(/\n/g, '<br>');
-
-    // Wrap consecutive list items
-    html = html
-      .replace(/(<li[^>]*>.*?<\/li><br>)+/g, (match) => {
-        const items = match.replace(/<br>/g, '');
-        return `<ul style="margin: 1rem 0;">${items}</ul>`;
-      });
-
-    return html;
+      if (line.includes('|') && line.trim().startsWith('|')) {
+        // Skip separator rows
+        if (/^\|[\s\-:]+\|$/.test(line.trim())) continue;
+        
+        const cells = line.split('|').filter(c => c.trim());
+        const isHeader = i === 0 || (lines[i-1] && /^\|[\s\-:]+\|$/.test(lines[i-1].trim()));
+        const cellTag = isHeader ? 'th' : 'td';
+        const cellStyle = 'border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left;';
+        const cellsHtml = cells.map(c => `<${cellTag} style="${cellStyle}">${processInlineStyles(c.trim())}</${cellTag}>`).join('');
+        processedLines.push(`<tr>${cellsHtml}</tr>`);
+        continue;
+      }
+      
+      // Empty lines become paragraph breaks
+      if (line.trim() === '') {
+        processedLines.push('<p style="margin: 0.5rem 0;"><br></p>');
+        continue;
+      }
+      
+      // Regular paragraphs
+      processedLines.push(`<p style="margin: 0.25rem 0; line-height: 1.75;">${processInlineStyles(line)}</p>`);
+    }
+    
+    // Wrap table rows
+    let result = processedLines.join('');
+    result = result.replace(/(<tr>.*?<\/tr>)+/gs, (match) => {
+      return `<table style="border-collapse: collapse; width: 100%; margin: 1rem 0;">${match}</table>`;
+    });
+    
+    return result || '<p><br></p>';
   }, []);
 
-  // Convert HTML back to markdown
-  const convertHtmlToMarkdown = useCallback((html: string): string => {
+  // Process inline markdown styles
+  const processInlineStyles = (text: string): string => {
+    return text
+      // LaTeX - preserve as-is for now (will be rendered separately)
+      .replace(/\$\$([^$]+)\$\$/g, '<span class="math-block" style="display: block; text-align: center; margin: 1rem 0; font-family: serif; background: #f3f4f6; padding: 0.5rem; border-radius: 0.25rem;">$$$$1$$</span>')
+      .replace(/\$([^$]+)\$/g, '<span class="math-inline" style="font-family: serif; background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.125rem;">$$$1$</span>')
+      // Bold + Italic
+      .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+      // Bold - make it purple as per design
+      .replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #7C77F4; font-weight: 700;">$1</strong>')
+      // Italic
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      // Underline
+      .replace(/_([^_]+)_/g, '<u>$1</u>')
+      // Highlight
+      .replace(/==([^=]+)==/g, '<mark style="background-color: #fef08a; padding: 0.125rem 0.25rem; border-radius: 0.25rem;">$1</mark>');
+  };
+
+  // Convert HTML back to clean markdown
+  const htmlToMarkdown = useCallback((html: string): string => {
     const temp = document.createElement('div');
     temp.innerHTML = html;
     
-    let markdown = temp.innerHTML
-      // Headers
-      .replace(/<h1[^>]*>(.+?)<\/h1>/gi, '# $1\n')
-      .replace(/<h2[^>]*>(.+?)<\/h2>/gi, '## $1\n')
-      .replace(/<h3[^>]*>(.+?)<\/h3>/gi, '### $1\n')
-      // Bold and italic
-      .replace(/<strong><em>(.+?)<\/em><\/strong>/gi, '***$1***')
-      .replace(/<em><strong>(.+?)<\/strong><\/em>/gi, '***$1***')
-      .replace(/<strong[^>]*>(.+?)<\/strong>/gi, '**$1**')
-      .replace(/<b[^>]*>(.+?)<\/b>/gi, '**$1**')
-      .replace(/<em[^>]*>(.+?)<\/em>/gi, '*$1*')
-      .replace(/<i[^>]*>(.+?)<\/i>/gi, '*$1*')
-      .replace(/<u[^>]*>(.+?)<\/u>/gi, '_$1_')
-      // Highlights
-      .replace(/<mark[^>]*>(.+?)<\/mark>/gi, '==$1==')
-      // Blockquotes
-      .replace(/<blockquote[^>]*>(.+?)<\/blockquote>/gi, '> $1\n')
-      // Horizontal rules
-      .replace(/<hr[^>]*>/gi, '---\n')
-      // Lists
-      .replace(/<li[^>]*>(.+?)<\/li>/gi, '- $1\n')
-      .replace(/<ul[^>]*>/gi, '')
-      .replace(/<\/ul>/gi, '')
-      .replace(/<ol[^>]*>/gi, '')
-      .replace(/<\/ol>/gi, '')
-      // Line breaks and divs
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<div>/gi, '\n')
-      .replace(/<\/div>/gi, '')
-      .replace(/<p>/gi, '\n')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/&nbsp;/gi, ' ')
-      // Clean up spans
-      .replace(/<span[^>]*>(.+?)<\/span>/gi, '$1')
-      // Clean up other tags
-      .replace(/<[^>]+>/g, '');
-    
-    return markdown.trim();
-  }, []);
-
-  useEffect(() => {
-    if (editorRef.current && !isUpdatingRef.current) {
-      const html = convertMarkdownToHtml(value);
-      if (editorRef.current.innerHTML !== html) {
-        // Save cursor position
-        const selection = window.getSelection();
-        const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    // Walk through all nodes and convert to markdown
+    const walkNodes = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent || '';
+      }
+      
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        const tagName = el.tagName.toLowerCase();
+        const childContent = Array.from(el.childNodes).map(walkNodes).join('');
         
-        editorRef.current.innerHTML = html;
-        
-        // Restore cursor if possible
-        if (range && editorRef.current.contains(range.startContainer)) {
-          selection?.removeAllRanges();
-          selection?.addRange(range);
+        switch (tagName) {
+          case 'h1':
+            return `# ${childContent}\n`;
+          case 'h2':
+            return `## ${childContent}\n`;
+          case 'h3':
+            return `### ${childContent}\n`;
+          case 'strong':
+          case 'b':
+            return `**${childContent}**`;
+          case 'em':
+          case 'i':
+            return `*${childContent}*`;
+          case 'u':
+            return `_${childContent}_`;
+          case 'mark':
+            return `==${childContent}==`;
+          case 'blockquote':
+            return `> ${childContent}\n`;
+          case 'hr':
+            return '---\n';
+          case 'br':
+            return '\n';
+          case 'p':
+            return `${childContent}\n`;
+          case 'div':
+            // Check if it's a list item
+            if (el.querySelector('span')) {
+              const bullet = el.children[0]?.textContent?.trim();
+              const content = el.children[1]?.textContent || childContent;
+              if (bullet === '•') {
+                return `- ${content}\n`;
+              } else if (/^\d+\.$/.test(bullet || '')) {
+                return `${bullet} ${content}\n`;
+              }
+            }
+            return `${childContent}\n`;
+          case 'span':
+            // Handle math blocks
+            if (el.classList.contains('math-block') || el.classList.contains('math-inline')) {
+              return el.textContent || '';
+            }
+            return childContent;
+          case 'table':
+            return childContent;
+          case 'tr':
+            const cells = Array.from(el.children).map(c => c.textContent || '').join(' | ');
+            return `| ${cells} |\n`;
+          case 'td':
+          case 'th':
+            return childContent;
+          default:
+            return childContent;
         }
       }
-    }
-  }, [value, convertMarkdownToHtml]);
+      
+      return '';
+    };
+    
+    let markdown = walkNodes(temp);
+    
+    // Clean up multiple newlines
+    markdown = markdown.replace(/\n{3,}/g, '\n\n').trim();
+    
+    return markdown;
+  }, []);
 
+  // Initialize editor with content
+  useEffect(() => {
+    if (editorRef.current && !isInitializedRef.current) {
+      editorRef.current.innerHTML = markdownToHtml(value);
+      isInitializedRef.current = true;
+    }
+  }, [value, markdownToHtml]);
+
+  // Handle content changes
   const handleInput = useCallback(() => {
     if (editorRef.current) {
-      isUpdatingRef.current = true;
-      const markdown = convertHtmlToMarkdown(editorRef.current.innerHTML);
+      const markdown = htmlToMarkdown(editorRef.current.innerHTML);
       onChange(markdown);
-      setTimeout(() => {
-        isUpdatingRef.current = false;
-      }, 0);
     }
-  }, [onChange, convertHtmlToMarkdown]);
+  }, [onChange, htmlToMarkdown]);
 
-  const execCommand = useCallback((command: string, value: string | undefined = undefined) => {
-    document.execCommand(command, false, value);
+  // Execute formatting command
+  const execCommand = useCallback((command: string, value?: string) => {
     editorRef.current?.focus();
+    document.execCommand(command, false, value);
     handleInput();
   }, [handleInput]);
 
-  const applyTextType = useCallback((type: string) => {
-    setSelectedTextType(type);
-    switch (type) {
-      case 'title':
-        execCommand('formatBlock', 'h1');
-        break;
-      case 'subtitle':
-        execCommand('formatBlock', 'h2');
-        break;
-      case 'heading':
-        execCommand('formatBlock', 'h3');
-        break;
-      case 'paragraph':
-        execCommand('formatBlock', 'p');
-        break;
-    }
+  // Apply text formatting
+  const applyTextFormat = useCallback((format: 'h1' | 'h2' | 'h3' | 'p') => {
+    execCommand('formatBlock', format);
   }, [execCommand]);
 
-  const applyHighlight = useCallback((color: string) => {
-    execCommand('hiliteColor', color);
-  }, [execCommand]);
-
-  const applyColor = useCallback((color: string) => {
-    execCommand('foreColor', color);
-  }, [execCommand]);
-
+  // Apply font family
   const applyFont = useCallback((font: string) => {
     setSelectedFont(font);
     execCommand('fontName', font);
   }, [execCommand]);
 
-  const applySize = useCallback((size: string) => {
+  // Apply font size properly without leaving raw HTML
+  const applyFontSize = useCallback((size: string) => {
     setSelectedSize(size);
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
-      const range = selection.getRangeAt(0);
-      const span = document.createElement('span');
-      span.style.fontSize = size;
-      try {
-        range.surroundContents(span);
-      } catch {
-        const fragment = range.extractContents();
-        span.appendChild(fragment);
-        range.insertNode(span);
-      }
-      selection.removeAllRanges();
+      // Use execCommand for fontSize (1-7 scale) then adjust
+      const sizeNum = parseInt(size);
+      let fontSizeValue = '3'; // Default
+      if (sizeNum <= 12) fontSizeValue = '1';
+      else if (sizeNum <= 14) fontSizeValue = '2';
+      else if (sizeNum <= 16) fontSizeValue = '3';
+      else if (sizeNum <= 18) fontSizeValue = '4';
+      else if (sizeNum <= 24) fontSizeValue = '5';
+      else if (sizeNum <= 28) fontSizeValue = '6';
+      else fontSizeValue = '7';
+      
+      execCommand('fontSize', fontSizeValue);
+      
+      // Now convert the font element to proper size
+      setTimeout(() => {
+        if (editorRef.current) {
+          const fonts = editorRef.current.querySelectorAll('font[size]');
+          fonts.forEach(font => {
+            const span = document.createElement('span');
+            span.style.fontSize = size;
+            span.innerHTML = font.innerHTML;
+            font.parentNode?.replaceChild(span, font);
+          });
+          handleInput();
+        }
+      }, 0);
     }
     editorRef.current?.focus();
-    handleInput();
-  }, [handleInput]);
+  }, [execCommand, handleInput]);
 
+  // Apply highlight color
+  const applyHighlight = useCallback((color: string) => {
+    execCommand('hiliteColor', color);
+  }, [execCommand]);
+
+  // Apply text color
+  const applyTextColor = useCallback((color: string) => {
+    execCommand('foreColor', color);
+  }, [execCommand]);
+
+  // Insert math equation
   const insertMathEquation = useCallback(() => {
-    // Create modal for math equation using Desmos
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-    modal.innerHTML = `
-      <div class="bg-background rounded-lg p-6 w-[700px]" style="background: white;">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold">Math Equation Editor</h3>
-          <button class="text-muted-foreground hover:text-foreground text-2xl" onclick="this.closest('.fixed').remove()">×</button>
-        </div>
-        <div id="calculator" style="width: 650px; height: 450px;"></div>
-        <div class="flex justify-end gap-2 mt-4">
-          <button class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onclick="this.closest('.fixed').remove()">Cancel</button>
-          <button class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white" onclick="window.insertMathEquation()">Insert</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    // Load Desmos script
-    const script = document.createElement('script');
-    script.src = 'https://www.desmos.com/api/v1.11/calculator.js?apiKey=452753a0558f4a3c97f286efa8700052';
-    script.onload = () => {
-      // @ts-ignore
-      const elt = document.getElementById('calculator');
-      // @ts-ignore
-      window.calculator = Desmos.GraphingCalculator(elt);
-    };
-    document.head.appendChild(script);
-
-    // @ts-ignore
-    window.insertMathEquation = () => {
-      // @ts-ignore
-      const state = window.calculator.getState();
-      const equation = state.expressions.list[0]?.latex || '';
-      if (equation && editorRef.current) {
-        // Insert as inline LaTeX
-        const mathSpan = document.createElement('span');
-        mathSpan.className = 'math-equation';
-        mathSpan.textContent = `$${equation}$`;
-        mathSpan.style.fontFamily = 'KaTeX_Math, serif';
-        mathSpan.style.backgroundColor = '#f3f4f6';
-        mathSpan.style.padding = '2px 8px';
-        mathSpan.style.borderRadius = '4px';
-        
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          range.insertNode(mathSpan);
-          range.setStartAfter(mathSpan);
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } else {
-          editorRef.current.appendChild(mathSpan);
-        }
-        handleInput();
+    const equation = prompt('Enter LaTeX equation (e.g., E = mc^2):');
+    if (equation && editorRef.current) {
+      const mathSpan = document.createElement('span');
+      mathSpan.className = 'math-inline';
+      mathSpan.textContent = `$${equation}$`;
+      mathSpan.style.fontFamily = 'serif';
+      mathSpan.style.backgroundColor = '#f3f4f6';
+      mathSpan.style.padding = '0.125rem 0.25rem';
+      mathSpan.style.borderRadius = '0.125rem';
+      
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(mathSpan);
+        range.setStartAfter(mathSpan);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        editorRef.current.appendChild(mathSpan);
       }
-      modal.remove();
-    };
+      handleInput();
+    }
   }, [handleInput]);
 
   const ToolbarButton = ({ onClick, icon: Icon, tooltip }: { onClick: () => void; icon: any; tooltip: string }) => (
@@ -312,7 +374,7 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
   );
 
   return (
-    <div className={`border rounded-lg overflow-hidden ${className}`}>
+    <div className={`border rounded-lg overflow-hidden bg-background ${className}`}>
       {/* Save/Cancel Header */}
       {(onSave || onCancel) && (
         <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
@@ -332,18 +394,18 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
         </div>
       )}
 
-      {/* Always Visible Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-background border-b">
+      {/* Always Visible Toolbar - Google Docs style */}
+      <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/30 border-b sticky top-0 z-10">
         {/* Text Type */}
-        <Select value={selectedTextType} onValueChange={applyTextType}>
-          <SelectTrigger className="w-[120px] h-8 text-xs">
-            <SelectValue placeholder="Text type" />
+        <Select defaultValue="p" onValueChange={(v) => applyTextFormat(v as any)}>
+          <SelectTrigger className="w-[110px] h-8 text-xs">
+            <SelectValue placeholder="Normal" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="title">Title</SelectItem>
-            <SelectItem value="subtitle">Subtitle</SelectItem>
-            <SelectItem value="heading">Heading</SelectItem>
-            <SelectItem value="paragraph">Paragraph</SelectItem>
+            <SelectItem value="p">Normal</SelectItem>
+            <SelectItem value="h1">Title</SelectItem>
+            <SelectItem value="h2">Subtitle</SelectItem>
+            <SelectItem value="h3">Heading</SelectItem>
           </SelectContent>
         </Select>
 
@@ -351,7 +413,7 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
 
         {/* Font Family */}
         <Select value={selectedFont} onValueChange={applyFont}>
-          <SelectTrigger className="w-[130px] h-8 text-xs">
+          <SelectTrigger className="w-[120px] h-8 text-xs">
             <Type className="w-3 h-3 mr-1" />
             <SelectValue />
           </SelectTrigger>
@@ -365,8 +427,8 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
         </Select>
 
         {/* Font Size */}
-        <Select value={selectedSize} onValueChange={applySize}>
-          <SelectTrigger className="w-[75px] h-8 text-xs">
+        <Select value={selectedSize} onValueChange={applyFontSize}>
+          <SelectTrigger className="w-[70px] h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -379,9 +441,9 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
         <Separator orientation="vertical" className="h-6 mx-1" />
 
         {/* Basic Formatting */}
-        <ToolbarButton onClick={() => execCommand('bold')} icon={Bold} tooltip="Bold" />
-        <ToolbarButton onClick={() => execCommand('italic')} icon={Italic} tooltip="Italic" />
-        <ToolbarButton onClick={() => execCommand('underline')} icon={Underline} tooltip="Underline" />
+        <ToolbarButton onClick={() => execCommand('bold')} icon={Bold} tooltip="Bold (Ctrl+B)" />
+        <ToolbarButton onClick={() => execCommand('italic')} icon={Italic} tooltip="Italic (Ctrl+I)" />
+        <ToolbarButton onClick={() => execCommand('underline')} icon={Underline} tooltip="Underline (Ctrl+U)" />
         <ToolbarButton onClick={() => execCommand('strikeThrough')} icon={Strikethrough} tooltip="Strikethrough" />
 
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -402,7 +464,7 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
                   type="button"
                   className="w-6 h-6 rounded border border-border hover:scale-110 transition-transform"
                   style={{ backgroundColor: item.color }}
-                  onClick={() => applyColor(item.color)}
+                  onClick={() => applyTextColor(item.color)}
                   title={item.name}
                 />
               ))}
@@ -418,7 +480,7 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
-            <p className="text-xs text-muted-foreground mb-2">Highlight Color</p>
+            <p className="text-xs text-muted-foreground mb-2">Highlight</p>
             <div className="flex gap-1">
               {highlightColors.map((item) => (
                 <button
@@ -437,9 +499,9 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
         <Separator orientation="vertical" className="h-6 mx-1" />
 
         {/* Headers */}
-        <ToolbarButton onClick={() => execCommand('formatBlock', 'h1')} icon={Heading1} tooltip="Title (H1)" />
-        <ToolbarButton onClick={() => execCommand('formatBlock', 'h2')} icon={Heading2} tooltip="Subtitle (H2)" />
-        <ToolbarButton onClick={() => execCommand('formatBlock', 'h3')} icon={Heading3} tooltip="Heading (H3)" />
+        <ToolbarButton onClick={() => applyTextFormat('h1')} icon={Heading1} tooltip="Title" />
+        <ToolbarButton onClick={() => applyTextFormat('h2')} icon={Heading2} tooltip="Subtitle" />
+        <ToolbarButton onClick={() => applyTextFormat('h3')} icon={Heading3} tooltip="Heading" />
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -463,15 +525,15 @@ export default function RichTextEditor({ value, onChange, className, onSave, onC
         <ToolbarButton onClick={insertMathEquation} icon={SquareFunction} tooltip="Insert Equation" />
       </div>
 
-      {/* Editor Area */}
+      {/* WYSIWYG Editor Area */}
       <div
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="min-h-[400px] p-6 outline-none focus:ring-2 focus:ring-primary/20 prose prose-lg max-w-none dark:prose-invert"
+        className="min-h-[400px] p-6 outline-none focus:ring-2 focus:ring-primary/20 overflow-auto"
         style={{ 
-          whiteSpace: 'pre-wrap',
-          lineHeight: 1.75
+          lineHeight: 1.75,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
         suppressContentEditableWarning
       />

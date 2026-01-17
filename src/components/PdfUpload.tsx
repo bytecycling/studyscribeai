@@ -49,12 +49,12 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
 
       setProgress(60);
 
-      const pdfTitle = `PDF: ${file.name}`;
+      const pdfTitleFallback = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
       const pdfContent = (data as any)?.content || (data as any)?.summary;
 
       // Generate full study pack
       const { data: pack, error: packError } = await supabase.functions.invoke('generate-study-pack', {
-        body: { text: pdfContent, title: pdfTitle }
+        body: { text: pdfContent, title: pdfTitleFallback }
       });
       if (packError) throw packError;
       if ((pack as any)?.error) throw new Error((pack as any).error);
@@ -68,6 +68,9 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
         throw new Error("Notes generation was incomplete. Please try again.");
       }
 
+      // Use AI-generated title if available
+      const finalTitle = (pack as any)?.suggestedTitle || pdfTitleFallback;
+
       setProgress(90);
 
       // Save to database
@@ -75,7 +78,7 @@ const PdfUpload = ({ onSuccess }: PdfUploadProps) => {
       const { error: insertError } = await supabase
         .from('notes')
         .insert({
-          title: pdfTitle,
+          title: finalTitle,
           content: (pack as any)?.notes || pdfContent,
           highlights: (pack as any)?.highlights || null,
           flashcards: (pack as any)?.flashcards || null,

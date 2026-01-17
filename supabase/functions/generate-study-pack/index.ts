@@ -345,6 +345,10 @@ REMEMBER: END WITH: END_OF_NOTES`;
               parameters: {
                 type: "object",
                 properties: {
+                  suggestedTitle: {
+                    type: "string",
+                    description: "A clear, descriptive title for these notes (5-10 words max). Should describe the main topic, not generic like 'YouTube Video' or 'PDF Document'.",
+                  },
                   notes: {
                     type: "string",
                     description: "Complete markdown notes. MUST end with END_OF_NOTES on its own line.",
@@ -392,7 +396,7 @@ REMEMBER: END WITH: END_OF_NOTES`;
                     },
                   },
                 },
-                required: ["notes", "highlights", "flashcards", "quiz"],
+                required: ["suggestedTitle", "notes", "highlights", "flashcards", "quiz"],
                 additionalProperties: false,
               },
             },
@@ -558,9 +562,13 @@ CRITICAL:
 
     logActivity("generation_success", "success", `Final notes length: ${fullNotes.length}`);
 
+    // Use AI-generated title if available, otherwise fall back to provided title
+    const finalTitle = initialPack.suggestedTitle || validTitle;
+
     return new Response(
       JSON.stringify({
         notes: fullNotes,
+        suggestedTitle: finalTitle,
         highlights: initialPack.highlights,
         flashcards: initialPack.flashcards,
         quiz: initialPack.quiz,
