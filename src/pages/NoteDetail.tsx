@@ -18,6 +18,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import GeneratingLoader from "@/components/GeneratingLoader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ActivityLogViewer from "@/components/ActivityLogViewer";
+import BugReportButton from "@/components/BugReportButton";
 
 interface NoteRow {
   id: string;
@@ -395,6 +396,7 @@ export default function NoteDetail() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <BugReportButton noteId={note.id} noteTitle={note.title} />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
