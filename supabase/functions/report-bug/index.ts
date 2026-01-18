@@ -88,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send email using Resend REST API
+    // Note: Using sqym0327@gmail.com as it's the verified email on Resend free tier
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -96,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "StudyScribe Bug Reports <onboarding@resend.dev>",
-        to: ["stu29.qymsun.jb@fairview.edu.my"],
+        to: ["sqym0327@gmail.com"],
         subject: `🐛 Bug Report: ${body.issueType} - ${body.noteTitle || "General"}`,
         html: emailHtml,
       }),
