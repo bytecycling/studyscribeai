@@ -129,7 +129,7 @@ export default function BugReportButton({ noteId, noteTitle }: BugReportButtonPr
             Report an Issue
           </DialogTitle>
           <DialogDescription>
-            Found a bug, lag, or error? Let us know and we'll fix it!
+            Found a bug, lag, or error? We will send an email to <span className="font-semibold text-primary">Yiming</span> about your issue so it can be fixed!
           </DialogDescription>
         </DialogHeader>
         
