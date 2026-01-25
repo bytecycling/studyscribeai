@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Heart, Code, GraduationCap, Moon, Sun, Mail, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, Heart, Code, GraduationCap, Moon, Sun, Mail, Send, Loader2, CheckCircle, PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ const AboutOwner = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -47,12 +48,18 @@ const AboutOwner = () => {
 
       if (error) throw error;
 
+      setShowSuccess(true);
+      setFormData({ name: '', email: '', message: '' });
+      
+      // Hide success animation after 4 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 4000);
+
       toast({
         title: "Message sent! 🎉",
         description: "Thanks for reaching out! Yiming will get back to you soon.",
       });
-
-      setFormData({ name: '', email: '', message: '' });
     } catch (error: any) {
       toast({
         title: "Failed to send message",
@@ -187,57 +194,86 @@ const AboutOwner = () => {
                 <Send className="h-5 w-5 text-primary" />
                 Send Me a Message
               </h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Your Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="What should I call you?"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      maxLength={100}
-                    />
+              
+              {showSuccess ? (
+                <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
+                  <div className="relative">
+                    <div className="absolute inset-0 animate-ping rounded-full bg-green-400/30" />
+                    <div className="relative p-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full shadow-lg">
+                      <CheckCircle className="h-12 w-12 text-white" />
+                    </div>
+                  </div>
+                  <div className="mt-6 text-center space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <PartyPopper className="h-6 w-6 text-primary animate-bounce" />
+                      <h4 className="text-2xl font-bold text-foreground">Message Sent!</h4>
+                      <PartyPopper className="h-6 w-6 text-primary animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    </div>
+                    <p className="text-muted-foreground">
+                      Thanks for reaching out! I'll get back to you soon 😊
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="mt-6"
+                    onClick={() => setShowSuccess(false)}
+                  >
+                    Send Another Message
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Your Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="What should I call you?"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        maxLength={100}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Your Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="So I can reply back!"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Your Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="So I can reply back!"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Say hi, share feedback, or just tell me how awesome this site is! 😄"
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       required
+                      maxLength={2000}
+                      rows={4}
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Say hi, share feedback, or just tell me how awesome this site is! 😄"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                    maxLength={2000}
-                    rows={4}
-                  />
-                </div>
-                <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      Send Message
-                    </>
-                  )}
-                </Button>
-              </form>
+                  <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Message
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
             </div>
             
             <p className="text-center text-sm text-muted-foreground pt-4">
