@@ -12,6 +12,7 @@ import History from "./pages/History";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Profile from "./pages/Profile";
+import AboutOwner from "./pages/AboutOwner";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/history" element={<History />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about-owner" element={<AboutOwner />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
