@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,20 +24,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Validate required fields
     if (!name || !email || !message) {
-      throw new Error("Missing required fields: name, email, and message are required");
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: name, email, and message are required" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     if (name.length > 100) {
-      throw new Error("Name must be less than 100 characters");
+      return new Response(
+        JSON.stringify({ error: "Name must be less than 100 characters" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     if (message.length > 2000) {
-      throw new Error("Message must be less than 2000 characters");
+      return new Response(
+        JSON.stringify({ error: "Message must be less than 2000 characters" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw new Error("Invalid email address");
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const emailHtml = `
@@ -64,14 +75,28 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const emailResponse = await resend.emails.send({
-      from: "StudyScribe Contact <onboarding@resend.dev>",
-      to: ["sqym0327@gmail.com"],
-      reply_to: email,
-      subject: `📬 Contact from ${name} - StudyScribe`,
-      html: emailHtml,
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "StudyScribe Contact <onboarding@resend.dev>",
+        to: ["sqym0327@gmail.com"],
+        reply_to: email,
+        subject: `📬 Contact from ${name} - StudyScribe`,
+        html: emailHtml,
+      }),
     });
 
+    if (!res.ok) {
+      const errorData = await res.text();
+      console.error("Resend API error:", errorData);
+      throw new Error("Failed to send email");
+    }
+
+    const emailResponse = await res.json();
     console.log("Contact email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true }), {
@@ -81,9 +106,9 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in contact-owner function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Failed to send message" }),
       {
-        status: 500,
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
