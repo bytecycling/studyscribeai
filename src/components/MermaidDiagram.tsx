@@ -10,7 +10,7 @@ interface MermaidDiagramProps {
 mermaid.initialize({
   startOnLoad: false,
   theme: 'dark',
-  securityLevel: 'loose',
+  securityLevel: 'strict',
   fontFamily: 'system-ui, -apple-system, sans-serif',
   logLevel: 'fatal', // Suppress all but fatal errors
   flowchart: {
@@ -111,7 +111,7 @@ export default function MermaidDiagram({ chart, className = '' }: MermaidDiagram
         mermaid.initialize({
           startOnLoad: false,
           theme: 'dark',
-          securityLevel: 'loose',
+          securityLevel: 'strict',
           suppressErrorRendering: true,
           logLevel: 'fatal',
         });
