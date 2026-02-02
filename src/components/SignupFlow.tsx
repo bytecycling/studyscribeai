@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
@@ -35,14 +36,14 @@ const SignupFlow = () => {
 
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
 
-      if (error) throw error;
+      if (result.redirected) return;
+      if (result.error) throw result.error;
+
+      navigate('/dashboard');
     } catch (error: any) {
       logError('SignupFlow.googleAuth', error);
       toast({
