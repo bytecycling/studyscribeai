@@ -42,28 +42,33 @@ const FAQ = () => {
   ];
 
   return (
-    <section className="py-20 px-4 bg-secondary/20">
-      <div className="container mx-auto max-w-4xl">
+    <section className="relative py-24 px-4 overflow-hidden">
+      <div className="absolute inset-0 gradient-mesh opacity-30" />
+      <div className="container relative mx-auto max-w-3xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Frequently Asked Questions
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-5 text-xs font-medium text-primary">
+            FAQ
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+            Frequently Asked{" "}
+            <span className="text-gradient animate-gradient">Questions</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Have questions? We've got answers. Find everything you need to know about StudyScribe.AI.
           </p>
         </div>
-        
-        <Accordion type="single" collapsible className="w-full space-y-4">
+
+        <Accordion type="single" collapsible className="w-full space-y-3">
           {faqs.map((faq, index) => (
-            <AccordionItem 
-              key={index} 
+            <AccordionItem
+              key={index}
               value={`item-${index}`}
-              className="bg-background border rounded-lg px-6 shadow-sm hover:shadow-md transition-shadow"
+              className="glass-card rounded-2xl px-6 border-0 hover:shadow-glow transition-all duration-300"
             >
-              <AccordionTrigger className="text-left hover:no-underline">
-                <span className="font-semibold">{faq.question}</span>
+              <AccordionTrigger className="text-left hover:no-underline py-5">
+                <span className="font-semibold text-base">{faq.question}</span>
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
