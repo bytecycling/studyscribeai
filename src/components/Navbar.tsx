@@ -19,31 +19,32 @@ const Navbar = () => {
   }, [darkMode]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <nav className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl">
+      <div className="glass rounded-full px-4 sm:px-6 h-14 flex items-center justify-between shadow-soft">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img src={logoImage} alt="StudyScribe.AI Logo" className="h-10 w-auto" />
-          <span className="font-bold text-xl">StudyScribe.AI</span>
+          <img src={logoImage} alt="StudyScribe.AI Logo" className="h-8 w-auto" />
+          <span className="font-bold text-base sm:text-lg hidden sm:inline">StudyScribe.AI</span>
         </Link>
-        
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setDarkMode(!darkMode)}
-            className="relative"
+            className="rounded-full h-9 w-9"
+            aria-label="Toggle dark mode"
           >
             {darkMode ? (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-4 w-4" />
             ) : (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-4 w-4" />
             )}
           </Button>
-          <Link to="/auth">
-            <Button variant="ghost">Sign In</Button>
+          <Link to="/auth" className="hidden sm:block">
+            <Button variant="ghost" className="rounded-full h-9">Sign In</Button>
           </Link>
           <Link to="/auth">
-            <Button variant="default">Get Started</Button>
+            <Button variant="default" className="rounded-full h-9 px-4 sm:px-5">Get Started</Button>
           </Link>
         </div>
       </div>
