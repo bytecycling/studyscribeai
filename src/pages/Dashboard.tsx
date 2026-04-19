@@ -49,13 +49,18 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 gradient-mesh pointer-events-none" />
+      <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl animate-blob pointer-events-none" />
+      <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-accent/20 rounded-full blur-3xl animate-blob pointer-events-none" style={{ animationDelay: '6s' }} />
+
       {/* Navbar */}
-      <nav className="border-b border-border bg-card">
+      <nav className="relative z-30 glass border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img src={logoImage} alt="StudyScribe.AI Logo" className="h-10 w-auto" />
-            <span className="font-bold text-xl">StudyScribe.AI</span>
+            <span className="font-bold text-xl text-gradient animate-gradient">StudyScribe.AI</span>
           </Link>
           
           <div className="flex items-center gap-4">
@@ -82,12 +87,12 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-12 relative">
+      <main className="relative container mx-auto px-4 py-12">
         {/* Floating toggle button */}
         <Button
           size="icon"
           variant="outline"
-          className="fixed left-4 top-24 z-40 shadow-lg hover:scale-110 transition-transform"
+          className="fixed left-4 top-24 z-40 glass shadow-glow hover:scale-110 transition-transform"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <FolderOpen className="w-5 h-5" />
@@ -103,7 +108,7 @@ const Dashboard = () => {
 
         {/* Collapsible Sidebar */}
         <aside 
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-background border-r border-border z-50 p-6 shadow-xl transition-transform duration-300 ease-in-out ${
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 glass border-r border-border/50 z-50 p-6 shadow-elevated transition-transform duration-300 ease-in-out ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -128,8 +133,10 @@ const Dashboard = () => {
 
         {/* Main content */}
         <div className="w-full">
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">Your Study Dashboard</h1>
+          <div className="mb-12 animate-fade-in">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
+              Your <span className="text-gradient animate-gradient">Study Dashboard</span>
+            </h1>
             <p className="text-muted-foreground text-lg">
               Transform your learning materials into comprehensive study notes
             </p>
@@ -137,11 +144,11 @@ const Dashboard = () => {
 
           {/* Upload Tabs */}
           <Tabs defaultValue="youtube" className="mb-12">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="youtube">YouTube</TabsTrigger>
-              <TabsTrigger value="audio">Audio/Video</TabsTrigger>
-              <TabsTrigger value="pdf">PDF</TabsTrigger>
-              <TabsTrigger value="website">Website</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 glass p-1 h-auto">
+              <TabsTrigger value="youtube" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">YouTube</TabsTrigger>
+              <TabsTrigger value="audio" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">Audio/Video</TabsTrigger>
+              <TabsTrigger value="pdf" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">PDF</TabsTrigger>
+              <TabsTrigger value="website" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">Website</TabsTrigger>
             </TabsList>
             
             <div className="mt-6">
@@ -165,7 +172,7 @@ const Dashboard = () => {
 
           {/* Recent Notes Section */}
           <div>
-            <h2 className="text-2xl font-bold mb-6">Your Study Notes</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight">Your Study Notes</h2>
             <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
           </div>
         </div>

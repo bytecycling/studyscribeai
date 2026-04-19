@@ -136,20 +136,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 dark:bg-[#0f0f1a] bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-background overflow-hidden">
+      <div className="absolute inset-0 gradient-mesh" />
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-blob" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-accent/30 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
+      <div className="relative w-full max-w-md">
         <Link to="/" className="flex items-center justify-center mb-8 hover:opacity-80 transition-opacity">
-          <span className="font-bold text-3xl tracking-tight dark:text-white text-primary">StudyScribe.AI</span>
+          <span className="font-bold text-3xl tracking-tight text-gradient animate-gradient">StudyScribe.AI</span>
         </Link>
 
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4 glass">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
-            <Card className="shadow-elevated dark:bg-[#1a1a2e] dark:border-primary/20">
+            <Card className="glass-card border-0">
               <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
                 <CardDescription className="text-center">
