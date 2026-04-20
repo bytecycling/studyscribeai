@@ -1,56 +1,5 @@
 import { Sparkles, Palette, Wrench, Type, Layers, Globe } from "lucide-react";
-
-const updates = [
-  {
-    date: "Apr 20, 2026",
-    icon: Globe,
-    title: "Language switcher in homepage navbar",
-    description: "Switch the entire app's language right from the top bar — native names like 中文（简体）.",
-    tag: "New",
-  },
-  {
-    date: "Apr 20, 2026",
-    icon: Layers,
-    title: "Glassmorphism across the whole app",
-    description: "Auth, Dashboard, History, and Profile pages now share the same glass + gradient aesthetic.",
-    tag: "Design",
-  },
-  {
-    date: "Apr 19, 2026",
-    icon: Sparkles,
-    title: "Bold & vibrant homepage redesign",
-    description: "New gradient mesh background, animated hero, How-it-works flow, and feature card hover effects.",
-    tag: "Design",
-  },
-  {
-    date: "Apr 18, 2026",
-    icon: Palette,
-    title: "New animated background",
-    description: "Floating gradient blobs and a subtle mesh give every page more depth and motion.",
-    tag: "Design",
-  },
-  {
-    date: "Apr 15, 2026",
-    icon: Wrench,
-    title: "All core upload functions live",
-    description: "YouTube, PDF, Audio/Video, and Website ingestion are all working end-to-end.",
-    tag: "Feature",
-  },
-  {
-    date: "Apr 12, 2026",
-    icon: Type,
-    title: "Better fonts & typography",
-    description: "Cleaner heading hierarchy, tighter tracking, and improved readability across notes.",
-    tag: "Polish",
-  },
-  {
-    date: "Apr 10, 2026",
-    icon: Wrench,
-    title: "LaTeX rendering fixes",
-    description: "Math formulas now render reliably with KaTeX — block math, inline math, and escaped backslashes.",
-    tag: "Fix",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const tagStyles: Record<string, string> = {
   New: "bg-primary/15 text-primary border-primary/30",
@@ -61,6 +10,17 @@ const tagStyles: Record<string, string> = {
 };
 
 const RecentUpdates = () => {
+  const { t } = useTranslation();
+  const updates = [
+    { date: "Apr 20, 2026", icon: Globe, title: t("updates.u1T"), description: t("updates.u1D"), tagKey: "New" },
+    { date: "Apr 20, 2026", icon: Layers, title: t("updates.u2T"), description: t("updates.u2D"), tagKey: "Design" },
+    { date: "Apr 19, 2026", icon: Sparkles, title: t("updates.u3T"), description: t("updates.u3D"), tagKey: "Design" },
+    { date: "Apr 18, 2026", icon: Palette, title: t("updates.u4T"), description: t("updates.u4D"), tagKey: "Design" },
+    { date: "Apr 15, 2026", icon: Wrench, title: t("updates.u5T"), description: t("updates.u5D"), tagKey: "Feature" },
+    { date: "Apr 12, 2026", icon: Type, title: t("updates.u6T"), description: t("updates.u6D"), tagKey: "Polish" },
+    { date: "Apr 10, 2026", icon: Wrench, title: t("updates.u7T"), description: t("updates.u7D"), tagKey: "Fix" },
+  ];
+
   return (
     <section className="relative py-28 overflow-hidden">
       <div className="absolute inset-0 gradient-mesh opacity-30" />
@@ -68,28 +28,23 @@ const RecentUpdates = () => {
       <div className="container relative mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-5 text-xs font-medium text-primary">
-            Changelog
+            {t("updates.badge")}
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Recent{" "}
-            <span className="text-gradient animate-gradient">updates</span>
+            {t("updates.title")}{" "}
+            <span className="text-gradient animate-gradient">{t("updates.titleAccent")}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            What's new in StudyScribe.AI — shipped continuously.
+            {t("updates.subtitle")}
           </p>
         </div>
 
         <div className="relative max-w-3xl mx-auto">
-          {/* Vertical timeline line */}
           <div className="absolute left-5 sm:left-6 top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-accent/30 to-transparent" />
 
           <ol className="space-y-6">
             {updates.map((update, index) => (
-              <li
-                key={index}
-                className="reveal-on-scroll relative pl-14 sm:pl-16"
-              >
-                {/* Icon dot */}
+              <li key={index} className="reveal-on-scroll relative pl-14 sm:pl-16">
                 <div className="absolute left-0 top-1 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-soft">
                   <update.icon className="w-5 h-5 text-primary-foreground" />
                 </div>
@@ -101,10 +56,10 @@ const RecentUpdates = () => {
                     </span>
                     <span
                       className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border ${
-                        tagStyles[update.tag] ?? tagStyles.Polish
+                        tagStyles[update.tagKey] ?? tagStyles.Polish
                       }`}
                     >
-                      {update.tag}
+                      {t(`updates.tags.${update.tagKey}`)}
                     </span>
                   </div>
                   <h3 className="text-lg font-bold mb-1">{update.title}</h3>
