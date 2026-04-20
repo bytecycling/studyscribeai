@@ -1,190 +1,311 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-const resources = {
-  english: {
-    translation: {
-      nav: {
-        signIn: 'Sign In',
-        getStarted: 'Get Started',
-        history: 'History',
-        signOut: 'Sign Out',
-        profile: 'Profile'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: 'Transform YouTube videos, audio files, and PDFs into comprehensive study notes. Create flashcards, take quizzes, and chat with AI about your content.',
-        cta: 'Get Started Free',
-        demo: 'View Demo'
-      },
-      features: {
-        title: 'Features',
-        // Add more feature translations
-      },
-      auth: {
-        signIn: 'Sign In',
-        signUp: 'Sign Up',
-        welcomeBack: 'Welcome Back',
-        createAccount: 'Create Account',
-        email: 'Email',
-        password: 'Password',
-        fullName: 'Full Name',
-        continueWithGoogle: 'Continue with Google',
-        continueWithEmail: 'Continue with Email'
-      }
-    }
+/**
+ * Full app translations.
+ * Keys mirror the structure used across pages/components.
+ * Languages: english, español, français, 中文, 日本語, bahasa melayu
+ */
+
+const en = {
+  common: {
+    loading: 'Loading…',
+    save: 'Save',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete',
+    back: 'Back',
+    backToDashboard: 'Back to Dashboard',
+    welcomeBack: 'Welcome back!',
+    error: 'Error',
+    success: 'Success',
   },
-  español: {
-    translation: {
-      nav: {
-        signIn: 'Iniciar Sesión',
-        getStarted: 'Comenzar',
-        history: 'Historial',
-        signOut: 'Cerrar Sesión',
-        profile: 'Perfil'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: 'Transforma videos de YouTube, archivos de audio y PDFs en notas de estudio completas. Crea tarjetas de memoria, realiza cuestionarios y chatea con IA sobre tu contenido.',
-        cta: 'Comenzar Gratis',
-        demo: 'Ver Demo'
-      },
-      auth: {
-        signIn: 'Iniciar Sesión',
-        signUp: 'Registrarse',
-        welcomeBack: 'Bienvenido de Nuevo',
-        createAccount: 'Crear Cuenta',
-        email: 'Correo Electrónico',
-        password: 'Contraseña',
-        fullName: 'Nombre Completo',
-        continueWithGoogle: 'Continuar con Google',
-        continueWithEmail: 'Continuar con Correo'
-      }
-    }
+  nav: {
+    signIn: 'Sign In',
+    getStarted: 'Get Started',
+    history: 'History',
+    profile: 'Profile',
+    signOut: 'Sign Out',
+    toggleDark: 'Toggle dark mode',
+    chooseLanguage: 'Choose language',
+    changeLanguage: 'Change language',
   },
-  français: {
-    translation: {
-      nav: {
-        signIn: 'Se Connecter',
-        getStarted: 'Commencer',
-        history: 'Historique',
-        signOut: 'Se Déconnecter',
-        profile: 'Profil'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: 'Transformez des vidéos YouTube, des fichiers audio et des PDF en notes d\'étude complètes. Créez des cartes mémoire, passez des quiz et discutez avec l\'IA sur votre contenu.',
-        cta: 'Commencer Gratuitement',
-        demo: 'Voir la Démo'
-      },
-      auth: {
-        signIn: 'Se Connecter',
-        signUp: 'S\'inscrire',
-        welcomeBack: 'Bon Retour',
-        createAccount: 'Créer un Compte',
-        email: 'Email',
-        password: 'Mot de Passe',
-        fullName: 'Nom Complet',
-        continueWithGoogle: 'Continuer avec Google',
-        continueWithEmail: 'Continuer avec Email'
-      }
-    }
+  hero: {
+    badge: 'AI-Powered Study Assistant',
+    title: 'StudyScribe.AI',
+    subtitle:
+      'Transform YouTube videos, audio files, and PDFs into comprehensive study notes. Create flashcards, take quizzes, and chat with AI about your content.',
+    tagline: 'The Brain Behind the Breakthrough',
+    cta: 'Get Started Free',
   },
-  '中文': {
-    translation: {
-      nav: {
-        signIn: '登录',
-        getStarted: '开始使用',
-        history: '历史记录',
-        signOut: '登出',
-        profile: '个人资料'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: '将YouTube视频、音频文件和PDF转换为全面的学习笔记。创建闪卡、进行测验，并与AI讨论您的内容。',
-        cta: '免费开始',
-        demo: '查看演示'
-      },
-      auth: {
-        signIn: '登录',
-        signUp: '注册',
-        welcomeBack: '欢迎回来',
-        createAccount: '创建账户',
-        email: '电子邮件',
-        password: '密码',
-        fullName: '全名',
-        continueWithGoogle: '使用Google继续',
-        continueWithEmail: '使用电子邮件继续'
-      }
-    }
+  how: {
+    badge: 'How it works',
+    title: 'From content to',
+    titleAccent: 'mastery in 3 steps',
+    subtitle: 'A simple workflow designed to get you studying smarter in minutes.',
+    s1Title: 'Upload',
+    s1Desc: 'Drop a YouTube link, PDF, audio file, or website. Anything you need to learn from.',
+    s2Title: 'AI Processes',
+    s2Desc: 'Our AI extracts key concepts, formulas, and structures them into clear study notes.',
+    s3Title: 'Study',
+    s3Desc: 'Read, highlight, quiz yourself, and chat with AI. Master your material faster.',
   },
-  '日本語': {
-    translation: {
-      nav: {
-        signIn: 'サインイン',
-        getStarted: '始める',
-        history: '履歴',
-        signOut: 'サインアウト',
-        profile: 'プロフィール'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: 'YouTubeビデオ、オーディオファイル、PDFを包括的な学習ノートに変換します。フラッシュカードを作成し、クイズを受け、AIとコンテンツについて話し合います。',
-        cta: '無料で始める',
-        demo: 'デモを見る'
-      },
-      auth: {
-        signIn: 'サインイン',
-        signUp: 'サインアップ',
-        welcomeBack: 'お帰りなさい',
-        createAccount: 'アカウント作成',
-        email: 'メール',
-        password: 'パスワード',
-        fullName: '氏名',
-        continueWithGoogle: 'Googleで続ける',
-        continueWithEmail: 'メールで続ける'
-      }
-    }
+  features: {
+    badge: 'Features',
+    title: 'Everything You Need to',
+    titleAccent: 'Study Smarter',
+    subtitle: 'Powerful AI tools designed to transform how you learn and retain information.',
+    youtubeT: 'YouTube Transcription',
+    youtubeD: 'Convert any YouTube video into detailed, organized study notes with AI-powered summarization.',
+    audioT: 'Audio & Video Processing',
+    audioD: 'Upload MP3 or MP4 files and get comprehensive transcriptions and summaries instantly.',
+    pdfT: 'PDF Analysis',
+    pdfD: 'Extract key information from PDFs and transform them into actionable study materials.',
+    aiT: 'AI Chat Assistant',
+    aiD: 'Ask questions and discuss your study materials with an intelligent AI tutor.',
+    langT: 'Multi-Language Support',
+    langD: 'Translate your notes into multiple languages for enhanced learning.',
+    highlightT: 'Smart Highlighting',
+    highlightD: 'Automatically highlight important points with customizable color coding.',
   },
-  'bahasa melayu': {
-    translation: {
-      nav: {
-        signIn: 'Log Masuk',
-        getStarted: 'Mulakan',
-        history: 'Sejarah',
-        signOut: 'Log Keluar',
-        profile: 'Profil'
-      },
-      hero: {
-        title: 'StudyScribe.AI',
-        subtitle: 'Tukar video YouTube, fail audio, dan PDF kepada nota pembelajaran yang komprehensif. Cipta kad imbas, ambil kuiz, dan berbual dengan AI tentang kandungan anda.',
-        cta: 'Mulakan Percuma',
-        demo: 'Lihat Demo'
-      },
-      auth: {
-        signIn: 'Log Masuk',
-        signUp: 'Daftar',
-        welcomeBack: 'Selamat Kembali',
-        createAccount: 'Buat Akaun',
-        email: 'Emel',
-        password: 'Kata Laluan',
-        fullName: 'Nama Penuh',
-        continueWithGoogle: 'Teruskan dengan Google',
-        continueWithEmail: 'Teruskan dengan Emel'
-      }
-    }
-  }
+  updates: {
+    badge: 'Changelog',
+    title: 'Recent',
+    titleAccent: 'updates',
+    subtitle: "What's new in StudyScribe.AI — shipped continuously.",
+    tags: { New: 'New', Design: 'Design', Feature: 'Feature', Polish: 'Polish', Fix: 'Fix' },
+    u1T: 'Language switcher in homepage navbar',
+    u1D: "Switch the entire app's language right from the top bar — native names like 中文（简体）.",
+    u2T: 'Glassmorphism across the whole app',
+    u2D: 'Auth, Dashboard, History, and Profile pages now share the same glass + gradient aesthetic.',
+    u3T: 'Bold & vibrant homepage redesign',
+    u3D: 'New gradient mesh background, animated hero, How-it-works flow, and feature card hover effects.',
+    u4T: 'New animated background',
+    u4D: 'Floating gradient blobs and a subtle mesh give every page more depth and motion.',
+    u5T: 'All core upload functions live',
+    u5D: 'YouTube, PDF, Audio/Video, and Website ingestion are all working end-to-end.',
+    u6T: 'Better fonts & typography',
+    u6D: 'Cleaner heading hierarchy, tighter tracking, and improved readability across notes.',
+    u7T: 'LaTeX rendering fixes',
+    u7D: 'Math formulas now render reliably with KaTeX — block math, inline math, and escaped backslashes.',
+  },
+  faq: {
+    badge: 'FAQ',
+    title: 'Frequently Asked',
+    titleAccent: 'Questions',
+    subtitle: "Have questions? We've got answers. Find everything you need to know about StudyScribe.AI.",
+    q1: 'How does StudyScribe.AI work?',
+    a1: 'StudyScribe.AI uses advanced AI to analyze your learning materials (YouTube videos, PDFs, audio files, or websites) and automatically generates comprehensive study notes, highlights, flashcards, and quizzes to help you learn more effectively.',
+    q2: 'What file formats are supported?',
+    a2: 'We support YouTube videos (via URL), PDF documents, audio/video files (MP3, MP4, WAV, etc.), and websites. Simply paste the URL or upload your file to get started.',
+    q3: 'Is my data secure?',
+    a3: 'Yes! Your data is stored securely in the cloud with encryption. Only you can access your notes and study materials. We never share your information with third parties.',
+    q4: 'Can I edit the AI-generated notes?',
+    a4: 'Absolutely! You can edit any AI-generated content, rename your notes, and customize everything to fit your learning style. All changes are saved automatically.',
+    q5: 'How accurate are the AI-generated summaries?',
+    a5: 'Our AI is highly accurate and continuously improving. However, we recommend reviewing the generated content and making adjustments as needed. The AI serves as a powerful tool to accelerate your learning process.',
+    q6: 'Can I translate my notes to other languages?',
+    a6: 'Yes! StudyScribe.AI supports multiple languages including Spanish, French, German, Italian, Portuguese, Chinese, Japanese, Korean, Arabic, Russian, and Hindi. You can translate any note with just a few clicks.',
+    q7: 'What is the AI Chat feature?',
+    a7: 'The AI Chat feature allows you to have an interactive conversation about your study materials. Ask questions, request clarifications, or dive deeper into specific topics - the AI will respond based on your uploaded content.',
+    q8: 'How long does it take to process materials?',
+    a8: 'Processing time varies depending on the length and type of content. Most materials are processed within 1-3 minutes. You\'ll receive a notification when your study pack is ready.',
+  },
+  about: {
+    badge: 'About',
+    title: 'About this',
+    titleAccent: 'website',
+    body1: 'This is a',
+    personalProject: 'personal project',
+    madeBy: 'made by',
+    yiming: 'Yiming',
+    tooltip: 'Click to know more about me!',
+    fromFisjb: 'from FISJB.',
+    body2:
+      'You may see some parts of the website malfunctioning, but hopefully it works when you are using it. I am very proud of the AI integration of this website lol, credit to all of the transcription, summarization, note creation, translation APIs ✌️. I hope my project can bring more opportunity for these kind of study apps to be created.',
+    madeOn: 'Made on 12 Oct 2025',
+  },
+  footer: {
+    text: 'Made by',
+    suffix: '• 2025 Personal Project',
+  },
+  auth: {
+    welcomeBack: 'Welcome Back',
+    signInTo: 'Sign in to continue studying',
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    signingIn: 'Signing in...',
+    email: 'Email',
+    password: 'Password',
+    fullName: 'Full Name',
+    continueWithGoogle: 'Continue with Google',
+    orContinueEmail: 'Or continue with email',
+    accountCreated: 'Account created!',
+    welcomeToApp: 'Welcome to StudyScribe.AI',
+    signInSuccess: "You've successfully signed in.",
+    failedSignUp: 'Failed to create account',
+    failedSignIn: 'Failed to sign in',
+    failedGoogle: 'Failed to sign in with Google',
+  },
+  dashboard: {
+    welcomeBack: 'Welcome back!',
+    titleA: 'Your',
+    titleB: 'Study Dashboard',
+    subtitle: 'Transform your learning materials into comprehensive study notes',
+    organize: 'Organize',
+    yourNotes: 'Your Study Notes',
+    tabs: { youtube: 'YouTube', audio: 'Audio/Video', pdf: 'PDF', website: 'Website' },
+  },
+  history: {
+    titleA: 'Study Notes',
+    titleB: 'History',
+    subtitle: 'View all your generated study notes',
+  },
+  profile: {
+    titleA: 'Profile',
+    titleB: 'Settings',
+    stats: 'Your Statistics',
+    totalNotes: 'Total Notes',
+    flashcardsCreated: 'Flashcards Created',
+    quizzesTaken: 'Quizzes Taken',
+    info: 'Profile Information',
+    infoDesc: 'Update your personal information',
+    fullName: 'Full Name',
+    email: 'Email',
+    education: 'Education Level',
+    selectEducation: 'Select education level',
+    eduHs: 'High School Student',
+    eduCollege: 'College Student',
+    eduUg: 'Undergraduate',
+    eduPg: 'Postgraduate',
+    eduHigher: 'Higher Education',
+    languagePref: 'Language Preference',
+    saveChanges: 'Save Changes',
+    changePassword: 'Change Password',
+    changePasswordDesc: 'Update your password',
+    newPassword: 'New Password',
+    newPasswordPh: 'Enter new password (min 6 characters)',
+    updatePassword: 'Update Password',
+    updated: 'Profile updated',
+    updatedDesc: 'Your profile has been updated successfully',
+    pwUpdated: 'Password updated',
+    pwUpdatedDesc: 'Your password has been changed successfully',
+    pwTooShort: 'Password must be at least 6 characters',
+  },
+  note: {
+    backTitle: 'Back',
+    edit: 'Edit Note',
+    save: 'Save',
+    cancel: 'Cancel',
+    regenerate: 'Regenerate',
+    regenerating: 'Regenerating…',
+    continueWriting: 'Continue Writing',
+    continuing: 'Continuing…',
+    incomplete: 'Notes Incomplete',
+    incompleteDesc:
+      'These notes appear to be cut off. Click "Continue Writing" to extend them, or "Regenerate" for a fresh generation.',
+  },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: localStorage.getItem('language') || 'english',
-    fallbackLng: 'english',
-    interpolation: {
-      escapeValue: false
-    }
-  });
+const es = {
+  common: { loading: 'Cargando…', save: 'Guardar', cancel: 'Cancelar', edit: 'Editar', delete: 'Eliminar', back: 'Volver', backToDashboard: 'Volver al Panel', welcomeBack: '¡Bienvenido de nuevo!', error: 'Error', success: 'Éxito' },
+  nav: { signIn: 'Iniciar Sesión', getStarted: 'Comenzar', history: 'Historial', profile: 'Perfil', signOut: 'Cerrar Sesión', toggleDark: 'Modo oscuro', chooseLanguage: 'Elegir idioma', changeLanguage: 'Cambiar idioma' },
+  hero: { badge: 'Asistente de Estudio con IA', title: 'StudyScribe.AI', subtitle: 'Transforma videos de YouTube, archivos de audio y PDFs en notas de estudio completas. Crea tarjetas, realiza cuestionarios y chatea con IA sobre tu contenido.', tagline: 'La mente detrás del avance', cta: 'Comenzar Gratis' },
+  how: { badge: 'Cómo funciona', title: 'Del contenido a', titleAccent: 'la maestría en 3 pasos', subtitle: 'Un flujo simple diseñado para que estudies más inteligentemente en minutos.', s1Title: 'Subir', s1Desc: 'Pega un enlace de YouTube, PDF, audio o sitio web. Cualquier cosa que necesites aprender.', s2Title: 'La IA procesa', s2Desc: 'Nuestra IA extrae conceptos clave, fórmulas y los estructura en notas claras.', s3Title: 'Estudia', s3Desc: 'Lee, resalta, hazte cuestionarios y chatea con la IA. Domina tu material más rápido.' },
+  features: { badge: 'Funciones', title: 'Todo lo que necesitas para', titleAccent: 'Estudiar Mejor', subtitle: 'Herramientas de IA potentes diseñadas para transformar cómo aprendes y retienes información.', youtubeT: 'Transcripción de YouTube', youtubeD: 'Convierte cualquier video de YouTube en notas detalladas y organizadas con resumen por IA.', audioT: 'Procesamiento de Audio y Video', audioD: 'Sube archivos MP3 o MP4 y obtén transcripciones y resúmenes completos al instante.', pdfT: 'Análisis de PDF', pdfD: 'Extrae información clave de PDFs y conviértelos en materiales de estudio accionables.', aiT: 'Asistente IA', aiD: 'Haz preguntas y discute tus materiales con un tutor IA inteligente.', langT: 'Soporte Multi-Idioma', langD: 'Traduce tus notas a múltiples idiomas para un mejor aprendizaje.', highlightT: 'Resaltado Inteligente', highlightD: 'Resalta automáticamente puntos importantes con colores personalizables.' },
+  updates: { badge: 'Novedades', title: 'Actualizaciones', titleAccent: 'recientes', subtitle: 'Lo nuevo en StudyScribe.AI — desplegado continuamente.', tags: { New: 'Nuevo', Design: 'Diseño', Feature: 'Función', Polish: 'Mejora', Fix: 'Arreglo' }, u1T: 'Selector de idioma en la barra de inicio', u1D: 'Cambia el idioma de toda la app desde la barra superior — nombres nativos como 中文（简体）.', u2T: 'Glassmorphism en toda la app', u2D: 'Auth, Panel, Historial y Perfil ahora comparten la misma estética de cristal + degradado.', u3T: 'Rediseño audaz y vibrante de la portada', u3D: 'Nuevo fondo de malla degradada, héroe animado, flujo "Cómo funciona" y efectos al pasar el cursor.', u4T: 'Nuevo fondo animado', u4D: 'Burbujas degradadas flotantes y una malla sutil dan más profundidad y movimiento a cada página.', u5T: 'Todas las funciones de carga activas', u5D: 'YouTube, PDF, Audio/Video y Sitios Web funcionan de extremo a extremo.', u6T: 'Mejores fuentes y tipografía', u6D: 'Jerarquía de encabezados más limpia, mejor espaciado y legibilidad mejorada en las notas.', u7T: 'Correcciones de LaTeX', u7D: 'Las fórmulas matemáticas se renderizan de forma fiable con KaTeX — math en bloque, inline y barras escapadas.' },
+  faq: { badge: 'Preguntas', title: 'Preguntas Frecuentes', titleAccent: '', subtitle: '¿Tienes preguntas? Tenemos respuestas. Encuentra todo sobre StudyScribe.AI.', q1: '¿Cómo funciona StudyScribe.AI?', a1: 'StudyScribe.AI usa IA avanzada para analizar tus materiales (videos de YouTube, PDFs, audios o sitios web) y genera notas completas, resaltados, tarjetas y cuestionarios para ayudarte a aprender mejor.', q2: '¿Qué formatos se admiten?', a2: 'Soportamos videos de YouTube (por URL), PDFs, audio/video (MP3, MP4, WAV, etc.) y sitios web. Solo pega la URL o sube tu archivo.', q3: '¿Mis datos están seguros?', a3: '¡Sí! Tus datos se almacenan cifrados en la nube. Solo tú puedes acceder a tus notas. Nunca compartimos tu información.', q4: '¿Puedo editar las notas generadas?', a4: '¡Por supuesto! Puedes editar cualquier contenido generado, renombrar notas y personalizar todo. Los cambios se guardan automáticamente.', q5: '¿Qué tan precisos son los resúmenes?', a5: 'Nuestra IA es muy precisa y mejora continuamente. Aun así, te recomendamos revisar el contenido generado y ajustarlo cuando sea necesario.', q6: '¿Puedo traducir mis notas a otros idiomas?', a6: '¡Sí! StudyScribe.AI admite varios idiomas incluyendo español, francés, alemán, italiano, portugués, chino, japonés, coreano, árabe, ruso e hindi.', q7: '¿Qué es la función AI Chat?', a7: 'AI Chat te permite tener una conversación interactiva sobre tus materiales. Pregunta, pide aclaraciones o profundiza en temas específicos.', q8: '¿Cuánto tarda en procesarse el material?', a8: 'Varía según el tamaño y tipo del contenido. La mayoría se procesa en 1-3 minutos. Te notificaremos cuando esté listo.' },
+  about: { badge: 'Acerca de', title: 'Acerca de este', titleAccent: 'sitio web', body1: 'Este es un', personalProject: 'proyecto personal', madeBy: 'hecho por', yiming: 'Yiming', tooltip: '¡Haz clic para conocerme más!', fromFisjb: 'de FISJB.', body2: 'Es posible que veas algunas partes del sitio fallando, pero esperemos que funcione mientras lo usas. Estoy muy orgulloso de la integración de IA de este sitio jaja, créditos a todas las APIs de transcripción, resumen, creación de notas y traducción ✌️. Espero que mi proyecto traiga más oportunidades para que se creen este tipo de apps de estudio.', madeOn: 'Hecho el 12 Oct 2025' },
+  footer: { text: 'Hecho por', suffix: '• Proyecto Personal 2025' },
+  auth: { welcomeBack: 'Bienvenido de Nuevo', signInTo: 'Inicia sesión para seguir estudiando', signIn: 'Iniciar Sesión', signUp: 'Registrarse', signingIn: 'Iniciando…', email: 'Correo Electrónico', password: 'Contraseña', fullName: 'Nombre Completo', continueWithGoogle: 'Continuar con Google', orContinueEmail: 'O continúa con correo', accountCreated: '¡Cuenta creada!', welcomeToApp: 'Bienvenido a StudyScribe.AI', signInSuccess: 'Has iniciado sesión correctamente.', failedSignUp: 'Error al crear la cuenta', failedSignIn: 'Error al iniciar sesión', failedGoogle: 'Error al iniciar con Google' },
+  dashboard: { welcomeBack: '¡Bienvenido de nuevo!', titleA: 'Tu', titleB: 'Panel de Estudio', subtitle: 'Transforma tus materiales de aprendizaje en notas completas', organize: 'Organizar', yourNotes: 'Tus Notas de Estudio', tabs: { youtube: 'YouTube', audio: 'Audio/Video', pdf: 'PDF', website: 'Sitio Web' } },
+  history: { titleA: 'Historial de', titleB: 'Notas', subtitle: 'Ver todas tus notas generadas' },
+  profile: { titleA: 'Configuración', titleB: 'del Perfil', stats: 'Tus Estadísticas', totalNotes: 'Total de Notas', flashcardsCreated: 'Tarjetas Creadas', quizzesTaken: 'Cuestionarios Hechos', info: 'Información del Perfil', infoDesc: 'Actualiza tu información personal', fullName: 'Nombre Completo', email: 'Correo', education: 'Nivel Educativo', selectEducation: 'Selecciona nivel', eduHs: 'Estudiante de Secundaria', eduCollege: 'Estudiante Universitario', eduUg: 'Pregrado', eduPg: 'Posgrado', eduHigher: 'Educación Superior', languagePref: 'Idioma Preferido', saveChanges: 'Guardar Cambios', changePassword: 'Cambiar Contraseña', changePasswordDesc: 'Actualiza tu contraseña', newPassword: 'Nueva Contraseña', newPasswordPh: 'Ingresa nueva contraseña (mín 6)', updatePassword: 'Actualizar Contraseña', updated: 'Perfil actualizado', updatedDesc: 'Tu perfil se ha actualizado correctamente', pwUpdated: 'Contraseña actualizada', pwUpdatedDesc: 'Tu contraseña fue cambiada correctamente', pwTooShort: 'La contraseña debe tener al menos 6 caracteres' },
+  note: { backTitle: 'Volver', edit: 'Editar Nota', save: 'Guardar', cancel: 'Cancelar', regenerate: 'Regenerar', regenerating: 'Regenerando…', continueWriting: 'Continuar Escribiendo', continuing: 'Continuando…', incomplete: 'Notas Incompletas', incompleteDesc: 'Estas notas parecen estar cortadas. Haz clic en "Continuar Escribiendo" o "Regenerar".' },
+};
+
+const fr = {
+  common: { loading: 'Chargement…', save: 'Enregistrer', cancel: 'Annuler', edit: 'Modifier', delete: 'Supprimer', back: 'Retour', backToDashboard: 'Retour au Tableau', welcomeBack: 'Bon retour !', error: 'Erreur', success: 'Succès' },
+  nav: { signIn: 'Se Connecter', getStarted: 'Commencer', history: 'Historique', profile: 'Profil', signOut: 'Se Déconnecter', toggleDark: 'Mode sombre', chooseLanguage: 'Choisir la langue', changeLanguage: 'Changer la langue' },
+  hero: { badge: "Assistant d'Étude IA", title: 'StudyScribe.AI', subtitle: "Transformez des vidéos YouTube, fichiers audio et PDF en notes d'étude complètes. Créez des cartes, passez des quiz et discutez avec l'IA.", tagline: 'Le cerveau derrière la percée', cta: 'Commencer Gratuitement' },
+  how: { badge: 'Comment ça marche', title: 'Du contenu à', titleAccent: 'la maîtrise en 3 étapes', subtitle: "Un flux simple conçu pour vous faire étudier plus intelligemment en quelques minutes.", s1Title: 'Téléverser', s1Desc: "Déposez un lien YouTube, un PDF, un fichier audio ou un site web. Tout ce que vous voulez apprendre.", s2Title: "L'IA traite", s2Desc: "Notre IA extrait les concepts clés, formules et les structure en notes claires.", s3Title: 'Étudier', s3Desc: "Lisez, surlignez, faites des quiz et discutez avec l'IA. Maîtrisez votre matériel plus vite." },
+  features: { badge: 'Fonctionnalités', title: 'Tout ce dont vous avez besoin pour', titleAccent: 'Étudier Plus Intelligemment', subtitle: "Outils d'IA puissants conçus pour transformer votre apprentissage.", youtubeT: 'Transcription YouTube', youtubeD: "Convertissez n'importe quelle vidéo YouTube en notes détaillées avec résumé par IA.", audioT: 'Audio et Vidéo', audioD: 'Téléversez des MP3 ou MP4 et obtenez des transcriptions et résumés instantanés.', pdfT: 'Analyse PDF', pdfD: 'Extrayez les informations clés des PDF et transformez-les en matériel exploitable.', aiT: 'Assistant IA', aiD: "Posez des questions et discutez de vos matériaux avec un tuteur IA intelligent.", langT: 'Multi-Langue', langD: 'Traduisez vos notes en plusieurs langues pour un meilleur apprentissage.', highlightT: 'Surlignage Intelligent', highlightD: 'Surlignez automatiquement les points importants avec des couleurs personnalisables.' },
+  updates: { badge: 'Journal', title: 'Mises à jour', titleAccent: 'récentes', subtitle: 'Quoi de neuf dans StudyScribe.AI — déployé en continu.', tags: { New: 'Nouveau', Design: 'Design', Feature: 'Fonction', Polish: 'Amélioration', Fix: 'Correction' }, u1T: 'Sélecteur de langue dans la barre', u1D: "Changez la langue de toute l'application depuis la barre — noms natifs comme 中文（简体）.", u2T: "Glassmorphism dans toute l'app", u2D: 'Auth, Tableau, Historique et Profil partagent la même esthétique verre + dégradé.', u3T: "Refonte audacieuse de la page d'accueil", u3D: 'Nouveau fond en maille, héros animé, flux "Comment ça marche" et effets au survol.', u4T: 'Nouveau fond animé', u4D: 'Des bulles dégradées flottantes et une maille subtile donnent plus de profondeur.', u5T: 'Toutes les fonctions de téléversement actives', u5D: 'YouTube, PDF, Audio/Vidéo et Site Web fonctionnent de bout en bout.', u6T: 'Meilleures polices et typographie', u6D: 'Hiérarchie plus claire, meilleur espacement et lisibilité améliorée.', u7T: 'Corrections LaTeX', u7D: 'Les formules math se rendent de façon fiable avec KaTeX — bloc, inline, barres échappées.' },
+  faq: { badge: 'FAQ', title: 'Questions', titleAccent: 'Fréquentes', subtitle: 'Des questions ? Voici les réponses sur StudyScribe.AI.', q1: 'Comment fonctionne StudyScribe.AI ?', a1: "StudyScribe.AI utilise une IA avancée pour analyser vos matériaux et générer automatiquement des notes complètes, surlignages, cartes et quiz pour mieux apprendre.", q2: 'Quels formats sont pris en charge ?', a2: 'Vidéos YouTube (par URL), PDF, audio/vidéo (MP3, MP4, WAV, etc.) et sites web. Collez l\'URL ou téléversez votre fichier.', q3: 'Mes données sont-elles sécurisées ?', a3: 'Oui ! Vos données sont stockées chiffrées dans le cloud. Vous seul y accédez. Nous ne partageons jamais vos informations.', q4: 'Puis-je modifier les notes générées ?', a4: 'Absolument ! Vous pouvez modifier tout contenu généré et tout est sauvegardé automatiquement.', q5: 'Quelle est la précision des résumés ?', a5: "Notre IA est très précise et s'améliore. Nous recommandons toutefois de relire et ajuster si nécessaire.", q6: 'Puis-je traduire mes notes ?', a6: 'Oui ! Plusieurs langues sont supportées incluant espagnol, français, allemand, italien, portugais, chinois, japonais, coréen, arabe, russe et hindi.', q7: "Qu'est-ce que l'AI Chat ?", a7: "L'AI Chat permet de discuter de vos matériaux. Posez des questions ou approfondissez des sujets.", q8: 'Combien de temps prend le traitement ?', a8: 'Cela varie. La plupart des matériaux sont traités en 1-3 minutes. Vous serez notifié quand c\'est prêt.' },
+  about: { badge: 'À propos', title: 'À propos de ce', titleAccent: 'site', body1: 'Ceci est un', personalProject: 'projet personnel', madeBy: 'fait par', yiming: 'Yiming', tooltip: "Cliquez pour en savoir plus sur moi !", fromFisjb: 'de FISJB.', body2: "Vous pourrez voir certaines parties du site dysfonctionner, mais j'espère qu'elles fonctionneront pour vous. Je suis très fier de l'intégration IA de ce site lol, crédit à toutes les APIs ✌️. J'espère que mon projet ouvrira la voie à plus d'apps d'étude.", madeOn: 'Fait le 12 Oct 2025' },
+  footer: { text: 'Fait par', suffix: '• Projet Personnel 2025' },
+  auth: { welcomeBack: 'Bon Retour', signInTo: 'Connectez-vous pour continuer', signIn: 'Se Connecter', signUp: "S'inscrire", signingIn: 'Connexion…', email: 'Email', password: 'Mot de Passe', fullName: 'Nom Complet', continueWithGoogle: 'Continuer avec Google', orContinueEmail: 'Ou continuer avec email', accountCreated: 'Compte créé !', welcomeToApp: 'Bienvenue sur StudyScribe.AI', signInSuccess: 'Vous êtes connecté.', failedSignUp: 'Échec de la création', failedSignIn: 'Échec de la connexion', failedGoogle: 'Échec Google' },
+  dashboard: { welcomeBack: 'Bon retour !', titleA: 'Votre', titleB: "Tableau d'Étude", subtitle: 'Transformez vos matériaux en notes complètes', organize: 'Organiser', yourNotes: 'Vos Notes', tabs: { youtube: 'YouTube', audio: 'Audio/Vidéo', pdf: 'PDF', website: 'Site Web' } },
+  history: { titleA: 'Historique des', titleB: 'Notes', subtitle: 'Voir toutes vos notes générées' },
+  profile: { titleA: 'Paramètres', titleB: 'du Profil', stats: 'Vos Statistiques', totalNotes: 'Notes', flashcardsCreated: 'Cartes Créées', quizzesTaken: 'Quiz Passés', info: 'Informations Personnelles', infoDesc: 'Mettez à jour vos informations', fullName: 'Nom Complet', email: 'Email', education: "Niveau d'Études", selectEducation: 'Sélectionner', eduHs: 'Lycéen', eduCollege: 'Étudiant', eduUg: 'Licence', eduPg: 'Master', eduHigher: 'Études Supérieures', languagePref: 'Langue Préférée', saveChanges: 'Enregistrer', changePassword: 'Changer le Mot de Passe', changePasswordDesc: 'Mettez à jour votre mot de passe', newPassword: 'Nouveau Mot de Passe', newPasswordPh: 'Entrez nouveau mot de passe (min 6)', updatePassword: 'Mettre à Jour', updated: 'Profil mis à jour', updatedDesc: 'Votre profil a été mis à jour', pwUpdated: 'Mot de passe mis à jour', pwUpdatedDesc: 'Votre mot de passe a été changé', pwTooShort: 'Min 6 caractères' },
+  note: { backTitle: 'Retour', edit: 'Modifier', save: 'Enregistrer', cancel: 'Annuler', regenerate: 'Régénérer', regenerating: 'Régénération…', continueWriting: 'Continuer', continuing: 'En cours…', incomplete: 'Notes Incomplètes', incompleteDesc: 'Ces notes semblent coupées. Cliquez sur "Continuer" ou "Régénérer".' },
+};
+
+const zh = {
+  common: { loading: '加载中…', save: '保存', cancel: '取消', edit: '编辑', delete: '删除', back: '返回', backToDashboard: '返回仪表板', welcomeBack: '欢迎回来！', error: '错误', success: '成功' },
+  nav: { signIn: '登录', getStarted: '开始使用', history: '历史记录', profile: '个人资料', signOut: '登出', toggleDark: '切换深色模式', chooseLanguage: '选择语言', changeLanguage: '更改语言' },
+  hero: { badge: 'AI 学习助手', title: 'StudyScribe.AI', subtitle: '将 YouTube 视频、音频文件和 PDF 转换为全面的学习笔记。创建闪卡、参加测验，并与 AI 讨论您的内容。', tagline: '突破背后的大脑', cta: '免费开始' },
+  how: { badge: '工作原理', title: '从内容到', titleAccent: '掌握只需 3 步', subtitle: '简单的工作流程，让您在几分钟内更聪明地学习。', s1Title: '上传', s1Desc: '粘贴 YouTube 链接、PDF、音频或网站。任何您想学习的内容。', s2Title: 'AI 处理', s2Desc: '我们的 AI 提取关键概念、公式，并将其结构化为清晰的学习笔记。', s3Title: '学习', s3Desc: '阅读、高亮、自我测验，并与 AI 聊天。更快掌握您的材料。' },
+  features: { badge: '功能', title: '您所需的一切来', titleAccent: '更聪明地学习', subtitle: '强大的 AI 工具旨在改变您的学习方式。', youtubeT: 'YouTube 转录', youtubeD: '将任何 YouTube 视频转换为详细、有组织的学习笔记。', audioT: '音频与视频处理', audioD: '上传 MP3 或 MP4 文件并立即获得全面的转录和摘要。', pdfT: 'PDF 分析', pdfD: '从 PDF 中提取关键信息并转化为可操作的学习材料。', aiT: 'AI 聊天助手', aiD: '与智能 AI 导师讨论您的学习材料。', langT: '多语言支持', langD: '将笔记翻译成多种语言以加强学习。', highlightT: '智能高亮', highlightD: '使用可自定义颜色自动高亮重要要点。' },
+  updates: { badge: '更新日志', title: '最近', titleAccent: '更新', subtitle: 'StudyScribe.AI 的新功能 — 持续部署。', tags: { New: '新', Design: '设计', Feature: '功能', Polish: '优化', Fix: '修复' }, u1T: '主页导航栏中的语言切换器', u1D: '从顶部栏切换整个应用的语言 — 原生名称如 中文（简体）。', u2T: '整个应用的玻璃拟态', u2D: '认证、仪表板、历史和资料页现在共享相同的玻璃 + 渐变美学。', u3T: '大胆且充满活力的主页重设计', u3D: '新的渐变网格背景、动画英雄、工作原理流程和功能卡悬停效果。', u4T: '新的动画背景', u4D: '浮动渐变气泡和微妙网格为每个页面增添深度和动感。', u5T: '所有核心上传功能上线', u5D: 'YouTube、PDF、音频/视频和网站摄取均端到端可用。', u6T: '更好的字体与排版', u6D: '更清晰的标题层次、更紧凑的字距和改进的可读性。', u7T: 'LaTeX 渲染修复', u7D: '数学公式现在使用 KaTeX 可靠地渲染 — 块级、内联和转义反斜杠。' },
+  faq: { badge: '常见问题', title: '常见', titleAccent: '问题', subtitle: '有问题？我们有答案。了解关于 StudyScribe.AI 的一切。', q1: 'StudyScribe.AI 如何工作？', a1: 'StudyScribe.AI 使用先进的 AI 分析您的学习材料并自动生成全面的学习笔记、高亮、闪卡和测验。', q2: '支持哪些文件格式？', a2: '我们支持 YouTube 视频（通过 URL）、PDF、音频/视频文件（MP3、MP4、WAV 等）和网站。', q3: '我的数据安全吗？', a3: '是的！您的数据加密存储在云端。只有您可以访问您的笔记。', q4: '我可以编辑 AI 生成的笔记吗？', a4: '当然可以！您可以编辑任何 AI 生成的内容并自动保存。', q5: 'AI 摘要的准确性如何？', a5: '我们的 AI 非常准确并不断改进。建议审查生成的内容并根据需要调整。', q6: '可以将笔记翻译成其他语言吗？', a6: '是的！StudyScribe.AI 支持多种语言，包括西班牙语、法语、德语、意大利语、葡萄牙语、中文、日语、韩语、阿拉伯语、俄语和印地语。', q7: 'AI 聊天功能是什么？', a7: 'AI 聊天功能让您可以就学习材料进行互动对话。提问、请求澄清或深入探讨特定主题。', q8: '处理材料需要多长时间？', a8: '处理时间因内容长度和类型而异。大多数材料在 1-3 分钟内处理完成。' },
+  about: { badge: '关于', title: '关于这个', titleAccent: '网站', body1: '这是一个由', personalProject: '个人项目', madeBy: '制作', yiming: 'Yiming', tooltip: '点击了解更多关于我！', fromFisjb: '来自 FISJB。', body2: '您可能会看到网站的某些部分出现故障，但希望它在您使用时能正常工作。我对这个网站的 AI 集成感到非常自豪 lol，归功于所有的转录、摘要、笔记创建和翻译 API ✌️。希望我的项目能为创建更多此类学习应用带来机会。', madeOn: '制作于 2025 年 10 月 12 日' },
+  footer: { text: '由', suffix: '制作 • 2025 个人项目' },
+  auth: { welcomeBack: '欢迎回来', signInTo: '登录以继续学习', signIn: '登录', signUp: '注册', signingIn: '登录中…', email: '电子邮件', password: '密码', fullName: '全名', continueWithGoogle: '使用 Google 继续', orContinueEmail: '或使用电子邮件继续', accountCreated: '账户已创建！', welcomeToApp: '欢迎使用 StudyScribe.AI', signInSuccess: '您已成功登录。', failedSignUp: '创建账户失败', failedSignIn: '登录失败', failedGoogle: 'Google 登录失败' },
+  dashboard: { welcomeBack: '欢迎回来！', titleA: '您的', titleB: '学习仪表板', subtitle: '将您的学习材料转换为全面的学习笔记', organize: '组织', yourNotes: '您的学习笔记', tabs: { youtube: 'YouTube', audio: '音频/视频', pdf: 'PDF', website: '网站' } },
+  history: { titleA: '学习笔记', titleB: '历史', subtitle: '查看您所有生成的学习笔记' },
+  profile: { titleA: '个人资料', titleB: '设置', stats: '您的统计', totalNotes: '总笔记数', flashcardsCreated: '已创建闪卡', quizzesTaken: '已参加测验', info: '个人资料信息', infoDesc: '更新您的个人信息', fullName: '全名', email: '电子邮件', education: '教育水平', selectEducation: '选择教育水平', eduHs: '高中生', eduCollege: '大学生', eduUg: '本科生', eduPg: '研究生', eduHigher: '高等教育', languagePref: '语言偏好', saveChanges: '保存更改', changePassword: '更改密码', changePasswordDesc: '更新您的密码', newPassword: '新密码', newPasswordPh: '输入新密码（至少 6 个字符）', updatePassword: '更新密码', updated: '资料已更新', updatedDesc: '您的资料已成功更新', pwUpdated: '密码已更新', pwUpdatedDesc: '您的密码已成功更改', pwTooShort: '密码至少需要 6 个字符' },
+  note: { backTitle: '返回', edit: '编辑笔记', save: '保存', cancel: '取消', regenerate: '重新生成', regenerating: '重新生成中…', continueWriting: '继续写作', continuing: '继续中…', incomplete: '笔记不完整', incompleteDesc: '这些笔记似乎被截断了。点击"继续写作"或"重新生成"。' },
+};
+
+const ja = {
+  common: { loading: '読み込み中…', save: '保存', cancel: 'キャンセル', edit: '編集', delete: '削除', back: '戻る', backToDashboard: 'ダッシュボードへ戻る', welcomeBack: 'お帰りなさい！', error: 'エラー', success: '成功' },
+  nav: { signIn: 'サインイン', getStarted: '始める', history: '履歴', profile: 'プロフィール', signOut: 'サインアウト', toggleDark: 'ダークモード', chooseLanguage: '言語を選択', changeLanguage: '言語を変更' },
+  hero: { badge: 'AI 学習アシスタント', title: 'StudyScribe.AI', subtitle: 'YouTube 動画、音声ファイル、PDF を包括的な学習ノートに変換します。フラッシュカードを作成し、クイズを受け、AI とコンテンツについて話し合います。', tagline: 'ブレイクスルーの背後にある頭脳', cta: '無料で始める' },
+  how: { badge: '使い方', title: 'コンテンツから', titleAccent: '3 ステップで習得', subtitle: '数分でよりスマートに学習できるシンプルなワークフロー。', s1Title: 'アップロード', s1Desc: 'YouTube リンク、PDF、音声ファイル、ウェブサイトをドロップ。', s2Title: 'AI が処理', s2Desc: 'AI が重要な概念や数式を抽出し、明確な学習ノートに構造化します。', s3Title: '学習', s3Desc: '読み、ハイライトし、自分でクイズし、AI とチャット。素材をより速く習得。' },
+  features: { badge: '機能', title: 'スマートに学習する', titleAccent: 'ために必要なすべて', subtitle: '学習方法を変革する強力な AI ツール。', youtubeT: 'YouTube 文字起こし', youtubeD: '任意の YouTube 動画を AI 要約付きの詳細なノートに変換。', audioT: '音声・動画処理', audioD: 'MP3 や MP4 ファイルをアップロードして、即座に文字起こしと要約を取得。', pdfT: 'PDF 解析', pdfD: 'PDF から重要な情報を抽出し、実用的な学習教材に変換。', aiT: 'AI チャット', aiD: '質問をして、賢い AI チューターと学習教材について話し合う。', langT: '多言語サポート', langD: 'ノートを複数の言語に翻訳して学習を強化。', highlightT: 'スマートハイライト', highlightD: 'カスタマイズ可能なカラーで重要なポイントを自動ハイライト。' },
+  updates: { badge: '更新履歴', title: '最近の', titleAccent: '更新', subtitle: 'StudyScribe.AI の新機能 — 継続的にリリース中。', tags: { New: '新', Design: 'デザイン', Feature: '機能', Polish: '改善', Fix: '修正' }, u1T: 'ホームナビバーの言語スイッチャー', u1D: 'トップバーからアプリ全体の言語を切り替え — 中文（简体）などの母国語名。', u2T: 'アプリ全体のグラスモーフィズム', u2D: '認証、ダッシュボード、履歴、プロフィールが同じガラス + グラデーションの美学を共有。', u3T: '大胆で活気のあるホームページ再デザイン', u3D: '新しいグラデーションメッシュ背景、アニメーションヒーロー、使い方フロー、機能カードホバー効果。', u4T: '新しいアニメーション背景', u4D: '浮遊するグラデーションブロブと微妙なメッシュが各ページに深みと動きを与えます。', u5T: 'すべてのコアアップロード機能稼働中', u5D: 'YouTube、PDF、音声/動画、ウェブサイトの取り込みがエンドツーエンドで動作。', u6T: 'より良いフォントとタイポグラフィ', u6D: 'よりクリーンな見出し階層、タイトな文字間隔、ノート全体の可読性向上。', u7T: 'LaTeX レンダリング修正', u7D: '数式が KaTeX で確実にレンダリングされる — ブロック数式、インライン数式、エスケープバックスラッシュ。' },
+  faq: { badge: 'FAQ', title: 'よくある', titleAccent: '質問', subtitle: 'ご質問はありますか？StudyScribe.AI について必要な情報をすべて。', q1: 'StudyScribe.AI はどのように機能しますか？', a1: 'StudyScribe.AI は高度な AI を使用して学習教材を分析し、包括的な学習ノート、ハイライト、フラッシュカード、クイズを自動生成します。', q2: 'どのファイル形式に対応していますか？', a2: 'YouTube 動画（URL 経由）、PDF、音声/動画ファイル（MP3、MP4、WAV など）、ウェブサイトに対応。', q3: 'データは安全ですか？', a3: 'はい！データは暗号化されてクラウドに安全に保存されます。あなただけがアクセスできます。', q4: 'AI 生成のノートを編集できますか？', a4: 'もちろん！AI 生成のコンテンツを編集でき、すべての変更は自動保存されます。', q5: 'AI 要約の精度はどうですか？', a5: '私たちの AI は非常に正確で常に改善されています。生成内容を確認し、必要に応じて調整することをお勧めします。', q6: 'ノートを他の言語に翻訳できますか？', a6: 'はい！StudyScribe.AI はスペイン語、フランス語、ドイツ語、イタリア語、ポルトガル語、中国語、日本語、韓国語、アラビア語、ロシア語、ヒンディー語など複数言語をサポート。', q7: 'AI チャット機能とは？', a7: 'AI チャットでは学習教材についてインタラクティブに会話できます。質問、明確化、深掘りが可能。', q8: '教材の処理にどのくらいかかりますか？', a8: 'コンテンツの長さと種類により異なります。ほとんどは 1-3 分で処理されます。' },
+  about: { badge: '概要', title: 'この', titleAccent: 'ウェブサイトについて', body1: 'これは', personalProject: '個人プロジェクト', madeBy: 'です。作成者:', yiming: 'Yiming', tooltip: 'クリックして私についてもっと知る！', fromFisjb: 'FISJB から。', body2: 'サイトの一部が誤動作することがあるかもしれませんが、お使いの際に動作することを願っています。このサイトの AI 統合をとても誇りに思っています lol、すべての文字起こし、要約、ノート作成、翻訳 API に感謝 ✌️。私のプロジェクトがこの種の学習アプリ作成の機会を増やすことを願っています。', madeOn: '2025 年 10 月 12 日作成' },
+  footer: { text: '作成:', suffix: '• 2025 個人プロジェクト' },
+  auth: { welcomeBack: 'お帰りなさい', signInTo: 'サインインして学習を続ける', signIn: 'サインイン', signUp: 'サインアップ', signingIn: 'サインイン中…', email: 'メール', password: 'パスワード', fullName: '氏名', continueWithGoogle: 'Google で続ける', orContinueEmail: 'またはメールで続ける', accountCreated: 'アカウント作成完了！', welcomeToApp: 'StudyScribe.AI へようこそ', signInSuccess: 'サインインしました。', failedSignUp: 'アカウント作成失敗', failedSignIn: 'サインイン失敗', failedGoogle: 'Google サインイン失敗' },
+  dashboard: { welcomeBack: 'お帰りなさい！', titleA: 'あなたの', titleB: '学習ダッシュボード', subtitle: '学習教材を包括的なノートに変換', organize: '整理', yourNotes: 'あなたの学習ノート', tabs: { youtube: 'YouTube', audio: '音声/動画', pdf: 'PDF', website: 'ウェブサイト' } },
+  history: { titleA: '学習ノート', titleB: '履歴', subtitle: 'すべての生成済みノートを表示' },
+  profile: { titleA: 'プロフィール', titleB: '設定', stats: 'あなたの統計', totalNotes: '総ノート数', flashcardsCreated: '作成フラッシュカード', quizzesTaken: '受験クイズ', info: 'プロフィール情報', infoDesc: '個人情報を更新', fullName: '氏名', email: 'メール', education: '学歴レベル', selectEducation: '学歴を選択', eduHs: '高校生', eduCollege: '大学生', eduUg: '学部', eduPg: '大学院', eduHigher: '高等教育', languagePref: '言語設定', saveChanges: '変更を保存', changePassword: 'パスワード変更', changePasswordDesc: 'パスワードを更新', newPassword: '新しいパスワード', newPasswordPh: '新しいパスワードを入力（最低 6 文字）', updatePassword: 'パスワードを更新', updated: 'プロフィール更新', updatedDesc: 'プロフィールが正常に更新されました', pwUpdated: 'パスワード更新', pwUpdatedDesc: 'パスワードが正常に変更されました', pwTooShort: 'パスワードは最低 6 文字必要です' },
+  note: { backTitle: '戻る', edit: 'ノート編集', save: '保存', cancel: 'キャンセル', regenerate: '再生成', regenerating: '再生成中…', continueWriting: '続きを書く', continuing: '続行中…', incomplete: 'ノート未完了', incompleteDesc: 'これらのノートは途切れているようです。「続きを書く」または「再生成」をクリックしてください。' },
+};
+
+const ms = {
+  common: { loading: 'Memuat…', save: 'Simpan', cancel: 'Batal', edit: 'Sunting', delete: 'Padam', back: 'Kembali', backToDashboard: 'Kembali ke Papan Pemuka', welcomeBack: 'Selamat kembali!', error: 'Ralat', success: 'Berjaya' },
+  nav: { signIn: 'Log Masuk', getStarted: 'Mulakan', history: 'Sejarah', profile: 'Profil', signOut: 'Log Keluar', toggleDark: 'Mod gelap', chooseLanguage: 'Pilih bahasa', changeLanguage: 'Tukar bahasa' },
+  hero: { badge: 'Pembantu Belajar AI', title: 'StudyScribe.AI', subtitle: 'Tukar video YouTube, fail audio dan PDF kepada nota pembelajaran komprehensif. Cipta kad imbas, ambil kuiz dan berbual dengan AI tentang kandungan anda.', tagline: 'Otak di Sebalik Kejayaan', cta: 'Mulakan Percuma' },
+  how: { badge: 'Cara ia berfungsi', title: 'Dari kandungan ke', titleAccent: 'penguasaan dalam 3 langkah', subtitle: 'Aliran kerja mudah untuk anda belajar lebih bijak dalam beberapa minit.', s1Title: 'Muat Naik', s1Desc: 'Letak pautan YouTube, PDF, fail audio atau laman web. Apa sahaja yang anda perlu pelajari.', s2Title: 'AI Memproses', s2Desc: 'AI kami mengekstrak konsep utama, formula dan menyusunnya menjadi nota yang jelas.', s3Title: 'Belajar', s3Desc: 'Baca, sorot, kuiz diri dan berbual dengan AI. Kuasai bahan anda lebih cepat.' },
+  features: { badge: 'Ciri-ciri', title: 'Segala yang anda perlukan untuk', titleAccent: 'Belajar Lebih Bijak', subtitle: 'Alat AI berkuasa direka untuk mengubah cara anda belajar.', youtubeT: 'Transkripsi YouTube', youtubeD: 'Tukar mana-mana video YouTube kepada nota terperinci dengan rumusan AI.', audioT: 'Pemprosesan Audio & Video', audioD: 'Muat naik fail MP3 atau MP4 dan dapatkan transkripsi serta rumusan serta-merta.', pdfT: 'Analisis PDF', pdfD: 'Ekstrak maklumat penting dari PDF dan tukar kepada bahan pembelajaran.', aiT: 'Pembantu AI', aiD: 'Tanya soalan dan bincang bahan dengan tutor AI pintar.', langT: 'Sokongan Pelbagai Bahasa', langD: 'Terjemah nota anda ke pelbagai bahasa untuk pembelajaran lebih baik.', highlightT: 'Sorotan Pintar', highlightD: 'Sorot mata penting secara automatik dengan kod warna yang boleh disesuaikan.' },
+  updates: { badge: 'Log Perubahan', title: 'Kemas kini', titleAccent: 'terkini', subtitle: 'Apa yang baharu di StudyScribe.AI — diluncurkan secara berterusan.', tags: { New: 'Baharu', Design: 'Reka Bentuk', Feature: 'Ciri', Polish: 'Penambahbaikan', Fix: 'Baikan' }, u1T: 'Penukar bahasa di bar navigasi', u1D: 'Tukar bahasa seluruh aplikasi dari bar atas — nama asli seperti 中文（简体）.', u2T: 'Glassmorphism di seluruh aplikasi', u2D: 'Halaman Auth, Papan Pemuka, Sejarah dan Profil kini berkongsi estetika kaca + gradien yang sama.', u3T: 'Reka bentuk semula laman utama yang berani', u3D: 'Latar belakang mesh gradien baharu, hero animasi, aliran "Cara ia berfungsi" dan kesan tuding kad ciri.', u4T: 'Latar belakang animasi baharu', u4D: 'Buih gradien terapung dan mesh halus memberi setiap halaman lebih kedalaman dan pergerakan.', u5T: 'Semua fungsi muat naik teras aktif', u5D: 'YouTube, PDF, Audio/Video dan Laman Web semuanya berfungsi end-to-end.', u6T: 'Fon dan tipografi lebih baik', u6D: 'Hierarki tajuk lebih bersih, jarak rapat dan kebolehbacaan dipertingkat.', u7T: 'Pembaikan rendering LaTeX', u7D: 'Formula matematik kini di-render dengan boleh dipercayai menggunakan KaTeX.' },
+  faq: { badge: 'Soalan', title: 'Soalan', titleAccent: 'Lazim', subtitle: 'Ada soalan? Kami ada jawapan. Cari semua tentang StudyScribe.AI.', q1: 'Bagaimana StudyScribe.AI berfungsi?', a1: 'StudyScribe.AI menggunakan AI canggih untuk menganalisis bahan pembelajaran anda dan menjana nota, sorotan, kad imbas dan kuiz secara automatik.', q2: 'Format fail apa yang disokong?', a2: 'Kami menyokong video YouTube (melalui URL), dokumen PDF, fail audio/video (MP3, MP4, WAV dll) dan laman web.', q3: 'Adakah data saya selamat?', a3: 'Ya! Data anda disimpan dengan selamat dengan penyulitan. Hanya anda yang boleh mengakses nota anda.', q4: 'Bolehkah saya menyunting nota yang dijana AI?', a4: 'Sudah tentu! Anda boleh menyunting mana-mana kandungan dan semua perubahan disimpan secara automatik.', q5: 'Sejauh mana tepat rumusan AI?', a5: 'AI kami sangat tepat dan sentiasa bertambah baik. Walau bagaimanapun, kami mengesyorkan untuk menyemak.', q6: 'Bolehkah saya terjemah nota saya?', a6: 'Ya! StudyScribe.AI menyokong pelbagai bahasa termasuk Sepanyol, Perancis, Jerman, Itali, Portugis, Cina, Jepun, Korea, Arab, Rusia dan Hindi.', q7: 'Apakah ciri AI Chat?', a7: 'AI Chat membolehkan anda berbual interaktif tentang bahan pembelajaran. Tanya soalan atau dalami topik.', q8: 'Berapa lama pemprosesan?', a8: 'Berbeza-beza. Kebanyakan diproses dalam 1-3 minit. Anda akan dimaklumkan apabila pek belajar siap.' },
+  about: { badge: 'Tentang', title: 'Tentang', titleAccent: 'laman web ini', body1: 'Ini adalah', personalProject: 'projek peribadi', madeBy: 'dibuat oleh', yiming: 'Yiming', tooltip: 'Klik untuk tahu lebih lanjut!', fromFisjb: 'dari FISJB.', body2: 'Anda mungkin nampak beberapa bahagian laman web tidak berfungsi dengan betul, tetapi diharapkan ia berfungsi semasa anda guna. Saya sangat bangga dengan integrasi AI laman ini lol, kredit kepada semua API ✌️. Saya harap projek ini membuka peluang untuk lebih banyak aplikasi belajar seperti ini.', madeOn: 'Dibuat pada 12 Okt 2025' },
+  footer: { text: 'Dibuat oleh', suffix: '• Projek Peribadi 2025' },
+  auth: { welcomeBack: 'Selamat Kembali', signInTo: 'Log masuk untuk teruskan belajar', signIn: 'Log Masuk', signUp: 'Daftar', signingIn: 'Log masuk…', email: 'Emel', password: 'Kata Laluan', fullName: 'Nama Penuh', continueWithGoogle: 'Teruskan dengan Google', orContinueEmail: 'Atau teruskan dengan emel', accountCreated: 'Akaun dicipta!', welcomeToApp: 'Selamat datang ke StudyScribe.AI', signInSuccess: 'Anda berjaya log masuk.', failedSignUp: 'Gagal cipta akaun', failedSignIn: 'Gagal log masuk', failedGoogle: 'Gagal log masuk Google' },
+  dashboard: { welcomeBack: 'Selamat kembali!', titleA: 'Papan Pemuka', titleB: 'Belajar Anda', subtitle: 'Tukar bahan pembelajaran anda kepada nota komprehensif', organize: 'Susun', yourNotes: 'Nota Belajar Anda', tabs: { youtube: 'YouTube', audio: 'Audio/Video', pdf: 'PDF', website: 'Laman Web' } },
+  history: { titleA: 'Sejarah', titleB: 'Nota Belajar', subtitle: 'Lihat semua nota belajar yang dijana' },
+  profile: { titleA: 'Tetapan', titleB: 'Profil', stats: 'Statistik Anda', totalNotes: 'Jumlah Nota', flashcardsCreated: 'Kad Imbas Dicipta', quizzesTaken: 'Kuiz Diambil', info: 'Maklumat Profil', infoDesc: 'Kemas kini maklumat peribadi', fullName: 'Nama Penuh', email: 'Emel', education: 'Tahap Pendidikan', selectEducation: 'Pilih tahap', eduHs: 'Pelajar Sekolah Menengah', eduCollege: 'Pelajar Kolej', eduUg: 'Ijazah Sarjana Muda', eduPg: 'Pasca Siswazah', eduHigher: 'Pendidikan Tinggi', languagePref: 'Bahasa Pilihan', saveChanges: 'Simpan Perubahan', changePassword: 'Tukar Kata Laluan', changePasswordDesc: 'Kemas kini kata laluan', newPassword: 'Kata Laluan Baharu', newPasswordPh: 'Masukkan kata laluan baharu (min 6 aksara)', updatePassword: 'Kemas Kini Kata Laluan', updated: 'Profil dikemas kini', updatedDesc: 'Profil anda berjaya dikemas kini', pwUpdated: 'Kata laluan dikemas kini', pwUpdatedDesc: 'Kata laluan berjaya ditukar', pwTooShort: 'Kata laluan mestilah sekurang-kurangnya 6 aksara' },
+  note: { backTitle: 'Kembali', edit: 'Sunting Nota', save: 'Simpan', cancel: 'Batal', regenerate: 'Jana Semula', regenerating: 'Menjana semula…', continueWriting: 'Sambung Menulis', continuing: 'Menyambung…', incomplete: 'Nota Tidak Lengkap', incompleteDesc: 'Nota ini kelihatan terpotong. Klik "Sambung Menulis" atau "Jana Semula".' },
+};
+
+const resources = {
+  english: { translation: en },
+  'español': { translation: es },
+  'français': { translation: fr },
+  '中文': { translation: zh },
+  '日本語': { translation: ja },
+  'bahasa melayu': { translation: ms },
+};
+
+i18n.use(initReactI18next).init({
+  resources,
+  lng: localStorage.getItem('language') || 'english',
+  fallbackLng: 'english',
+  interpolation: { escapeValue: false },
+});
 
 export default i18n;
