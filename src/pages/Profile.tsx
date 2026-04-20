@@ -10,10 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { logError } from "@/utils/logger";
+import { useTranslation } from "react-i18next";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     full_name: '',
@@ -120,16 +122,17 @@ const Profile = () => {
 
       if (error) throw error;
 
-      // Update language in localStorage
+      // Update language in localStorage and i18n live
       localStorage.setItem('language', profile.language_preference);
+      i18n.changeLanguage(profile.language_preference);
 
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully"
+        title: t("profile.updated"),
+        description: t("profile.updatedDesc")
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive"
       });
@@ -141,8 +144,8 @@ const Profile = () => {
   const handleChangePassword = async () => {
     if (!newPassword || newPassword.length < 6) {
       toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
+        title: t("common.error"),
+        description: t("profile.pwTooShort"),
         variant: "destructive"
       });
       return;
@@ -157,13 +160,13 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully"
+        title: t("profile.pwUpdated"),
+        description: t("profile.pwUpdatedDesc")
       });
       setNewPassword('');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive"
       });
@@ -187,15 +190,15 @@ const Profile = () => {
 
           <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="rounded-full">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
+            <span className="hidden sm:inline">{t("common.backToDashboard")}</span>
+            <span className="sm:hidden">{t("common.back")}</span>
           </Button>
         </div>
       </nav>
 
       <main className="relative container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="text-4xl md:text-5xl font-bold mb-8 tracking-tight animate-fade-in">
-          Profile <span className="text-gradient animate-gradient">Settings</span>
+          {t("profile.titleA")} <span className="text-gradient animate-gradient">{t("profile.titleB")}</span>
         </h1>
 
         <div className="grid gap-6">
@@ -205,22 +208,22 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Your Statistics
+                {t("profile.stats")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-3xl font-bold text-primary">{stats.totalNotes}</div>
-                  <div className="text-sm text-muted-foreground">Total Notes</div>
+                  <div className="text-sm text-muted-foreground">{t("profile.totalNotes")}</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-primary">{stats.totalFlashcards}</div>
-                  <div className="text-sm text-muted-foreground">Flashcards Created</div>
+                  <div className="text-sm text-muted-foreground">{t("profile.flashcardsCreated")}</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-primary">{stats.totalQuizzes}</div>
-                  <div className="text-sm text-muted-foreground">Quizzes Taken</div>
+                  <div className="text-sm text-muted-foreground">{t("profile.quizzesTaken")}</div>
                 </div>
               </div>
             </CardContent>
@@ -229,12 +232,12 @@ const Profile = () => {
           {/* Profile Information */}
           <Card className="glass-card border-border/50">
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information</CardDescription>
+              <CardTitle>{t("profile.info")}</CardTitle>
+              <CardDescription>{t("profile.infoDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t("profile.fullName")}</Label>
                 <Input
                   id="fullName"
                   value={profile.full_name}
@@ -243,7 +246,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("profile.email")}</Label>
                 <Input
                   id="email"
                   value={profile.email}
@@ -253,24 +256,24 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="education">Education Level</Label>
+                <Label htmlFor="education">{t("profile.education")}</Label>
                 <select
                   id="education"
                   value={profile.education_level}
                   onChange={(e) => setProfile({ ...profile, education_level: e.target.value })}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <option value="">Select education level</option>
-                  <option value="high school student">High School Student</option>
-                  <option value="college student">College Student</option>
-                  <option value="undergraduate">Undergraduate</option>
-                  <option value="postgraduate">Postgraduate</option>
-                  <option value="higher education">Higher Education</option>
+                  <option value="">{t("profile.selectEducation")}</option>
+                  <option value="high school student">{t("profile.eduHs")}</option>
+                  <option value="college student">{t("profile.eduCollege")}</option>
+                  <option value="undergraduate">{t("profile.eduUg")}</option>
+                  <option value="postgraduate">{t("profile.eduPg")}</option>
+                  <option value="higher education">{t("profile.eduHigher")}</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="language">Language Preference</Label>
+                <Label htmlFor="language">{t("profile.languagePref")}</Label>
                 <select
                   id="language"
                   value={profile.language_preference}
@@ -288,7 +291,7 @@ const Profile = () => {
 
               <Button onClick={handleUpdateProfile} disabled={loading} className="w-full">
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {t("profile.saveChanges")}
               </Button>
             </CardContent>
           </Card>
@@ -296,23 +299,23 @@ const Profile = () => {
           {/* Change Password */}
           <Card className="glass-card border-border/50">
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your password</CardDescription>
+              <CardTitle>{t("profile.changePassword")}</CardTitle>
+              <CardDescription>{t("profile.changePasswordDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t("profile.newPassword")}</Label>
                 <Input
                   id="newPassword"
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password (min 6 characters)"
+                  placeholder={t("profile.newPasswordPh")}
                 />
               </div>
 
               <Button onClick={handleChangePassword} disabled={loading} className="w-full">
-                Update Password
+                {t("profile.updatePassword")}
               </Button>
             </CardContent>
           </Card>
