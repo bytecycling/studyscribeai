@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import NotesList from "@/components/NotesList";
 import logoImage from "@/assets/studyscribe_logo.png";
+import { useTranslation } from "react-i18next";
 
 export default function History() {
+  const { t } = useTranslation();
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
-      {/* Gradient mesh background */}
       <div className="absolute inset-0 gradient-mesh opacity-50 pointer-events-none" />
 
-      {/* Glass Navbar */}
       <nav className="sticky top-3 z-40 mx-3 sm:mx-6">
         <div className="glass rounded-full px-4 sm:px-6 h-14 flex items-center justify-between shadow-soft max-w-6xl mx-auto">
           <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -21,21 +21,20 @@ export default function History() {
           <Link to="/dashboard">
             <Button variant="ghost" size="sm" className="rounded-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-              <span className="sm:hidden">Back</span>
+              <span className="hidden sm:inline">{t("common.backToDashboard")}</span>
+              <span className="sm:hidden">{t("common.back")}</span>
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="relative container mx-auto px-4 py-12">
         <div className="mb-12 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">
-            Study Notes <span className="text-gradient animate-gradient">History</span>
+            {t("history.titleA")} <span className="text-gradient animate-gradient">{t("history.titleB")}</span>
           </h1>
           <p className="text-muted-foreground text-lg">
-            View all your generated study notes
+            {t("history.subtitle")}
           </p>
         </div>
 

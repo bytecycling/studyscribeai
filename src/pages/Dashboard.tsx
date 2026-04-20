@@ -12,9 +12,11 @@ import WebsiteUpload from "@/components/WebsiteUpload";
 import NotesList from "@/components/NotesList";
 import SettingsMenu from "@/components/SettingsMenu";
 import FolderManager from "@/components/FolderManager";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [refreshNotes, setRefreshNotes] = useState(0);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -67,21 +69,21 @@ const Dashboard = () => {
             <Link to="/history">
               <Button variant="ghost" size="sm">
                 <BookOpen className="w-4 h-4 mr-2" />
-                History
+                {t("nav.history")}
               </Button>
             </Link>
             <Link to="/profile">
               <Button variant="ghost" size="sm">
-                Profile
+                {t("nav.profile")}
               </Button>
             </Link>
             <span className="text-sm text-muted-foreground">
-              Welcome back!
+              {t("dashboard.welcomeBack")}
             </span>
             <SettingsMenu onClearHistory={handleUploadSuccess} />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+              {t("nav.signOut")}
             </Button>
           </div>
         </div>
@@ -113,7 +115,7 @@ const Dashboard = () => {
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Organize</h3>
+            <h3 className="text-lg font-semibold">{t("dashboard.organize")}</h3>
             <Button
               size="icon"
               variant="ghost"
@@ -135,20 +137,20 @@ const Dashboard = () => {
         <div className="w-full">
           <div className="mb-12 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
-              Your <span className="text-gradient animate-gradient">Study Dashboard</span>
+              {t("dashboard.titleA")} <span className="text-gradient animate-gradient">{t("dashboard.titleB")}</span>
             </h1>
             <p className="text-muted-foreground text-lg">
-              Transform your learning materials into comprehensive study notes
+              {t("dashboard.subtitle")}
             </p>
           </div>
 
           {/* Upload Tabs */}
           <Tabs defaultValue="youtube" className="mb-12">
             <TabsList className="grid w-full grid-cols-4 glass p-1 h-auto">
-              <TabsTrigger value="youtube" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">YouTube</TabsTrigger>
-              <TabsTrigger value="audio" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">Audio/Video</TabsTrigger>
-              <TabsTrigger value="pdf" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">PDF</TabsTrigger>
-              <TabsTrigger value="website" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">Website</TabsTrigger>
+              <TabsTrigger value="youtube" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">{t("dashboard.tabs.youtube")}</TabsTrigger>
+              <TabsTrigger value="audio" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">{t("dashboard.tabs.audio")}</TabsTrigger>
+              <TabsTrigger value="pdf" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">{t("dashboard.tabs.pdf")}</TabsTrigger>
+              <TabsTrigger value="website" className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground">{t("dashboard.tabs.website")}</TabsTrigger>
             </TabsList>
             
             <div className="mt-6">
@@ -172,7 +174,7 @@ const Dashboard = () => {
 
           {/* Recent Notes Section */}
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight">Your Study Notes</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight">{t("dashboard.yourNotes")}</h2>
             <NotesList refreshTrigger={refreshNotes} folderId={selectedFolderId} />
           </div>
         </div>
