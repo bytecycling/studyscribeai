@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Languages, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,14 +27,18 @@ interface LanguageSwitcherProps {
 }
 
 const LanguageSwitcher = ({ variant = "ghost", compact = false }: LanguageSwitcherProps) => {
+  const { i18n, t } = useTranslation();
   const [current, setCurrent] = useState<string>(
-    () => localStorage.getItem("language") || "english"
+    () => localStorage.getItem("language") || i18n.language || "english"
   );
 
   useEffect(() => {
     const stored = localStorage.getItem("language");
-    if (stored && stored !== current) setCurrent(stored);
-  }, []);
+    if (stored && stored !== i18n.language) {
+      i18n.changeLanguage(stored);
+      setCurrent(stored);
+    }
+  }, [i18n]);
 
   const activeLang = LANGUAGES.find((l) => l.key === current) ?? LANGUAGES[0];
 
@@ -41,8 +46,9 @@ const LanguageSwitcher = ({ variant = "ghost", compact = false }: LanguageSwitch
     if (key === current) return;
     localStorage.setItem("language", key);
     setCurrent(key);
-    // Reload so i18n + UI strings update everywhere
-    window.location.reload();
+    i18n.changeLanguage(key);
+    // Live update — no reload needed; broadcast for any non-react listeners
+    window.dispatchEvent(new CustomEvent("languagechange", { detail: { language: key } }));
   };
 
   return (
@@ -52,7 +58,7 @@ const LanguageSwitcher = ({ variant = "ghost", compact = false }: LanguageSwitch
           variant={variant}
           size={compact ? "icon" : "sm"}
           className={compact ? "rounded-full h-9 w-9" : "rounded-full h-9 px-3 gap-1.5"}
-          aria-label="Change language"
+          aria-label={t("nav.changeLanguage")}
         >
           <Languages className="h-4 w-4" />
           {!compact && (
@@ -64,7 +70,7 @@ const LanguageSwitcher = ({ variant = "ghost", compact = false }: LanguageSwitch
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 glass-card">
         <DropdownMenuLabel className="text-xs text-muted-foreground">
-          Choose language
+          {t("nav.chooseLanguage")}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {LANGUAGES.map((lang) => {
