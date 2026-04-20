@@ -227,9 +227,8 @@ const Profile = () => {
           </Card>
 
           {/* Profile Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
+          <Card className="glass-card border-border/50">
+
               <CardDescription>Update your personal information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -294,9 +293,8 @@ const Profile = () => {
           </Card>
 
           {/* Change Password */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+          <Card className="glass-card border-border/50">
+
               <CardDescription>Update your password</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
