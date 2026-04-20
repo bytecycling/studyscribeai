@@ -200,7 +200,8 @@ const Profile = () => {
 
         <div className="grid gap-6">
           {/* Stats Card */}
-          <Card>
+          <Card className="glass-card border-border/50">
+
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
