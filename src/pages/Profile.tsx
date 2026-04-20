@@ -173,28 +173,35 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <nav className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logoImage} alt="StudyScribe.AI Logo" className="h-10 w-auto" />
-            <span className="font-bold text-xl">StudyScribe.AI</span>
+    <div className="relative min-h-screen bg-background overflow-hidden">
+      {/* Gradient mesh background */}
+      <div className="absolute inset-0 gradient-mesh opacity-50 pointer-events-none" />
+
+      {/* Glass Navbar */}
+      <nav className="sticky top-3 z-40 mx-3 sm:mx-6">
+        <div className="glass rounded-full px-4 sm:px-6 h-14 flex items-center justify-between shadow-soft max-w-6xl mx-auto">
+          <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src={logoImage} alt="StudyScribe.AI Logo" className="h-8 w-auto" />
+            <span className="font-bold text-base sm:text-lg text-gradient animate-gradient">StudyScribe.AI</span>
           </Link>
-          
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="rounded-full">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Profile Settings</h1>
+      <main className="relative container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 tracking-tight animate-fade-in">
+          Profile <span className="text-gradient animate-gradient">Settings</span>
+        </h1>
 
         <div className="grid gap-6">
           {/* Stats Card */}
-          <Card>
+          <Card className="glass-card border-border/50">
+
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -220,7 +227,7 @@ const Profile = () => {
           </Card>
 
           {/* Profile Information */}
-          <Card>
+          <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>Update your personal information</CardDescription>
@@ -287,7 +294,7 @@ const Profile = () => {
           </Card>
 
           {/* Change Password */}
-          <Card>
+          <Card className="glass-card border-border/50">
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
               <CardDescription>Update your password</CardDescription>

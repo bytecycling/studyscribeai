@@ -48,8 +48,7 @@ const HowItWorks = () => {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className="relative flex flex-col items-center text-center animate-slide-up"
-                style={{ animationDelay: `${index * 0.15}s` }}
+                className="reveal-on-scroll relative flex flex-col items-center text-center"
               >
                 {/* Icon circle */}
                 <div className="relative mb-6">

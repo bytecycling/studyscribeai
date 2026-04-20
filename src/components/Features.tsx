@@ -56,8 +56,7 @@ const Features = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative p-7 rounded-2xl glass-card hover:-translate-y-1 hover:shadow-glow transition-all duration-300 animate-slide-up overflow-hidden"
-              style={{ animationDelay: `${index * 0.08}s` }}
+              className="reveal-on-scroll group relative p-7 rounded-2xl glass-card hover:-translate-y-1 hover:shadow-glow transition-all duration-300 overflow-hidden"
             >
               {/* Hover gradient sheen */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-accent/0 group-hover:from-primary/5 group-hover:to-accent/10 transition-all duration-500 pointer-events-none" />

@@ -312,6 +312,19 @@ All colors MUST be HSL.
     }
   }
 
+  /* Scroll-triggered reveal: hidden by default, animates in when .is-visible is added */
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    will-change: opacity, transform;
+  }
+
+  .reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   /* Mermaid diagram styles */
   .mermaid-container {
     @apply rounded-lg p-4;

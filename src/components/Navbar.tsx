@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Moon, Sun } from "lucide-react";
 import logoImage from "@/assets/studyscribe_logo.png";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const Navbar = () => {
   const [darkMode, setDarkMode] = useState(
@@ -20,13 +21,14 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-6xl">
-      <div className="glass rounded-full px-4 sm:px-6 h-14 flex items-center justify-between shadow-soft">
+      <div className="glass rounded-full px-3 sm:px-6 h-14 flex items-center justify-between shadow-soft">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img src={logoImage} alt="StudyScribe.AI Logo" className="h-8 w-auto" />
           <span className="font-bold text-base sm:text-lg hidden sm:inline">StudyScribe.AI</span>
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          <LanguageSwitcher />
           <Button
             variant="ghost"
             size="icon"
@@ -53,3 +55,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
