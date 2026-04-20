@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { Moon, Sun } from "lucide-react";
 import logoImage from "@/assets/studyscribe_logo.png";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem('darkMode') === 'true' || localStorage.getItem('darkMode') === null
   );
@@ -34,7 +36,7 @@ const Navbar = () => {
             size="icon"
             onClick={() => setDarkMode(!darkMode)}
             className="rounded-full h-9 w-9"
-            aria-label="Toggle dark mode"
+            aria-label={t("nav.toggleDark")}
           >
             {darkMode ? (
               <Sun className="h-4 w-4" />
@@ -43,10 +45,10 @@ const Navbar = () => {
             )}
           </Button>
           <Link to="/auth" className="hidden sm:block">
-            <Button variant="ghost" className="rounded-full h-9">Sign In</Button>
+            <Button variant="ghost" className="rounded-full h-9">{t("nav.signIn")}</Button>
           </Link>
           <Link to="/auth">
-            <Button variant="default" className="rounded-full h-9 px-4 sm:px-5">Get Started</Button>
+            <Button variant="default" className="rounded-full h-9 px-4 sm:px-5">{t("nav.getStarted")}</Button>
           </Link>
         </div>
       </div>
