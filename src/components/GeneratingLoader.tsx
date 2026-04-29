@@ -1,23 +1,33 @@
-import { Loader2, BookOpen, Sparkles, Brain, FileText } from "lucide-react";
+import { Loader2, BookOpen, Sparkles, Brain, FileText, X, CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+export interface ProcessingLog {
+  ts: number;
+  message: string;
+  done?: boolean;
+}
 
 interface GeneratingLoaderProps {
   progress: number;
   title?: string;
+  logs?: ProcessingLog[];
+  onCancel?: () => void;
 }
 
 const stages = [
-  { icon: FileText, text: "Extracting content...", min: 0, max: 30 },
-  { icon: Brain, text: "Analyzing material...", min: 30, max: 60 },
-  { icon: Sparkles, text: "Generating notes...", min: 60, max: 85 },
-  { icon: BookOpen, text: "Creating study materials...", min: 85, max: 100 },
-];
+  { icon: FileText, key: "extracting", min: 0, max: 30 },
+  { icon: Brain, key: "analyzing", min: 30, max: 60 },
+  { icon: Sparkles, key: "generating", min: 60, max: 85 },
+  { icon: BookOpen, key: "creating", min: 85, max: 100 },
+] as const;
 
-export default function GeneratingLoader({ progress, title }: GeneratingLoaderProps) {
+export default function GeneratingLoader({ progress, title, logs = [], onCancel }: GeneratingLoaderProps) {
+  const { t } = useTranslation();
   const [dots, setDots] = useState("");
 
-  // Animate dots to show activity
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => (prev.length >= 3 ? "" : prev + "."));
@@ -29,11 +39,11 @@ export default function GeneratingLoader({ progress, title }: GeneratingLoaderPr
   const StageIcon = currentStage.icon;
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4 space-y-6">
+    <div className="flex flex-col items-center justify-center py-6 px-4 space-y-5">
       {/* Animated Icon */}
       <div className="relative">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <StageIcon className="w-10 h-10 text-primary animate-pulse" />
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+          <StageIcon className="w-10 h-10 text-primary" />
         </div>
         <div className="absolute -top-1 -right-1">
           <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -50,27 +60,52 @@ export default function GeneratingLoader({ progress, title }: GeneratingLoaderPr
       {/* Stage Text */}
       <div className="text-center">
         <p className="font-medium text-foreground">
-          {currentStage.text}{dots}
+          {t(`loader.${currentStage.key}`)}{dots}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          This may take a moment
+          {t("loader.moment")}
         </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full max-w-xs space-y-2">
+      <div className="w-full max-w-sm space-y-2">
         <Progress value={progress} className="h-2" />
         <p className="text-xs text-center text-muted-foreground">
-          {progress}% complete
+          {t("loader.percent", { p: Math.round(progress) })}
         </p>
       </div>
 
+      {/* Activity log */}
+      {logs.length > 0 && (
+        <div className="w-full max-w-sm rounded-lg border border-border/50 bg-muted/30 p-3 max-h-40 overflow-y-auto text-xs space-y-1.5">
+          <p className="font-medium text-muted-foreground mb-1">{t("loader.activityLog")}</p>
+          {logs.map((log, i) => (
+            <div key={i} className="flex items-start gap-2 animate-fade-in">
+              {log.done ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+              ) : (
+                <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin mt-0.5 flex-shrink-0" />
+              )}
+              <span className="text-foreground/80">{log.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Activity Indicator */}
-      <div className="flex gap-1 mt-2">
+      <div className="flex gap-1">
         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:200ms]" />
         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:400ms]" />
       </div>
+
+      {/* Cancel button */}
+      {onCancel && (
+        <Button variant="outline" size="sm" onClick={onCancel} className="mt-2">
+          <X className="w-4 h-4 mr-2" />
+          {t("loader.cancel")}
+        </Button>
+      )}
     </div>
   );
 }
