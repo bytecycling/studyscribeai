@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import AppleBookLoader from "@/components/AppleBookLoader";
 
 export interface ProcessingLog {
   ts: number;
@@ -40,14 +41,13 @@ export default function GeneratingLoader({ progress, title, logs = [], onCancel 
 
   return (
     <div className="flex flex-col items-center justify-center py-6 px-4 space-y-5">
-      {/* Animated Icon */}
-      <div className="relative">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-          <StageIcon className="w-10 h-10 text-primary" />
-        </div>
-        <div className="absolute -top-1 -right-1">
-          <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        </div>
+      {/* Apple → Book → Book loop animation */}
+      <AppleBookLoader />
+
+      {/* Subtle stage chip under the animation */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <StageIcon className="w-3.5 h-3.5 text-primary" />
+        <span>{t(`loader.${currentStage.key}`)}{dots}</span>
       </div>
 
       {/* Title */}
