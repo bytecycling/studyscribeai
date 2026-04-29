@@ -57,15 +57,10 @@ export default function GeneratingLoader({ progress, title, logs = [], onCancel 
         </p>
       )}
 
-      {/* Stage Text */}
-      <div className="text-center">
-        <p className="font-medium text-foreground">
-          {t(`loader.${currentStage.key}`)}{dots}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {t("loader.moment")}
-        </p>
-      </div>
+      {/* Reassurance */}
+      <p className="text-xs text-muted-foreground text-center">
+        {t("loader.moment")}
+      </p>
 
       {/* Progress Bar */}
       <div className="w-full max-w-sm space-y-2">
