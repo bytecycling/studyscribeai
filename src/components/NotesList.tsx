@@ -64,8 +64,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     } catch (error: any) {
       logError('NotesList.loadNotes', error);
       toast({
-        title: "Error",
-        description: "Failed to load notes",
+        title: t("common.error"),
+        description: t("common.error"),
         variant: "destructive",
       });
     } finally {
@@ -83,16 +83,16 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Note deleted successfully",
+        title: t("common.success"),
+        description: t("notesList.deleted"),
       });
 
       loadNotes();
     } catch (error: any) {
       logError('NotesList.deleteNote', error);
       toast({
-        title: "Error",
-        description: "Failed to delete note",
+        title: t("common.error"),
+        description: t("notesList.deleted"),
         variant: "destructive",
       });
     }
@@ -111,8 +111,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   const saveTitle = async (id: string) => {
     if (!editTitle.trim()) {
       toast({
-        title: "Error",
-        description: "Title cannot be empty",
+        title: t("common.error"),
+        description: t("notesList.titleEmpty"),
         variant: "destructive",
       });
       return;
@@ -127,8 +127,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Note renamed successfully",
+        title: t("common.success"),
+        description: t("notesList.renamed"),
       });
 
       setEditingId(null);
@@ -136,8 +136,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     } catch (error: any) {
       logError('NotesList.saveTitle', error);
       toast({
-        title: "Error",
-        description: "Failed to rename note",
+        title: t("common.error"),
+        description: t("notesList.renamed"),
         variant: "destructive",
       });
     }
@@ -153,16 +153,16 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: targetFolderId ? "Note moved to folder" : "Note moved to all notes",
+        title: t("common.success"),
+        description: targetFolderId ? t("notesList.moved") : t("notesList.movedAll"),
       });
 
       loadNotes();
     } catch (error: any) {
       logError('NotesList.moveNote', error);
       toast({
-        title: "Error",
-        description: "Failed to move note",
+        title: t("common.error"),
+        description: t("notesList.moved"),
         variant: "destructive",
       });
     }
@@ -204,8 +204,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     if (!note.raw_text || !note.content) {
       if (showToast) {
         toast({
-          title: "Cannot Continue",
-          description: "This note has no saved source text to continue from.",
+          title: t("notesList.cannotContinue"),
+          description: t("notesList.cannotContinueDesc"),
           variant: "destructive",
         });
       }
@@ -246,10 +246,10 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
 
       if (showToast) {
         toast({
-          title: isComplete ? "Notes Completed!" : "Notes Extended",
+          title: isComplete ? t("notesList.notesCompleted") : t("notesList.notesExtended"),
           description: isComplete
-            ? "This note is now complete."
-            : "Extended, but it may still be incomplete—run Continue again if needed.",
+            ? t("notesList.notesCompletedDesc")
+            : t("notesList.notesExtendedDesc"),
         });
       }
 
@@ -259,8 +259,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       logError('NotesList.continueNote', e);
       if (showToast) {
         toast({
-          title: "Error",
-          description: e.message || "Failed to continue note",
+          title: t("common.error"),
+          description: e.message || t("common.error"),
           variant: "destructive",
         });
       }
@@ -275,8 +275,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
   const handleBulkContinue = async () => {
     if (incompleteNotes.length === 0) {
       toast({
-        title: "No Incomplete Notes",
-        description: "All notes are already complete!",
+        title: t("notesList.noIncomplete"),
+        description: t("notesList.noIncompleteDesc"),
       });
       return;
     }
@@ -308,8 +308,8 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     setBulkProgress({ current: 0, total: 0, currentNote: "" });
 
     toast({
-      title: "Bulk Continue Complete",
-      description: `Completed: ${successCount}, Still incomplete: ${failCount}`,
+      title: t("notesList.bulkDone"),
+      description: t("notesList.bulkDoneDesc", { success: successCount, fail: failCount }),
     });
 
     await loadNotes();
@@ -319,7 +319,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Loading notes...</p>
+          <p className="text-muted-foreground">{t("notesList.loading")}</p>
         </CardContent>
       </Card>
     );
@@ -330,7 +330,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-muted-foreground">
-            No study notes yet. Start by uploading your first learning material!
+            {t("notesList.empty")}
           </p>
         </CardContent>
       </Card>
@@ -347,7 +347,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
-                    Continuing note {bulkProgress.current} of {bulkProgress.total}
+                    {t("notesList.continuingNote", { current: bulkProgress.current, total: bulkProgress.total })}
                   </span>
                   <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                     {bulkProgress.currentNote}
@@ -355,17 +355,17 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                 </div>
                 <Progress value={(bulkProgress.current / bulkProgress.total) * 100} />
                 <p className="text-xs text-muted-foreground text-center">
-                  Please wait... Processing with rate limiting to avoid overload.
+                  {t("notesList.rateLimit")}
                 </p>
               </div>
             ) : (
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-amber-600 dark:text-amber-400">
-                    {incompleteNotes.length} incomplete note{incompleteNotes.length !== 1 ? 's' : ''}
+                    {t("notesList.incompleteCount", { count: incompleteNotes.length })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    These notes were cut off during generation
+                    {t("notesList.cutOff")}
                   </p>
                 </div>
                 <Button
@@ -373,7 +373,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                   className="bg-amber-600 hover:bg-amber-700"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Continue All
+                  {t("notesList.continueAll")}
                 </Button>
               </div>
             )}
@@ -422,7 +422,7 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                         <CardTitle className="text-lg truncate">{note.title}</CardTitle>
                         {!note.is_complete && (
                           <Badge variant="secondary" className="shrink-0 bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                            Incomplete
+                            {t("notesList.incomplete")}
                           </Badge>
                         )}
                       </div>
@@ -441,12 +441,12 @@ const NotesList = ({ refreshTrigger, folderId }: NotesListProps) => {
                       disabled={continuingId === note.id || bulkContinuing}
                     >
                       <PlayCircle className={continuingId === note.id ? "w-4 h-4 mr-2 animate-pulse" : "w-4 h-4 mr-2"} />
-                      {continuingId === note.id ? "Continuing…" : "Continue"}
+                      {continuingId === note.id ? t("notesList.continuingBtn") : t("notesList.continueBtn")}
                     </Button>
                   )}
                   <Link to={`/note/${note.id}`}>
                     <Button variant="outline" size="sm">
-                      View
+                      {t("notesList.view")}
                     </Button>
                   </Link>
                   <Button
