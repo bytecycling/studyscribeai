@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Settings, Languages, Trash2, Sparkles, Moon } from "lucide-react";
 import {
@@ -28,17 +29,12 @@ interface SettingsMenuProps {
 }
 
 const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
+  const { t, i18n } = useTranslation();
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
-  const [language, setLanguage] = useState(
-    localStorage.getItem('language') || 'english'
-  );
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'english');
   const [tempLanguage, setTempLanguage] = useState(language);
-  const [aiEnabled, setAiEnabled] = useState(
-    localStorage.getItem('aiEnabled') !== 'false'
-  );
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('darkMode') === 'true'
-  );
+  const [aiEnabled, setAiEnabled] = useState(localStorage.getItem('aiEnabled') !== 'false');
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,23 +48,21 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
   const handleLanguageConfirm = () => {
     setLanguage(tempLanguage);
     localStorage.setItem('language', tempLanguage);
+    i18n.changeLanguage(tempLanguage);
+    window.dispatchEvent(new CustomEvent("languagechange", { detail: { language: tempLanguage } }));
     toast({
-      title: "Language updated",
-      description: `Language preference set to ${tempLanguage}`,
+      title: t("settings.languageUpdated"),
+      description: t("settings.languageUpdatedDesc", { lang: tempLanguage }),
     });
     setShowLanguageDialog(false);
-    // Reload to apply language changes
-    window.location.reload();
   };
 
   const handleDarkModeToggle = (enabled: boolean) => {
     setDarkMode(enabled);
     localStorage.setItem('darkMode', enabled.toString());
     toast({
-      title: enabled ? "Dark mode enabled" : "Dark mode disabled",
-      description: enabled 
-        ? "Dark mode is now active" 
-        : "Dark mode has been disabled",
+      title: enabled ? t("settings.darkOn") : t("settings.darkOff"),
+      description: enabled ? t("settings.darkOnDesc") : t("settings.darkOffDesc"),
     });
   };
 
@@ -76,10 +70,8 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
     setAiEnabled(enabled);
     localStorage.setItem('aiEnabled', enabled.toString());
     toast({
-      title: enabled ? "AI enabled" : "AI disabled",
-      description: enabled 
-        ? "AI features are now active" 
-        : "AI features have been disabled",
+      title: enabled ? t("settings.aiOn") : t("settings.aiOff"),
+      description: enabled ? t("settings.aiOnDesc") : t("settings.aiOffDesc"),
     });
   };
 
@@ -88,26 +80,14 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('user_id', user.id);
-
+      const { error } = await supabase.from('notes').delete().eq('user_id', user.id);
       if (error) throw error;
 
-      toast({
-        title: "History cleared",
-        description: "All your notes have been deleted",
-      });
-
+      toast({ title: t("settings.historyCleared"), description: t("settings.historyClearedDesc") });
       onClearHistory();
     } catch (error: any) {
       logError('SettingsMenu.clearHistory', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to clear history",
-        variant: "destructive",
-      });
+      toast({ title: t("common.error"), description: error.message || t("settings.failClear"), variant: "destructive" });
     }
   };
 
@@ -120,41 +100,35 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Settings</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("settings.title")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          
+
           <DropdownMenuItem onClick={() => setShowLanguageDialog(true)}>
             <Languages className="mr-2 h-4 w-4" />
-            Change Language
+            {t("settings.changeLanguage")}
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={handleClearHistory}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Clear History
+            {t("settings.clearHistory")}
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
-          
+
           <div className="flex items-center justify-between px-2 py-2">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm">AI Features</span>
+              <span className="text-sm">{t("settings.aiFeatures")}</span>
             </div>
-            <Switch
-              checked={aiEnabled}
-              onCheckedChange={handleAiToggle}
-            />
+            <Switch checked={aiEnabled} onCheckedChange={handleAiToggle} />
           </div>
 
           <div className="flex items-center justify-between px-2 py-2">
             <div className="flex items-center gap-2">
               <Moon className="h-4 w-4" />
-              <span className="text-sm">Dark Mode</span>
+              <span className="text-sm">{t("settings.darkMode")}</span>
             </div>
-            <Switch
-              checked={darkMode}
-              onCheckedChange={handleDarkModeToggle}
-            />
+            <Switch checked={darkMode} onCheckedChange={handleDarkModeToggle} />
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -165,10 +139,8 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Choose Language</DialogTitle>
-            <DialogDescription>
-              Select your preferred language for the interface
-            </DialogDescription>
+            <DialogTitle>{t("settings.chooseLanguage")}</DialogTitle>
+            <DialogDescription>{t("settings.chooseLanguageDesc")}</DialogDescription>
           </DialogHeader>
           <RadioGroup value={tempLanguage} onValueChange={setTempLanguage}>
             {['English', 'Español', 'Français', '中文', '日本語', 'Bahasa Melayu'].map((lang) => (
@@ -180,11 +152,9 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
           </RadioGroup>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setShowLanguageDialog(false)}>
-              Cancel
+              {t("settings.cancel")}
             </Button>
-            <Button onClick={handleLanguageConfirm}>
-              Apply Changes
-            </Button>
+            <Button onClick={handleLanguageConfirm}>{t("settings.apply")}</Button>
           </div>
         </DialogContent>
       </Dialog>

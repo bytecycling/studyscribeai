@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Folder, Plus, Trash2, Edit2 } from "lucide-react";
+import { Folder, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,6 +13,7 @@ interface FolderManagerProps {
 }
 
 const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps) => {
+  const { t } = useTranslation();
   const [folders, setFolders] = useState<any[]>([]);
   const [newFolderName, setNewFolderName] = useState('');
   const [showDialog, setShowDialog] = useState(false);
@@ -52,31 +54,27 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
 
       if (error) throw error;
 
-      toast({ title: "Folder created", description: `"${newFolderName}" has been created` });
+      toast({ title: t("folders.created"), description: t("folders.createdDesc", { name: newFolderName }) });
       setNewFolderName('');
       setShowDialog(false);
       loadFolders();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };
 
   const deleteFolder = async (folderId: string) => {
     try {
-      const { error } = await supabase
-        .from('folders')
-        .delete()
-        .eq('id', folderId);
-
+      const { error } = await supabase.from('folders').delete().eq('id', folderId);
       if (error) throw error;
 
-      toast({ title: "Folder deleted" });
+      toast({ title: t("folders.deleted") });
       if (selectedFolderId === folderId) {
         onFolderSelect(null);
       }
       loadFolders();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };
 
@@ -89,28 +87,28 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Folder className="w-5 h-5" />
-          Folders
+          {t("folders.title")}
         </h3>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline">
               <Plus className="w-4 h-4 mr-1" />
-              New
+              {t("folders.new")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Folder</DialogTitle>
+              <DialogTitle>{t("folders.create")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <Input
-                placeholder="Folder name"
+                placeholder={t("folders.name")}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && createFolder()}
               />
               <Button onClick={createFolder} className="w-full">
-                Create Folder
+                {t("folders.createBtn")}
               </Button>
             </div>
           </DialogContent>
@@ -118,25 +116,19 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
       </div>
 
       <div className="space-y-2">
-        <div
-          onDragOver={handleDragOver}
-        >
+        <div onDragOver={handleDragOver}>
           <Button
             variant={selectedFolderId === null ? "secondary" : "ghost"}
             className="w-full justify-start"
             onClick={() => onFolderSelect(null)}
           >
             <Folder className="w-4 h-4 mr-2" />
-            All Notes
+            {t("folders.allNotes")}
           </Button>
         </div>
 
         {folders.map((folder) => (
-          <div 
-            key={folder.id} 
-            className="flex items-center gap-2"
-            onDragOver={handleDragOver}
-          >
+          <div key={folder.id} className="flex items-center gap-2" onDragOver={handleDragOver}>
             <Button
               variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
               className="flex-1 justify-start"
@@ -145,11 +137,7 @@ const FolderManager = ({ onFolderSelect, selectedFolderId }: FolderManagerProps)
               <Folder className="w-4 h-4 mr-2" style={{ color: folder.color }} />
               {folder.name}
             </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => deleteFolder(folder.id)}
-            >
+            <Button size="icon" variant="ghost" onClick={() => deleteFolder(folder.id)}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
