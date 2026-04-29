@@ -103,11 +103,6 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
           <DropdownMenuLabel>{t("settings.title")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => setShowLanguageDialog(true)}>
-            <Languages className="mr-2 h-4 w-4" />
-            {t("settings.changeLanguage")}
-          </DropdownMenuItem>
-
           <DropdownMenuItem onClick={handleClearHistory}>
             <Trash2 className="mr-2 h-4 w-4" />
             {t("settings.clearHistory")}

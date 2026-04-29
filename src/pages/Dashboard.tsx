@@ -12,6 +12,7 @@ import WebsiteUpload from "@/components/WebsiteUpload";
 import NotesList from "@/components/NotesList";
 import SettingsMenu from "@/components/SettingsMenu";
 import FolderManager from "@/components/FolderManager";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
@@ -77,10 +78,11 @@ const Dashboard = () => {
                 {t("nav.profile")}
               </Button>
             </Link>
+            <LanguageSwitcher />
+            <SettingsMenu onClearHistory={handleUploadSuccess} />
             <span className="text-sm text-muted-foreground">
               {t("dashboard.welcomeBack")}
             </span>
-            <SettingsMenu onClearHistory={handleUploadSuccess} />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               {t("nav.signOut")}
