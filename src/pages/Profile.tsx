@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { logError } from "@/utils/logger";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -177,6 +178,7 @@ const Profile = () => {
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
+      <SEO title="Your profile · StudyScribe.AI" description="Manage your StudyScribe.AI profile, language preferences, and study statistics." path="/profile" noindex />
       {/* Gradient mesh background */}
       <div className="absolute inset-0 gradient-mesh opacity-50 pointer-events-none" />
 

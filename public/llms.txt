@@ -1,0 +1,17 @@
+# StudyScribe.AI
+
+> AI study assistant that turns YouTube videos, PDFs, audio recordings, and websites into structured academic notes, flashcards, and quizzes.
+
+StudyScribe.AI is a personal project by Yiming. Upload private study material and get clean Markdown notes with LaTeX math, Mermaid diagrams, interactive quizzes, and an AI chat that answers questions about your own content.
+
+## Pages
+
+- [Home](/): Overview of features, how it works, recent updates, FAQ.
+- [Sign in](/auth): Create an account or sign in to start generating notes.
+- [About the creator](/about-owner): Background on Yiming and the project.
+- [Terms](/terms): Terms of service.
+- [Privacy](/privacy): Privacy policy and data handling.
+
+## Optional
+
+- App routes such as `/dashboard`, `/history`, `/profile`, and `/note/:id` require authentication and are not intended for AI crawling.

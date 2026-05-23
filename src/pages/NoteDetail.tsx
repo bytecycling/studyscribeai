@@ -19,6 +19,7 @@ import GeneratingLoader from "@/components/GeneratingLoader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ActivityLogViewer from "@/components/ActivityLogViewer";
 import BugReportButton from "@/components/BugReportButton";
+import SEO from "@/components/SEO";
 
 interface NoteRow {
   id: string;
@@ -384,6 +385,7 @@ export default function NoteDetail() {
 
   return (
     <main className="relative h-screen overflow-hidden">
+      <SEO title={`${note.title} · StudyScribe.AI`} description={`Study note: ${note.title}`} path={`/note/${note.id}`} noindex />
       <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none" />
       <ResizablePanelGroup direction="horizontal" className="relative h-full">
         {/* Notes Panel */}

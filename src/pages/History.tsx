@@ -4,11 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import NotesList from "@/components/NotesList";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 export default function History() {
   const { t } = useTranslation();
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
+      <SEO title="Your note history · StudyScribe.AI" description="Browse and search every study note you've generated with StudyScribe.AI." path="/history" noindex />
       <div className="absolute inset-0 gradient-mesh opacity-50 pointer-events-none" />
 
       <nav className="sticky top-3 z-40 mx-3 sm:mx-6">

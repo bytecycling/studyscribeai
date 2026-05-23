@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 const AboutOwner = () => {
   const navigate = useNavigate();
@@ -75,6 +76,22 @@ const AboutOwner = () => {
 
   return (
     <div className="min-h-screen bg-background py-20">
+      <SEO
+        title="About Yiming — Creator of StudyScribe.AI"
+        description="Meet Yiming, the student-developer behind StudyScribe.AI, and get in touch about the project."
+        path="/about-owner"
+        type="profile"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          mainEntity: {
+            "@type": "Person",
+            name: "Yiming",
+            description: "Creator of StudyScribe.AI",
+            url: "https://studyscribeai.lovable.app/about-owner",
+          },
+        }}
+      />
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <Button 

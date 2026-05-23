@@ -3,6 +3,7 @@ import { BookOpen, ArrowLeft, Lock } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import logoImage from "@/assets/studyscribe_logo.png";
+import SEO from "@/components/SEO";
 
 const Privacy = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen gradient-hero">
+      <SEO title="Privacy Policy · StudyScribe.AI" description="How StudyScribe.AI collects, uses, and protects your data, including COPPA compliance details." path="/privacy" />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/auth" className="inline-flex items-center gap-2 mb-6 text-background hover:opacity-80 transition-opacity">
           <ArrowLeft className="w-4 h-4" />

@@ -14,6 +14,7 @@ import SettingsMenu from "@/components/SettingsMenu";
 import FolderManager from "@/components/FolderManager";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Dashboard = () => {
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
+      <SEO title="Dashboard · StudyScribe.AI" description="Upload videos, audio, PDFs, and websites to generate AI study notes, flashcards, and quizzes." path="/dashboard" noindex />
       {/* Animated background */}
       <div className="absolute inset-0 gradient-mesh pointer-events-none" />
       <div className="absolute top-0 -left-40 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl animate-blob pointer-events-none" />
