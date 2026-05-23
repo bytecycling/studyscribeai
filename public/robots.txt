@@ -12,3 +12,9 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /history
+Disallow: /profile
+Disallow: /note/
+
+Sitemap: https://studyscribeai.lovable.app/sitemap.xml
