@@ -8,6 +8,18 @@ import FAQ from "@/components/FAQ";
 import About from "@/components/About";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import SEO from "@/components/SEO";
+
+const FAQ_ITEMS: Array<[string, string]> = [
+  ["How does StudyScribe.AI work?", "StudyScribe.AI uses advanced AI to analyze your learning materials (YouTube videos, PDFs, audio files, or websites) and automatically generates comprehensive study notes, highlights, flashcards, and quizzes."],
+  ["What file formats are supported?", "We support YouTube videos (via URL), PDF documents, audio/video files (MP3, MP4, WAV, etc.), and websites."],
+  ["Is my data secure?", "Yes. Your data is stored securely in the cloud with encryption. Only you can access your notes."],
+  ["Can I edit the AI-generated notes?", "Yes. You can edit any AI-generated content; all changes are saved automatically."],
+  ["How accurate are the AI-generated summaries?", "Our AI is highly accurate and continuously improving. We recommend reviewing the generated content."],
+  ["Can I translate my notes to other languages?", "Yes. StudyScribe.AI supports multiple languages including Spanish, French, German, Chinese, Japanese, and more."],
+  ["What is the AI Chat feature?", "AI Chat lets you have an interactive conversation about your study materials grounded in your uploaded content."],
+  ["How long does it take to process materials?", "Most materials are processed within 1-3 minutes depending on length and type."],
+];
 
 const Index = () => {
   useEffect(() => {
