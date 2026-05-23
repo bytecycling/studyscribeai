@@ -385,6 +385,7 @@ export default function NoteDetail() {
 
   return (
     <main className="relative h-screen overflow-hidden">
+      <SEO title={`${note.title} · StudyScribe.AI`} description={`Study note: ${note.title}`} path={`/note/${note.id}`} noindex />
       <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none" />
       <ResizablePanelGroup direction="horizontal" className="relative h-full">
         {/* Notes Panel */}

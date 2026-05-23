@@ -140,6 +140,7 @@ const Auth = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 bg-background overflow-hidden">
+      <SEO title="Sign in or create account · StudyScribe.AI" description="Sign in to StudyScribe.AI or create a free account to generate study notes, flashcards, and quizzes from your own content." path="/auth" />
       <div className="absolute inset-0 gradient-mesh" />
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-blob" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-accent/30 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
