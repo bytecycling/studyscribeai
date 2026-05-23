@@ -19,6 +19,7 @@ import GeneratingLoader from "@/components/GeneratingLoader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ActivityLogViewer from "@/components/ActivityLogViewer";
 import BugReportButton from "@/components/BugReportButton";
+import SEO from "@/components/SEO";
 
 interface NoteRow {
   id: string;

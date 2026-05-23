@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { logError } from "@/utils/logger";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Profile = () => {
   const navigate = useNavigate();

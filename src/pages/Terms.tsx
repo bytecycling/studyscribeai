@@ -4,6 +4,7 @@ import { BookOpen, ArrowLeft } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import logoImage from "@/assets/studyscribe_logo.png";
+import SEO from "@/components/SEO";
 
 const Terms = () => {
   const location = useLocation();

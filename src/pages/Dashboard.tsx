@@ -14,6 +14,7 @@ import SettingsMenu from "@/components/SettingsMenu";
 import FolderManager from "@/components/FolderManager";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Dashboard = () => {
   const navigate = useNavigate();

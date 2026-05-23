@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import NotesList from "@/components/NotesList";
 import logoImage from "@/assets/studyscribe_logo.png";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 export default function History() {
   const { t } = useTranslation();

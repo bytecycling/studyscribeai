@@ -13,6 +13,7 @@ import SignupFlow from "@/components/SignupFlow";
 import { Eye, EyeOff } from "lucide-react";
 import { logError } from "@/utils/logger";
 import { useTranslation } from "react-i18next";
+import SEO from "@/components/SEO";
 
 const Auth = () => {
   const { toast } = useToast();

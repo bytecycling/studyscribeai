@@ -3,6 +3,7 @@ import { BookOpen, ArrowLeft, Lock } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import logoImage from "@/assets/studyscribe_logo.png";
+import SEO from "@/components/SEO";
 
 const Privacy = () => {
   const location = useLocation();
