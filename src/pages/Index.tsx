@@ -48,6 +48,20 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="StudyScribe.AI — Turn videos, PDFs & audio into study notes"
+        description="AI study assistant that converts YouTube videos, PDFs, audio recordings, and websites into structured notes, flashcards, and quizzes."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_ITEMS.map(([q, a]) => ({
+            "@type": "Question",
+            name: q,
+            acceptedAnswer: { "@type": "Answer", text: a },
+          })),
+        }}
+      />
       <Navbar />
       <main className="pt-20">
         <Hero />
