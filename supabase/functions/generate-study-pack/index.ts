@@ -61,12 +61,8 @@ function sanitizeChemistry(s: string): string {
   unwrap("ce");
   unwrap("pu");
 
-  // Common arrow/operator cleanups inside the extracted text
-  out = out
-    .replace(/->/g, "→")
-    .replace(/<=>/g, "⇌")
-    .replace(/<->/g, "↔")
-    .replace(/\\require\{mhchem\}/g, "");
+  // Remove stray mhchem require directives
+  out = out.replace(/\\require\{mhchem\}/g, "");
 
   return out;
 }
