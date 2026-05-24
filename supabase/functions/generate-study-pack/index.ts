@@ -480,10 +480,16 @@ CRITICAL:
       }
     }
 
-    // Check final completion status
-    const isComplete = endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`) || 
-                       (fullNotes.toLowerCase().includes("## 📝 summary") && 
-                        fullNotes.toLowerCase().includes("## 🎓 next steps"));
+    // Strip any stray mhchem/LaTeX wrappers the renderer can't handle
+    fullNotes = sanitizeChemistry(fullNotes);
+
+    // Check final completion status: all three Cornell sections present
+    const lower = fullNotes.toLowerCase();
+    const isComplete =
+      endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`) ||
+      (lower.includes("## 📝 main notes") &&
+        lower.includes("## ❓ cue questions") &&
+        lower.includes("## 🧠 summary"));
 
     if (!isComplete) {
       logActivity("generation_incomplete", "error", `Failed to reach END_OF_NOTES after ${MAX_CONTINUATIONS} continuations`);
@@ -497,6 +503,7 @@ CRITICAL:
     }
 
     logActivity("generation_success", "success", `Final notes length: ${fullNotes.length}`);
+
 
     // Use AI-generated title if available, otherwise fall back to provided title
     const finalTitle = initialPack.suggestedTitle || validTitle;
