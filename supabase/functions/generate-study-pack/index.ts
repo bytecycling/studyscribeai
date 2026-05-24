@@ -27,6 +27,50 @@ function stripTrailingEndMarker(notes: string): string {
     .trim();
 }
 
+/**
+ * Convert any stray mhchem/LaTeX chemistry wrappers into plain text,
+ * so the markdown renderer never shows a raw "\ce{...}".
+ */
+function sanitizeChemistry(s: string): string {
+  if (!s) return s;
+  let out = s;
+
+  // Extract content inside \ce{...} or \pu{...} (handles nested braces shallowly).
+  const unwrap = (cmd: string) => {
+    const re = new RegExp(`\\\\${cmd}\\s*\\{`, "g");
+    let result = "";
+    let i = 0;
+    while (i < out.length) {
+      re.lastIndex = i;
+      const m = re.exec(out);
+      if (!m) { result += out.slice(i); break; }
+      result += out.slice(i, m.index);
+      let depth = 1;
+      let j = m.index + m[0].length;
+      while (j < out.length && depth > 0) {
+        const ch = out[j];
+        if (ch === "{") depth++;
+        else if (ch === "}") depth--;
+        if (depth > 0) result += ch;
+        j++;
+      }
+      i = j;
+    }
+    out = result;
+  };
+  unwrap("ce");
+  unwrap("pu");
+
+  // Common arrow/operator cleanups inside the extracted text
+  out = out
+    .replace(/->/g, "→")
+    .replace(/<=>/g, "⇌")
+    .replace(/<->/g, "↔")
+    .replace(/\\require\{mhchem\}/g, "");
+
+  return out;
+}
+
 async function callGateway({
   apiKey,
   body,
