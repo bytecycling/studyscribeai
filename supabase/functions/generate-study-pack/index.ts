@@ -27,6 +27,46 @@ function stripTrailingEndMarker(notes: string): string {
     .trim();
 }
 
+/**
+ * Convert any stray mhchem/LaTeX chemistry wrappers into plain text,
+ * so the markdown renderer never shows a raw "\ce{...}".
+ */
+function sanitizeChemistry(s: string): string {
+  if (!s) return s;
+  let out = s;
+
+  // Extract content inside \ce{...} or \pu{...} (handles nested braces shallowly).
+  const unwrap = (cmd: string) => {
+    const re = new RegExp(`\\\\${cmd}\\s*\\{`, "g");
+    let result = "";
+    let i = 0;
+    while (i < out.length) {
+      re.lastIndex = i;
+      const m = re.exec(out);
+      if (!m) { result += out.slice(i); break; }
+      result += out.slice(i, m.index);
+      let depth = 1;
+      let j = m.index + m[0].length;
+      while (j < out.length && depth > 0) {
+        const ch = out[j];
+        if (ch === "{") depth++;
+        else if (ch === "}") depth--;
+        if (depth > 0) result += ch;
+        j++;
+      }
+      i = j;
+    }
+    out = result;
+  };
+  unwrap("ce");
+  unwrap("pu");
+
+  // Remove stray mhchem require directives
+  out = out.replace(/\\require\{mhchem\}/g, "");
+
+  return out;
+}
+
 async function callGateway({
   apiKey,
   body,
@@ -144,181 +184,117 @@ serve(async (req) => {
 
     const isWebsite = String(sourceType || "").toLowerCase() === "website";
 
-    const systemPrompt = isWebsite
-      ? `You are a careful study-note writer creating professional, interactive notes.
+    const cornellSpec = `You are an expert academic note-maker creating CORNELL-STYLE study notes optimized for active recall, long-term retention, and fast exam revision.
 
-GOAL: Produce CLEAR, CONCISE, ORGANIZED notes based ONLY on the provided website text.
+##############################################
+# MANDATORY OUTPUT STRUCTURE
+##############################################
 
-STRICT RULES:
-- Use ONLY facts explicitly present in the source. If a detail is not in the source, DO NOT add it.
-- Keep notes ~700–1200 words total (include only the most important points).
-- End with the literal line: END_OF_NOTES
+Your output is ONE markdown document with EXACTLY THREE sections, in this order, using these exact H2 headers:
 
-FORMAT (Turbo AI Style):
+## 📝 Main Notes
+## ❓ Cue Questions
+## 🧠 Summary
 
-# [Clear Title]
+After the Summary section, end with the literal line on its own:
+END_OF_NOTES
 
-📌 **Key Takeaways**
-- 5–9 short bullets with **bold key terms** (these are the most important points)
+The three sections MUST COMPLEMENT each other — never repeat the same sentences across sections.
+
+##############################################
+# SECTION 1 — ## 📝 Main Notes
+##############################################
+Goal: professionally organized study material (not transcript, not generic summary).
+
+Rules:
+- Detect the major topics in the source and create H3 (###) headings per topic; H4 (####) for sub-topics when useful.
+- Convert dense prose into short bullets with **bold key terms** (2–4 bolds per bullet group, max).
+- Preserve: definitions, formulas, key terminology, examples, cause/effect, evidence, steps, timelines, statistics.
+- Remove filler, repetition, conversational asides, ads, navigation text.
+- For videos/podcasts: maintain chronological flow; group bullets by topic shift.
+- For papers/essays: preserve argument flow (claim → evidence → counter → conclusion).
+- For tutorials: preserve numbered procedural steps and dependencies.
+- Use a markdown table for comparisons or definitions when it improves clarity.
+- Use > blockquotes sparingly for crucial insights: \`> 💡 **Insight**: …\`
+- Concise > exhaustive. Aim 400–900 words for short sources, 900–1600 for long.
+
+##############################################
+# SECTION 2 — ## ❓ Cue Questions
+##############################################
+Goal: active-recall prompts that TEST the Main Notes — DO NOT repeat them.
+
+Rules:
+- Produce 8–14 numbered questions.
+- Mix difficulty: recall, conceptual ("why/how"), application, analysis, comparison, common-mistake.
+- Each question must map to material in Main Notes but be phrased as a prompt, not a statement.
+- Adapt question style to the content domain (math/science/history/literature/business/programming/general).
+- Keep each question one line, no answers in this section.
+
+##############################################
+# SECTION 3 — ## 🧠 Summary
+##############################################
+Goal: the "if I only read this later, I still get it" big-picture compression.
+
+Rules:
+- 4–7 short bullets OR 1 tight paragraph (≤120 words).
+- Capture: core concept, why it matters, key relationships, final takeaway.
+- No new facts that aren't supported by the source.
+- Simple language; minimize jargon (unless a defined key term).
+
+##############################################
+# STYLING & FORMATTING RULES
+##############################################
+- **Bold** the most important terms (sparingly — these render as accent color).
+- Emojis allowed only in section headers and the occasional blockquote.
+- Use --- horizontal rules between the three major sections.
+- Markdown tables for structured comparisons.
+- Math: inline \`$E = mc^2$\`, block \`$$F = ma$$\`. Use double backslashes for LaTeX commands: \\\\frac{a}{b}, \\\\sqrt{x}, \\\\sum, \\\\int.
+- Chemistry equations: write them as PLAIN TEXT (e.g. "2 H2 + O2 → 2 H2O", "NaCl(aq)"). DO NOT use \\\\ce{...}, \\\\pu{...}, or the mhchem package — write subscripts/superscripts inline with normal characters and arrows (→, ⇌, +).
+- NEVER output raw LaTeX wrappers the renderer can't display (no \\\\begin{align}, no \\\\ce, no \\\\pu, no \\\\require).
+- Source-faithful: use ONLY facts present in the source. If something isn't there, omit it.
+- No "Next Steps", no "Learning Objectives", no meta-commentary about the notes.
+
+##############################################
+# STUDY MATERIALS (returned via tool call alongside notes)
+##############################################
+- highlights: 8–12 critical quotes/concepts (short)
+- flashcards: 12–20 Q&A pairs (answers concise, 1–3 sentences)
+- quiz: 10–14 multiple-choice questions, 4 options each, exactly one correct
+
+##############################################
+# CRITICAL
+##############################################
+- DO NOT STOP EARLY. Generate all three sections fully.
+- MUST end with: END_OF_NOTES`;
+
+    const websiteSpec = `You are creating CONCISE Cornell study notes from a single website. Same three-section structure as the full Cornell spec.
+
+OUTPUT (one markdown doc):
+
+## 📝 Main Notes
+- H3 per topic, bulleted key points with **bold terms**, brief examples from the page.
+- ~300–700 words; cut filler, ads, navigation.
 
 ---
 
-## 🧩 Main Points
-
-### [Subtopic 1]
-- Use bullets with **bold terms** for key concepts
-- Keep explanations brief but informative
-
-### [Subtopic 2]  
-- Continue with clear hierarchy
+## ❓ Cue Questions
+- 6–10 numbered active-recall questions covering the Main Notes.
 
 ---
 
-## 📊 Key Definitions Table
-| Term | Definition |
-|:-----|:-----------|
-| **Term 1** | Brief definition |
-| **Term 2** | Brief definition |
-
----
-
-## ❓ Questions to Review
-1. Question 1?
-2. Question 2?
-
----
-
-## 📝 Summary
-- 3–5 bullet summary of key points
+## 🧠 Summary
+- 3–6 bullets OR a tight ≤80-word paragraph.
 
 END_OF_NOTES
 
-STYLING RULES:
-- **Bold** the most important terms and concepts (2-4 per paragraph max)
-- Use emojis in section headers for visual navigation (📌 📚 💡 ⚠️ 📊 📝)
-- Use tables for comparisons or definitions
-- Use > blockquotes for key insights: > 💡 **Key Insight**: ...
-- Use --- horizontal rules between major sections
-- Math formulas: inline $E = mc^2$, block $$F = ma$$ (use \\\\frac, \\\\sqrt, \\\\sum, \\\\int with double backslashes)
+RULES:
+- Source-faithful only. No hallucination.
+- Chemistry as plain text ("H2SO4", "2 H2 + O2 → 2 H2O"). NEVER use \\\\ce{} or \\\\pu{}.
+- Math: \`$inline$\` and \`$$block$$\`; LaTeX commands with double backslashes.
+- highlights 6–10, flashcards 8–14, quiz 6–10.
+- MUST end with END_OF_NOTES.`;
 
-STUDY MATERIALS (keep concise):
-- highlights: 8–12
-- flashcards: 10–16
-- quiz: 8–12
-
-REMEMBER: End with END_OF_NOTES.`
-      : `You are an expert academic tutor creating COMPREHENSIVE, INTERACTIVE study materials in the Turbo AI style.
-
-##############################################
-# ABSOLUTE CRITICAL REQUIREMENT - READ THIS #
-##############################################
-
-YOU MUST GENERATE THE COMPLETE NOTES FROM START TO FINISH.
-DO NOT STOP EARLY. DO NOT TRUNCATE. DO NOT CUT OFF.
-THE NOTES MUST END WITH THE LITERAL TEXT: END_OF_NOTES
-
-If you stop before END_OF_NOTES, the student will fail their exam.
-This is NON-NEGOTIABLE.
-
-##############################################
-
-COVERAGE REQUIREMENT:
-- Cover ALL important information from the source content.
-- Do NOT summarize into vague bullet points; teach the material with explanations and examples.
-
-FORMAT STRUCTURE (Turbo AI Style):
-
-# [Clear, Descriptive Title]
-
-📌 **Key Takeaways**
-- **Most important point 1** - brief explanation 💡
-- **Most important point 2** - brief explanation 🌎
-- **Most important point 3** - brief explanation ⚠️
-(5-9 bullets total, these are the MOST CRITICAL concepts to remember)
-
----
-
-## 🎯 Learning Objectives
-After studying these notes, you should be able to:
-- [Specific, measurable objective 1]
-- [Specific, measurable objective 2]
-- [Specific, measurable objective 3]
-
----
-
-## 📚 [First Major Topic]
-
-### What You Need to Know
-[Clear explanation with **bold key terms**. Explain concepts as if teaching to someone who has never seen this before.]
-
-### Key Concepts
-- **Term 1**: Definition and why it matters
-- **Term 2**: Definition and practical application
-- **Term 3**: Definition with example
-
-### Examples & Applications
-[Concrete examples that illustrate the concepts. Use real-world scenarios.]
-
-> 💡 **Key Insight**: [Important takeaway or common misconception to avoid]
-
----
-
-## 📚 [Second Major Topic]
-
-[Continue with same structure for each major section - COVER ALL TOPICS FROM THE SOURCE]
-
----
-
-## 📊 Key Definitions Table
-| Term | Definition |
-|:-----|:-----------|
-| **Term 1** | Clear definition |
-| **Term 2** | Clear definition |
-| **Term 3** | Clear definition |
-
----
-
-## 🔗 Connections & Relationships
-[How do these concepts relate to each other? What's the bigger picture?]
-
-## ⚠️ Common Mistakes to Avoid
-1. **Mistake 1**: How to avoid it
-2. **Mistake 2**: How to avoid it
-3. **Mistake 3**: How to avoid it
-
----
-
-## 📝 Summary
-- **Key point 1**: Brief recap
-- **Key point 2**: Brief recap
-- **Key point 3**: Brief recap
-(Comprehensive summary tying everything together)
-
-## 🎓 Next Steps
-[What should the student do next to master this material?]
-
-END_OF_NOTES
-
-STYLING RULES (CRITICAL):
-- **Bold** the most important terms and concepts (these appear purple in the UI)
-- Do NOT over-bold - only 2-4 bold terms per paragraph for the MOST important concepts
-- Use emojis in ALL section headers for visual navigation (📌 📚 💡 ⚠️ 📊 📝 🎯 🔗 🎓)
-- Use --- horizontal rules between major sections
-- Use tables for comparisons, definitions, or structured data
-- Use > blockquotes for important insights and tips
-- Use proper markdown lists with - prefix
-
-MATH/SCIENCE FORMULAS (when applicable):
-- Inline math: $E = mc^2$ or $\\\\alpha + \\\\beta$
-- Block math on own line: $$F = ma$$
-- Use double backslashes for LaTeX commands: \\\\frac{a}{b}, \\\\sqrt{x}, \\\\sum_{i=1}^n, \\\\int_0^1
-
-STUDY MATERIALS:
-- highlights: 10-15 key points
-- flashcards: 15-25 Q&A pairs
-- quiz: 12-18 multiple choice questions with 4 options each
-
-REMEMBER: END WITH: END_OF_NOTES`;
+    const systemPrompt = isWebsite ? websiteSpec : cornellSpec;
 
     let initialPack: any | null = null;
 
@@ -544,10 +520,16 @@ CRITICAL:
       }
     }
 
-    // Check final completion status
-    const isComplete = endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`) || 
-                       (fullNotes.toLowerCase().includes("## 📝 summary") && 
-                        fullNotes.toLowerCase().includes("## 🎓 next steps"));
+    // Strip any stray mhchem/LaTeX wrappers the renderer can't handle
+    fullNotes = sanitizeChemistry(fullNotes);
+
+    // Check final completion status: all three Cornell sections present
+    const lower = fullNotes.toLowerCase();
+    const isComplete =
+      endsWithEndMarker(`${fullNotes}\nEND_OF_NOTES`) ||
+      (lower.includes("## 📝 main notes") &&
+        lower.includes("## ❓ cue questions") &&
+        lower.includes("## 🧠 summary"));
 
     if (!isComplete) {
       logActivity("generation_incomplete", "error", `Failed to reach END_OF_NOTES after ${MAX_CONTINUATIONS} continuations`);
@@ -561,6 +543,7 @@ CRITICAL:
     }
 
     logActivity("generation_success", "success", `Final notes length: ${fullNotes.length}`);
+
 
     // Use AI-generated title if available, otherwise fall back to provided title
     const finalTitle = initialPack.suggestedTitle || validTitle;
