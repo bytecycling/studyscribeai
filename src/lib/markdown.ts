@@ -1,0 +1,40 @@
+/**
+ * Shared markdown / math text normalization so notes, flashcards, quizzes
+ * and translations render the same way.
+ */
+
+/** Fix common bold breakage from LLMs (e.g. "** -2 **" → "**-2**"). */
+export function sanitizeBold(s: string): string {
+  if (!s) return s;
+  let out = s;
+
+  // Collapse spaces immediately inside ** ... **
+  // "** word **"  → "**word**"
+  // "** -2 **"    → "**-2**"
+  out = out.replace(/\*\*\s+([^*\n]+?)\s+\*\*/g, "**$1**");
+  // Half-open variants like "** word**" or "**word **"
+  out = out.replace(/\*\*\s+([^*\n]+?)\*\*/g, "**$1**");
+  out = out.replace(/\*\*([^*\n]+?)\s+\*\*/g, "**$1**");
+
+  // Same for single-asterisk italics around short tokens like "*-2*"
+  out = out.replace(/\*\s+([^*\n]+?)\s+\*/g, "*$1*");
+
+  return out;
+}
+
+/** Normalize math delimiters so remark-math always picks them up. */
+export function normalizeMath(s: string): string {
+  if (!s) return s;
+  let out = s;
+  // \( ... \)  →  $ ... $
+  out = out.replace(/\\\((.+?)\\\)/gs, (_m, body) => `$${body}$`);
+  // \[ ... \]  →  $$ ... $$
+  out = out.replace(/\\\[(.+?)\\\]/gs, (_m, body) => `$$${body}$$`);
+  return out;
+}
+
+/** Run all sanitizers (use everywhere markdown is rendered). */
+export function sanitizeMarkdown(s: string): string {
+  if (!s) return s;
+  return sanitizeBold(normalizeMath(s));
+}

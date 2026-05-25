@@ -1,16 +1,15 @@
 /**
- * Smooth infinite-loop learning animation:
- *   🌱 seed drops from above
- *   sprouts into a growing trunk + canopy
- *   apples appear on the tree
- *   apples drop down
- *   one apple becomes the next seed → loop
+ * Infinite-loop learning animation:
+ *   Tree stands with apples →
+ *   trunk SPLITS down the middle (two halves tilt outward & fall) →
+ *   apples drop into the soil as seeds →
+ *   soil pulses, a sprout emerges →
+ *   sprout grows into the next tree → loop.
  *
- * Pure CSS keyframes — no extra deps. ~160x120px.
+ * Pure CSS keyframes. ~160x130 footprint.
  */
 const AppleBookLoader = () => {
-  // Loop duration (must match every animation-duration below)
-  const D = "5s";
+  const D = "6s";
 
   return (
     <div
@@ -19,89 +18,100 @@ const AppleBookLoader = () => {
       style={{ ["--loop" as any]: D }}
     >
       <style>{`
-        /* Seed falls in (0–15%), then hides while tree grows */
-        @keyframes lb-seed {
-          0%   { transform: translate(-50%, -180%) scale(1); opacity: 0; }
-          6%   { opacity: 1; }
-          15%  { transform: translate(-50%, 0%) scale(1); opacity: 1; }
-          18%  { transform: translate(-50%, 0%) scale(0.6); opacity: 0; }
-          100% { transform: translate(-50%, 0%) scale(0.6); opacity: 0; }
+        /* Sprout: 0-15% grows */
+        @keyframes lb-sprout {
+          0%        { transform: translate(-50%, 0) scaleY(0); opacity: 0; }
+          4%        { opacity: 1; }
+          15%       { transform: translate(-50%, 0) scaleY(1); opacity: 1; }
+          22%, 100% { transform: translate(-50%, 0) scaleY(1); opacity: 0; }
         }
 
-        /* Trunk grows from ground (15–35%), stays, then fades out at end */
-        @keyframes lb-trunk {
-          0%, 15%   { transform: scaleY(0); opacity: 0; }
-          22%       { opacity: 1; }
-          35%, 88%  { transform: scaleY(1); opacity: 1; }
-          96%, 100% { transform: scaleY(1); opacity: 0; }
+        /* Whole tree (trunk + canopy as one container): visible 18%-62%, then splits */
+        @keyframes lb-tree {
+          0%, 17%   { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
+          22%       { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+          30%, 60%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+          62%, 100% { opacity: 0; transform: translate(-50%, 0) scale(1); }
         }
 
-        /* Canopy pops in after trunk, gentle breathing while apples grow */
-        @keyframes lb-canopy {
-          0%, 30%   { transform: translate(-50%, 0) scale(0); opacity: 0; }
-          42%       { transform: translate(-50%, 0) scale(1.15); opacity: 1; }
-          50%, 86%  { transform: translate(-50%, 0) scale(1); opacity: 1; }
-          96%, 100% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+        /* Trunk-half splits at 60%, tilts outward and falls */
+        @keyframes lb-half-left {
+          0%, 60%   { transform: rotate(0deg) translate(0,0); opacity: 1; }
+          72%       { transform: rotate(-55deg) translate(-6px, 4px); opacity: 1; }
+          80%       { transform: rotate(-80deg) translate(-10px, 14px); opacity: 0; }
+          100%      { transform: rotate(-80deg) translate(-10px, 14px); opacity: 0; }
+        }
+        @keyframes lb-half-right {
+          0%, 60%   { transform: rotate(0deg) translate(0,0); opacity: 1; }
+          72%       { transform: rotate(55deg) translate(6px, 4px); opacity: 1; }
+          80%       { transform: rotate(80deg) translate(10px, 14px); opacity: 0; }
+          100%      { transform: rotate(80deg) translate(10px, 14px); opacity: 0; }
         }
 
-        /* Apples appear on canopy, then fall */
-        @keyframes lb-apple-grow {
-          0%, 50%   { transform: translate(-50%, 0) scale(0); opacity: 0; }
-          58%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
-          70%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
-          /* fall */
-          85%       { transform: translate(-50%, 60px) scale(0.9); opacity: 1; }
-          92%       { transform: translate(-50%, 70px) scale(0.6); opacity: 0; }
-          100%      { transform: translate(-50%, 70px) scale(0.6); opacity: 0; }
+        /* Apples on the tree: visible 30%-62%, then drop to soil as seeds */
+        @keyframes lb-apple-drop {
+          0%, 28%   { transform: translate(-50%, 0) scale(0); opacity: 0; }
+          34%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
+          60%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
+          /* fall into soil */
+          74%       { transform: translate(-50%, 58px) scale(0.85); opacity: 1; }
+          82%       { transform: translate(-50%, 66px) scale(0.55); opacity: 0.9; }
+          /* bury */
+          90%, 100% { transform: translate(-50%, 70px) scale(0.35); opacity: 0; }
         }
 
-        /* Ground line subtle pulse on landing */
-        @keyframes lb-ground {
-          0%, 82%   { transform: scaleX(1); opacity: 0.5; }
-          88%       { transform: scaleX(1.15); opacity: 0.9; }
-          94%, 100% { transform: scaleX(1); opacity: 0.5; }
+        /* Soil pulse when seeds bury */
+        @keyframes lb-soil {
+          0%, 78%   { transform: scaleX(1); opacity: 0.45; }
+          85%       { transform: scaleX(1.25); opacity: 0.9; }
+          94%, 100% { transform: scaleX(1); opacity: 0.45; }
         }
 
-        .lb-seed   { animation: lb-seed   var(--loop) cubic-bezier(.45,.05,.55,.95) infinite; }
-        .lb-trunk  { animation: lb-trunk  var(--loop) ease-out infinite; transform-origin: bottom center; }
-        .lb-canopy { animation: lb-canopy var(--loop) cubic-bezier(.34,1.56,.64,1) infinite; transform-origin: bottom center; }
-        .lb-apple  { animation: lb-apple-grow var(--loop) cubic-bezier(.55,.05,.7,.95) infinite; }
-        .lb-ground { animation: lb-ground var(--loop) ease-in-out infinite; transform-origin: center; }
+        .lb-sprout    { animation: lb-sprout    var(--loop) ease-out infinite; transform-origin: bottom center; }
+        .lb-tree      { animation: lb-tree      var(--loop) cubic-bezier(.34,1.4,.64,1) infinite; transform-origin: bottom center; }
+        .lb-half-l    { animation: lb-half-left var(--loop) cubic-bezier(.5,.05,.8,.6) infinite; transform-origin: bottom right; }
+        .lb-half-r    { animation: lb-half-right var(--loop) cubic-bezier(.5,.05,.8,.6) infinite; transform-origin: bottom left; }
+        .lb-apple     { animation: lb-apple-drop var(--loop) cubic-bezier(.55,.05,.7,.95) infinite; }
+        .lb-soil      { animation: lb-soil       var(--loop) ease-in-out infinite; transform-origin: center; }
       `}</style>
 
-      {/* Ground line */}
-      <div
-        className="lb-ground absolute left-1/2 -translate-x-1/2 bottom-2 h-px w-24 bg-primary/40 rounded-full"
-      />
+      {/* Soil */}
+      <div className="lb-soil absolute left-1/2 -translate-x-1/2 bottom-2 h-1 w-28 rounded-full"
+           style={{ background: "linear-gradient(to right, transparent, hsl(25 45% 30%), transparent)" }} />
 
-      {/* Trunk (grows from bottom) */}
-      <div
-        className="lb-trunk absolute left-1/2 -translate-x-1/2 bottom-2 w-1.5 h-14 rounded-full"
-        style={{ background: "linear-gradient(to top, hsl(25 45% 35%), hsl(25 55% 45%))" }}
-      />
-
-      {/* Canopy */}
-      <div className="lb-canopy absolute left-1/2 bottom-12 w-20 h-20">
-        <svg viewBox="0 0 80 80" className="w-full h-full">
-          <circle cx="40" cy="40" r="26" fill="hsl(140 55% 40%)" opacity="0.95" />
-          <circle cx="24" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
-          <circle cx="56" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
-          <circle cx="40" cy="22" r="18" fill="hsl(140 65% 50%)" opacity="0.95" />
+      {/* Tiny sprout (start of loop) */}
+      <div className="lb-sprout absolute left-1/2 bottom-2 w-3 h-5">
+        <svg viewBox="0 0 12 20" className="w-full h-full">
+          <line x1="6" y1="20" x2="6" y2="10" stroke="hsl(140 60% 40%)" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M6 12 C 2 11, 1 7, 4 6" fill="hsl(140 65% 50%)" />
+          <path d="M6 10 C 10 9, 11 5, 8 4" fill="hsl(140 65% 50%)" />
         </svg>
       </div>
 
-      {/* Apples on the canopy (3 positions, slightly staggered) */}
-      <Apple className="lb-apple absolute" style={{ left: "32%", bottom: "70px" }} />
-      <Apple className="lb-apple absolute" style={{ left: "50%", bottom: "78px", animationDelay: "0.15s" }} />
-      <Apple className="lb-apple absolute" style={{ left: "68%", bottom: "70px", animationDelay: "0.3s" }} />
+      {/* Full tree (trunk halves + canopy + apples) */}
+      <div className="lb-tree absolute left-1/2 bottom-2 w-24 h-24">
+        {/* Trunk left half */}
+        <div className="lb-half-l absolute left-1/2 bottom-0 -translate-x-full w-1.5 h-12 rounded-l-full"
+             style={{ background: "linear-gradient(to top, hsl(25 45% 30%), hsl(25 55% 42%))" }} />
+        {/* Trunk right half */}
+        <div className="lb-half-r absolute left-1/2 bottom-0 w-1.5 h-12 rounded-r-full"
+             style={{ background: "linear-gradient(to top, hsl(25 45% 35%), hsl(25 55% 45%))" }} />
 
-      {/* Falling seed */}
-      <div className="lb-seed absolute top-0 left-1/2 w-3 h-4">
-        <svg viewBox="0 0 12 16" className="w-full h-full">
-          <ellipse cx="6" cy="10" rx="4" ry="5" fill="hsl(35 70% 45%)" />
-          <path d="M6 6 C 6 3, 8 2, 10 2" stroke="hsl(140 65% 40%)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-        </svg>
+        {/* Canopy (fades with the tree container) */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-10 w-20 h-20">
+          <svg viewBox="0 0 80 80" className="w-full h-full">
+            <circle cx="40" cy="40" r="26" fill="hsl(140 55% 40%)" opacity="0.95" />
+            <circle cx="24" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
+            <circle cx="56" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
+            <circle cx="40" cy="22" r="18" fill="hsl(140 65% 50%)" opacity="0.95" />
+          </svg>
+        </div>
       </div>
+
+      {/* Falling apples (overlaid above the canopy positions so they survive the split) */}
+      <Apple className="lb-apple absolute" style={{ left: "34%", bottom: "70px" }} />
+      <Apple className="lb-apple absolute" style={{ left: "50%", bottom: "78px", animationDelay: "0.12s" }} />
+      <Apple className="lb-apple absolute" style={{ left: "66%", bottom: "70px", animationDelay: "0.24s" }} />
     </div>
   );
 };

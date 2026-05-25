@@ -1,8 +1,10 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import { cn } from "@/lib/utils";
+import { sanitizeMarkdown } from "@/lib/markdown";
 
 interface FlashcardItemProps {
   question: string;
@@ -38,13 +40,13 @@ export default function FlashcardItem({ question, answer, index }: FlashcardItem
             <span className="text-primary font-bold">Question: </span>
             <span className="prose prose-sm dark:prose-invert inline prose-p:my-0 prose-p:leading-snug">
               <ReactMarkdown
-                remarkPlugins={[remarkMath]}
+                remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
                   p: ({ children }) => <span>{children}</span>,
                 }}
               >
-                {question}
+                {sanitizeMarkdown(question)}
               </ReactMarkdown>
             </span>
           </div>
@@ -64,13 +66,13 @@ export default function FlashcardItem({ question, answer, index }: FlashcardItem
             <span className="text-primary font-bold">Answer: </span>
             <span className="prose prose-sm dark:prose-invert inline prose-p:my-0 prose-p:leading-snug">
               <ReactMarkdown
-                remarkPlugins={[remarkMath]}
+                remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
                   p: ({ children }) => <span>{children}</span>,
                 }}
               >
-                {answer}
+                {sanitizeMarkdown(answer)}
               </ReactMarkdown>
             </span>
           </div>

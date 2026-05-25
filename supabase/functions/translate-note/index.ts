@@ -81,7 +81,7 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a professional translator. Translate the following study notes content to ${validLanguage}. Maintain the markdown formatting and structure. Keep technical terms accurate.`;
+    const systemPrompt = `You are a professional translator. Translate the following study notes content to ${validLanguage}. Maintain the markdown formatting and structure exactly. Keep technical terms accurate. CRITICAL: keep bold markers tight — write **term** (no spaces around the text inside **), never "** term **". Preserve all math (\`$...$\`, \`$$...$$\`) and LaTeX commands unchanged.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
