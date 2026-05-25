@@ -20,6 +20,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ActivityLogViewer from "@/components/ActivityLogViewer";
 import BugReportButton from "@/components/BugReportButton";
 import SEO from "@/components/SEO";
+import RegenerateDialog, { type RegenerationFeedback } from "@/components/RegenerateDialog";
+import { sanitizeMarkdown } from "@/lib/markdown";
 
 interface NoteRow {
   id: string;
@@ -85,6 +87,7 @@ export default function NoteDetail() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenProgress, setRegenProgress] = useState(0);
+  const [regenDialogOpen, setRegenDialogOpen] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
   const [continueProgress, setContinueProgress] = useState(0);
   const { toast } = useToast();
@@ -183,7 +186,7 @@ export default function NoteDetail() {
     setShowSidebar(prev => !prev);
   }, []);
 
-  const handleRegenerateNotes = useCallback(async () => {
+  const handleRegenerateNotes = useCallback(async (feedback?: RegenerationFeedback) => {
     if (!note?.raw_text) {
       toast({
         title: "Cannot Regenerate",
@@ -193,6 +196,7 @@ export default function NoteDetail() {
       return;
     }
 
+    setRegenDialogOpen(false);
     setIsRegenerating(true);
     setRegenProgress(10);
 
@@ -206,7 +210,11 @@ export default function NoteDetail() {
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-study-pack", {
-        body: { text: note.raw_text, title: note.title },
+        body: {
+          text: note.raw_text,
+          title: note.title,
+          regenerationFeedback: feedback,
+        },
       });
 
       if (error) throw error;
@@ -455,17 +463,17 @@ export default function NoteDetail() {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={handleRegenerateNotes}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRegenDialogOpen(true)}
                               disabled={isRegenerating || isContinuing}
                             >
                               <RefreshCw className={isRegenerating ? "w-4 h-4 mr-2 animate-spin" : "w-4 h-4 mr-2"} />
                               {isRegenerating ? "Regenerating…" : "Regenerate"}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Regenerate notes from source</TooltipContent>
+                          <TooltipContent>Regenerate with your feedback</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}
