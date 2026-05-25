@@ -392,7 +392,12 @@ export default function NoteDetail() {
 
 
   return (
-    <main className="relative h-screen overflow-hidden">
+    <main className="relative h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+      <RegenerateDialog
+        open={regenDialogOpen}
+        onOpenChange={setRegenDialogOpen}
+        onConfirm={(fb) => handleRegenerateNotes(fb)}
+      />
       <SEO title={`${note.title} · StudyScribe.AI`} description={`Study note: ${note.title}`} path={`/note/${note.id}`} noindex />
       <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none" />
       <ResizablePanelGroup direction="horizontal" className="relative h-full">
@@ -520,38 +525,40 @@ export default function NoteDetail() {
                   />
                 ) : (
                   <>
-                    <div className="prose prose-lg max-w-none dark:prose-invert prose-li:my-1 prose-ul:my-2 prose-ol:my-2">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                        components={{
-                          code({ node, className, children, ...props }) {
-                            const match = /language-mermaid/.exec(className || "");
-                            const content = String(children).replace(/\n$/, "");
-                            if (match) {
-                              return <MermaidDiagram chart={content} className="my-4" />;
-                            }
-                            const isInline = !className;
-                            if (isInline) {
-                              return <code {...props}>{children}</code>;
-                            }
-                            return (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                          pre({ children, ...props }) {
-                            const child = children as any;
-                            if (child?.props?.className?.includes("language-mermaid")) {
-                              return <>{children}</>;
-                            }
-                            return <pre {...props}>{children}</pre>;
-                          },
-                        }}
-                      >
-                        {note.content}
-                      </ReactMarkdown>
+                    <div className="rounded-xl bg-gradient-to-br from-card via-card to-primary/5 border border-border/60 shadow-sm p-6 md:p-8 animate-fade-in">
+                      <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:scroll-mt-20 prose-h2:border-l-4 prose-h2:border-primary prose-h2:pl-3 prose-h2:bg-primary/5 prose-h2:py-2 prose-h2:rounded-r-md prose-h3:text-primary/90 prose-li:my-1 prose-ul:my-2 prose-ol:my-2 prose-blockquote:border-l-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-r-md prose-blockquote:py-1 prose-strong:text-primary">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                          components={{
+                            code({ node, className, children, ...props }) {
+                              const match = /language-mermaid/.exec(className || "");
+                              const content = String(children).replace(/\n$/, "");
+                              if (match) {
+                                return <MermaidDiagram chart={content} className="my-4" />;
+                              }
+                              const isInline = !className;
+                              if (isInline) {
+                                return <code {...props}>{children}</code>;
+                              }
+                              return (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
+                            pre({ children, ...props }) {
+                              const child = children as any;
+                              if (child?.props?.className?.includes("language-mermaid")) {
+                                return <>{children}</>;
+                              }
+                              return <pre {...props}>{children}</pre>;
+                            },
+                          }}
+                        >
+                          {sanitizeMarkdown(note.content)}
+                        </ReactMarkdown>
+                      </div>
                     </div>
 
                     <ActivityLogViewer activityLog={note.activity_log as any} />
