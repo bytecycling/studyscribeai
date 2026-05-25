@@ -147,7 +147,7 @@ serve(async (req) => {
     }
 
     logActivity("auth_success", "info", `user=${user.id}`);
-    const { text, title, sourceType } = await req.json();
+    const { text, title, sourceType, regenerationFeedback } = await req.json();
 
     // Input validation
     if (!text || typeof text !== "string") {
@@ -170,6 +170,30 @@ serve(async (req) => {
 
     // Validate title length (max 500 chars)
     const validTitle = title && typeof title === "string" ? title.substring(0, 500) : "Untitled";
+
+    // Sanitize regeneration feedback (optional)
+    let feedbackBlock = "";
+    if (regenerationFeedback && typeof regenerationFeedback === "object") {
+      const presets: string[] = Array.isArray(regenerationFeedback.presets)
+        ? regenerationFeedback.presets.filter((p: unknown) => typeof p === "string").slice(0, 10)
+        : [];
+      const instructions: string = typeof regenerationFeedback.instructions === "string"
+        ? regenerationFeedback.instructions.slice(0, 1000)
+        : "";
+
+      if (presets.length || instructions) {
+        feedbackBlock = `
+
+##############################################
+# USER REGENERATION FEEDBACK (HIGH PRIORITY)
+##############################################
+The user previously generated these notes and asked for changes. Apply ALL feedback below while STILL following the Cornell structure and source-fidelity rules. Feedback may only alter style, depth, focus, or which parts of the source to emphasize/skip — NEVER invent facts outside the source.
+
+Quick options selected: ${presets.length ? presets.join(", ") : "(none)"}
+User instructions: ${instructions || "(none)"}`;
+        logActivity("regeneration_feedback", "info", `presets=${presets.length}, instr_len=${instructions.length}`);
+      }
+    }
 
     logActivity("request_received", "info", `title=${validTitle}, sourceType=${sourceType || "unknown"}, textLength=${text.length}`);
 
@@ -244,7 +268,7 @@ Rules:
 ##############################################
 # STYLING & FORMATTING RULES
 ##############################################
-- **Bold** the most important terms (sparingly — these render as accent color).
+- **Bold** the most important terms (sparingly). CRITICAL: write bold tightly — **term** NOT ** term ** and NOT ** term**. Never put spaces between the ** markers and the bolded text, especially around numbers (write **-2**, not ** -2 **).
 - Emojis allowed only in section headers and the occasional blockquote.
 - Use --- horizontal rules between the three major sections.
 - Markdown tables for structured comparisons.
@@ -294,7 +318,7 @@ RULES:
 - highlights 6–10, flashcards 8–14, quiz 6–10.
 - MUST end with END_OF_NOTES.`;
 
-    const systemPrompt = isWebsite ? websiteSpec : cornellSpec;
+    const systemPrompt = (isWebsite ? websiteSpec : cornellSpec) + feedbackBlock;
 
     let initialPack: any | null = null;
 
