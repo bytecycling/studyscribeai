@@ -4,6 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, RefreshCw, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { sanitizeMarkdown } from "@/lib/markdown";
+
+const mdComponents = {
+  p: ({ children }: any) => <span>{children}</span>,
+};
+const Md = ({ children }: { children: string }) => (
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm, remarkMath]}
+    rehypePlugins={[rehypeKatex]}
+    components={mdComponents}
+  >
+    {sanitizeMarkdown(children || "")}
+  </ReactMarkdown>
+);
 
 interface QuizQuestion {
   question: string;
@@ -212,8 +230,9 @@ export default function InteractiveQuiz({
       {quiz.map((q, i) => (
         <Card key={i} className="border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              {i + 1}. {q.question}
+            <CardTitle className="text-base font-medium prose prose-sm dark:prose-invert max-w-none prose-p:my-0">
+              <span className="mr-1">{i + 1}.</span>
+              <Md>{q.question}</Md>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -246,7 +265,9 @@ export default function InteractiveQuiz({
                     <span className="font-medium">
                       {String.fromCharCode(65 + idx)}.
                     </span>
-                    <span>{opt}</span>
+                    <span className="prose prose-sm dark:prose-invert max-w-none prose-p:my-0">
+                      <Md>{opt}</Md>
+                    </span>
                     {hasSubmitted && isCorrectAnswer && (
                       <CheckCircle className="w-4 h-4 ml-auto text-green-600" />
                     )}
