@@ -87,7 +87,7 @@ export default function RegenerateDialog({ open, onOpenChange, onConfirm }: Prop
             <Textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              placeholder='e.g. "focus on chapter 2", "don\'t include the proofs", "shorter bullets in Main Notes"'
+              placeholder={`e.g. "focus on chapter 2", "don't include the proofs", "shorter bullets in Main Notes"`}
               rows={4}
               maxLength={1000}
             />
