@@ -408,10 +408,11 @@ export default function NoteDetail() {
       />
       <SEO title={`${note.title} · StudyScribe.AI`} description={`Study note: ${note.title}`} path={`/note/${note.id}`} noindex />
       <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none" />
-      <ResizablePanelGroup direction="horizontal" className="relative h-full">
+      <ResizablePanelGroup direction="horizontal" className="relative h-full" onLayout={handleLayoutChange}>
         {/* Notes Panel */}
-        <ResizablePanel defaultSize={showSidebar ? 50 : 100} minSize={30}>
-          <div className="h-full overflow-y-auto p-6">
+        {viewMode !== "sidebar" && (
+          <ResizablePanel defaultSize={viewMode === "both" ? 55 : 100} minSize={5} className="!overflow-visible">
+            <div className="h-full overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold">{note.title}</h1>
@@ -427,9 +428,9 @@ export default function NoteDetail() {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => setShowSidebar(!showSidebar)}
+                        onClick={handleToggleSidebar}
                       >
-                        {showSidebar ? (
+                        {viewMode === "both" ? (
                           <PanelRightClose className="h-4 w-4" />
                         ) : (
                           <PanelRight className="h-4 w-4" />
@@ -437,7 +438,7 @@ export default function NoteDetail() {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {showSidebar ? "Hide AI Panel (⌘B)" : "Show AI Panel (⌘B)"}
+                      {viewMode === "both" ? "Hide AI Panel (⌘B)" : "Show AI Panel (⌘B)"}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
