@@ -578,22 +578,34 @@ export default function NoteDetail() {
             </Card>
           </div>
         </ResizablePanel>
+        )}
 
-        {showSidebar && (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={50} minSize={20}>
-              <ResizableSidebar
-                noteId={id}
-                noteContent={note.content}
-                highlights={highlights}
-                flashcards={flashcards}
-                quiz={quiz}
-              />
-            </ResizablePanel>
-          </>
+        {viewMode === "both" && <ResizableHandle withHandle />}
+
+        {viewMode !== "notes" && (
+          <ResizablePanel defaultSize={viewMode === "both" ? 45 : 100} minSize={5}>
+            <ResizableSidebar
+              noteId={id}
+              noteContent={note.content}
+              highlights={highlights}
+              flashcards={flashcards}
+              quiz={quiz}
+            />
+          </ResizablePanel>
         )}
       </ResizablePanelGroup>
+
+      {viewMode !== "both" && (
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => setViewMode("both")}
+          className="absolute top-4 right-4 z-20 rounded-full shadow-lg gap-2"
+        >
+          <Maximize2 className="h-4 w-4" />
+          {viewMode === "notes" ? "Show AI panel" : "Show notes"}
+        </Button>
+      )}
     </main>
   );
 }
