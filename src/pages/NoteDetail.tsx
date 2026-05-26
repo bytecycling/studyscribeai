@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight, RefreshCw, PlayCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, PanelRightClose, PanelRight, RefreshCw, PlayCircle, AlertTriangle, Maximize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -84,7 +84,7 @@ export default function NoteDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [viewMode, setViewMode] = useState<"both" | "notes" | "sidebar">("both");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenProgress, setRegenProgress] = useState(0);
   const [regenDialogOpen, setRegenDialogOpen] = useState(false);
@@ -183,8 +183,16 @@ export default function NoteDetail() {
   }, [note, editedContent, toast]);
 
   const handleToggleSidebar = useCallback(() => {
-    setShowSidebar(prev => !prev);
+    setViewMode(prev => (prev === "both" ? "notes" : "both"));
   }, []);
+
+  const handleLayoutChange = useCallback((sizes: number[]) => {
+    if (sizes.length !== 2) return;
+    const [notesSize, sideSize] = sizes;
+    // Auto-hide a panel when its sibling is dragged past ~95%.
+    if (notesSize >= 95 && viewMode !== "notes") setViewMode("notes");
+    else if (sideSize >= 95 && viewMode !== "sidebar") setViewMode("sidebar");
+  }, [viewMode]);
 
   const handleRegenerateNotes = useCallback(async (feedback?: RegenerationFeedback) => {
     if (!note?.raw_text) {
