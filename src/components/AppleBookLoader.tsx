@@ -1,132 +1,150 @@
 /**
- * Infinite-loop learning animation:
- *   Tree stands with apples →
- *   trunk SPLITS down the middle (two halves tilt outward & fall) →
- *   apples drop into the soil as seeds →
- *   soil pulses, a sprout emerges →
- *   sprout grows into the next tree → loop.
+ * Minimal Newton-under-the-apple-tree loop:
+ *   Tree grows softly →
+ *   Newton sits beneath reading →
+ *   Apple on the branch wiggles, drops, bonks Newton's head →
+ *   Newton stands, walks off →
+ *   The fallen apple buries into the soil as a seed →
+ *   Tree gently decays/fades →
+ *   Loop.
  *
- * Pure CSS keyframes. ~160x130 footprint.
+ * Pure CSS keyframes. Calm, natural pacing.
  */
 const AppleBookLoader = () => {
-  const D = "6s";
+  const D = "8s";
 
   return (
     <div
-      className="relative w-40 h-32 select-none mx-auto"
+      className="relative w-48 h-36 mx-auto select-none"
       aria-hidden="true"
       style={{ ["--loop" as any]: D }}
     >
       <style>{`
-        /* Sprout: 0-15% grows */
-        @keyframes lb-sprout {
-          0%        { transform: translate(-50%, 0) scaleY(0); opacity: 0; }
-          4%        { opacity: 1; }
-          15%       { transform: translate(-50%, 0) scaleY(1); opacity: 1; }
-          22%, 100% { transform: translate(-50%, 0) scaleY(1); opacity: 0; }
-        }
-
-        /* Whole tree (trunk + canopy as one container): visible 18%-62%, then splits */
+        /* Whole tree: grows in, holds, decays out */
         @keyframes lb-tree {
-          0%, 17%   { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
-          22%       { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
-          30%, 60%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
-          62%, 100% { opacity: 0; transform: translate(-50%, 0) scale(1); }
+          0%        { transform: translate(-50%, 6px) scale(0.4); opacity: 0; transform-origin: bottom center; }
+          10%       { transform: translate(-50%, 0)    scale(1);   opacity: 1; }
+          78%       { transform: translate(-50%, 0)    scale(1);   opacity: 1; filter: none; }
+          92%       { transform: translate(-50%, 2px)  scale(0.95); opacity: 0.25; filter: saturate(0.4); }
+          100%      { transform: translate(-50%, 4px)  scale(0.9);  opacity: 0;    filter: saturate(0); }
         }
 
-        /* Trunk-half splits at 60%, tilts outward and falls */
-        @keyframes lb-half-left {
-          0%, 60%   { transform: rotate(0deg) translate(0,0); opacity: 1; }
-          72%       { transform: rotate(-55deg) translate(-6px, 4px); opacity: 1; }
-          80%       { transform: rotate(-80deg) translate(-10px, 14px); opacity: 0; }
-          100%      { transform: rotate(-80deg) translate(-10px, 14px); opacity: 0; }
-        }
-        @keyframes lb-half-right {
-          0%, 60%   { transform: rotate(0deg) translate(0,0); opacity: 1; }
-          72%       { transform: rotate(55deg) translate(6px, 4px); opacity: 1; }
-          80%       { transform: rotate(80deg) translate(10px, 14px); opacity: 0; }
-          100%      { transform: rotate(80deg) translate(10px, 14px); opacity: 0; }
-        }
-
-        /* Apples on the tree: visible 30%-62%, then drop to soil as seeds */
-        @keyframes lb-apple-drop {
-          0%, 28%   { transform: translate(-50%, 0) scale(0); opacity: 0; }
-          34%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
-          60%       { transform: translate(-50%, 0) scale(1); opacity: 1; }
-          /* fall into soil */
-          74%       { transform: translate(-50%, 58px) scale(0.85); opacity: 1; }
-          82%       { transform: translate(-50%, 66px) scale(0.55); opacity: 0.9; }
-          /* bury */
-          90%, 100% { transform: translate(-50%, 70px) scale(0.35); opacity: 0; }
+        /* Newton: fades in sitting, gets bonked, then walks off */
+        @keyframes lb-newton {
+          0%, 12%   { transform: translate(0, 4px); opacity: 0; }
+          18%       { transform: translate(0, 0);   opacity: 1; }
+          /* sitting still and reading */
+          18%, 55%  { transform: translate(0, 0);   opacity: 1; }
+          /* small head bump from apple */
+          58%       { transform: translate(0, 2px); opacity: 1; }
+          62%       { transform: translate(0, 0);   opacity: 1; }
+          /* walk off to the right */
+          75%       { transform: translate(28px, 0); opacity: 1; }
+          85%       { transform: translate(56px, 0); opacity: 0; }
+          100%      { transform: translate(56px, 0); opacity: 0; }
         }
 
-        /* Soil pulse when seeds bury */
+        /* Apple on the branch: wiggles, then drops onto Newton, then becomes a seed */
+        @keyframes lb-apple {
+          0%, 25%   { transform: translate(-50%, 0) rotate(0deg) scale(1); opacity: 0; }
+          30%       { transform: translate(-50%, 0) rotate(0deg) scale(1); opacity: 1; }
+          /* gentle wiggle */
+          42%       { transform: translate(-50%, 0) rotate(-8deg) scale(1); opacity: 1; }
+          46%       { transform: translate(-50%, 0) rotate(8deg)  scale(1); opacity: 1; }
+          50%       { transform: translate(-50%, 0) rotate(-6deg) scale(1); opacity: 1; }
+          54%       { transform: translate(-50%, 0) rotate(0deg)  scale(1); opacity: 1; }
+          /* drop onto Newton's head */
+          58%       { transform: translate(-50%, 38px) rotate(0deg) scale(1);    opacity: 1; }
+          /* roll to soil */
+          66%       { transform: translate(-30%, 58px) rotate(45deg) scale(0.95); opacity: 1; }
+          72%       { transform: translate(-15%, 64px) rotate(90deg) scale(0.9);  opacity: 1; }
+          /* bury → seed */
+          82%       { transform: translate(-15%, 66px) rotate(90deg) scale(0.45); opacity: 0.9; }
+          90%, 100% { transform: translate(-15%, 68px) rotate(90deg) scale(0.25); opacity: 0; }
+        }
+
+        /* Soil pulse when seed buries */
         @keyframes lb-soil {
-          0%, 78%   { transform: scaleX(1); opacity: 0.45; }
-          85%       { transform: scaleX(1.25); opacity: 0.9; }
-          94%, 100% { transform: scaleX(1); opacity: 0.45; }
+          0%, 78%   { transform: scaleX(1);    opacity: 0.5; }
+          86%       { transform: scaleX(1.25); opacity: 0.95; }
+          96%, 100% { transform: scaleX(1);    opacity: 0.5; }
         }
 
-        .lb-sprout    { animation: lb-sprout    var(--loop) ease-out infinite; transform-origin: bottom center; }
-        .lb-tree      { animation: lb-tree      var(--loop) cubic-bezier(.34,1.4,.64,1) infinite; transform-origin: bottom center; }
-        .lb-half-l    { animation: lb-half-left var(--loop) cubic-bezier(.5,.05,.8,.6) infinite; transform-origin: bottom right; }
-        .lb-half-r    { animation: lb-half-right var(--loop) cubic-bezier(.5,.05,.8,.6) infinite; transform-origin: bottom left; }
-        .lb-apple     { animation: lb-apple-drop var(--loop) cubic-bezier(.55,.05,.7,.95) infinite; }
-        .lb-soil      { animation: lb-soil       var(--loop) ease-in-out infinite; transform-origin: center; }
+        .lb-tree   { animation: lb-tree   var(--loop) cubic-bezier(.34,1.2,.64,1) infinite; }
+        .lb-newton { animation: lb-newton var(--loop) ease-in-out infinite; }
+        .lb-apple  { animation: lb-apple  var(--loop) cubic-bezier(.55,.05,.7,.95) infinite; }
+        .lb-soil   { animation: lb-soil   var(--loop) ease-in-out infinite; transform-origin: center; }
       `}</style>
 
-      {/* Soil */}
-      <div className="lb-soil absolute left-1/2 -translate-x-1/2 bottom-2 h-1 w-28 rounded-full"
-           style={{ background: "linear-gradient(to right, transparent, hsl(25 45% 30%), transparent)" }} />
+      {/* Soil line */}
+      <div
+        className="lb-soil absolute left-1/2 -translate-x-1/2 bottom-2 h-[3px] w-36 rounded-full"
+        style={{ background: "linear-gradient(to right, transparent, hsl(25 45% 32%), transparent)" }}
+      />
 
-      {/* Tiny sprout (start of loop) */}
-      <div className="lb-sprout absolute left-1/2 bottom-2 w-3 h-5">
-        <svg viewBox="0 0 12 20" className="w-full h-full">
-          <line x1="6" y1="20" x2="6" y2="10" stroke="hsl(140 60% 40%)" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M6 12 C 2 11, 1 7, 4 6" fill="hsl(140 65% 50%)" />
-          <path d="M6 10 C 10 9, 11 5, 8 4" fill="hsl(140 65% 50%)" />
+      {/* Tree (trunk + canopy) */}
+      <div className="lb-tree absolute left-1/2 bottom-2 w-28 h-28">
+        <svg viewBox="0 0 112 112" className="w-full h-full">
+          {/* trunk */}
+          <path
+            d="M54 110 C 52 90, 50 78, 53 60 C 56 48, 56 40, 54 30"
+            stroke="hsl(25 50% 32%)"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {/* branch under apple */}
+          <path
+            d="M55 48 C 62 44, 70 42, 76 40"
+            stroke="hsl(25 50% 32%)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {/* canopy: layered soft circles */}
+          <g>
+            <circle cx="56" cy="30" r="22" fill="hsl(140 50% 38%)" opacity="0.95" />
+            <circle cx="40" cy="32" r="16" fill="hsl(140 55% 44%)" opacity="0.9" />
+            <circle cx="72" cy="32" r="16" fill="hsl(140 55% 44%)" opacity="0.9" />
+            <circle cx="56" cy="18" r="15" fill="hsl(140 60% 50%)" opacity="0.95" />
+          </g>
         </svg>
       </div>
 
-      {/* Full tree (trunk halves + canopy + apples) */}
-      <div className="lb-tree absolute left-1/2 bottom-2 w-24 h-24">
-        {/* Trunk left half */}
-        <div className="lb-half-l absolute left-1/2 bottom-0 -translate-x-full w-1.5 h-12 rounded-l-full"
-             style={{ background: "linear-gradient(to top, hsl(25 45% 30%), hsl(25 55% 42%))" }} />
-        {/* Trunk right half */}
-        <div className="lb-half-r absolute left-1/2 bottom-0 w-1.5 h-12 rounded-r-full"
-             style={{ background: "linear-gradient(to top, hsl(25 45% 35%), hsl(25 55% 45%))" }} />
-
-        {/* Canopy (fades with the tree container) */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-10 w-20 h-20">
-          <svg viewBox="0 0 80 80" className="w-full h-full">
-            <circle cx="40" cy="40" r="26" fill="hsl(140 55% 40%)" opacity="0.95" />
-            <circle cx="24" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
-            <circle cx="56" cy="38" r="18" fill="hsl(140 60% 45%)" opacity="0.9" />
-            <circle cx="40" cy="22" r="18" fill="hsl(140 65% 50%)" opacity="0.95" />
-          </svg>
-        </div>
+      {/* Apple hanging from branch (above Newton) */}
+      <div
+        className="lb-apple absolute"
+        style={{ left: "62%", bottom: "78px", width: 14, height: 14, transformOrigin: "top center" }}
+      >
+        <svg viewBox="0 0 24 24" className="w-full h-full">
+          <path
+            d="M12 7c-2-3-7-2-7 3 0 4 3 9 7 9s7-5 7-9c0-5-5-6-7-3Z"
+            fill="#ef4444"
+          />
+          <path d="M12 7c0-2 1-3 2.5-3" stroke="#16a34a" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          <ellipse cx="9" cy="11" rx="1.2" ry="0.8" fill="#fff" opacity="0.45" />
+        </svg>
       </div>
 
-      {/* Falling apples (overlaid above the canopy positions so they survive the split) */}
-      <Apple className="lb-apple absolute" style={{ left: "34%", bottom: "70px" }} />
-      <Apple className="lb-apple absolute" style={{ left: "50%", bottom: "78px", animationDelay: "0.12s" }} />
-      <Apple className="lb-apple absolute" style={{ left: "66%", bottom: "70px", animationDelay: "0.24s" }} />
+      {/* Newton sitting under the tree reading */}
+      <div className="lb-newton absolute" style={{ left: "54%", bottom: "8px", width: 26, height: 32 }}>
+        <svg viewBox="0 0 26 32" className="w-full h-full">
+          {/* head */}
+          <circle cx="13" cy="6" r="4" fill="hsl(30 35% 75%)" />
+          {/* hair tuft */}
+          <path d="M9 5 C 10 2, 16 2, 17 5" stroke="hsl(220 15% 25%)" strokeWidth="1.2" fill="none" />
+          {/* body */}
+          <path d="M7 22 C 7 13, 19 13, 19 22 L 19 26 L 7 26 Z" fill="hsl(220 30% 35%)" />
+          {/* legs sitting */}
+          <rect x="6"  y="26" width="6" height="3" rx="1" fill="hsl(220 25% 22%)" />
+          <rect x="14" y="26" width="6" height="3" rx="1" fill="hsl(220 25% 22%)" />
+          {/* book */}
+          <rect x="7"  y="18" width="12" height="6" rx="1" fill="hsl(35 65% 88%)" stroke="hsl(35 35% 50%)" strokeWidth="0.6" />
+          <line x1="13" y1="18" x2="13" y2="24" stroke="hsl(35 35% 50%)" strokeWidth="0.6" />
+        </svg>
+      </div>
     </div>
   );
 };
-
-const Apple = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
-  <div className={className} style={{ width: 14, height: 14, ...style }}>
-    <svg viewBox="0 0 24 24" className="w-full h-full">
-      <path
-        d="M12 7c-2-3-7-2-7 3 0 4 3 9 7 9s7-5 7-9c0-5-5-6-7-3Z"
-        fill="#ef4444"
-      />
-      <path d="M12 7c0-2 1-3 2.5-3" stroke="#16a34a" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      <ellipse cx="9" cy="11" rx="1.2" ry="0.8" fill="#fff" opacity="0.45" />
-    </svg>
-  </div>
-);
 
 export default AppleBookLoader;
