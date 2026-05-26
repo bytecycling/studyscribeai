@@ -26,8 +26,19 @@
     </script>
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebSite","name":"StudyScribe.AI","url":"https://studyscribeai.lovable.app/"}
-    </script>
+  </script>
   <link rel="icon" type="image/png" href="https://storage.googleapis.com/gpt-engineer-file-uploads/hPFqqVsdgtQ8LjSsNpm6i8zo9EB2/uploads/1768661347147-image_2026-01-17_224907140.png">
+  <script>
+    // Apply theme before paint to avoid flashes and route-level overrides.
+    (function () {
+      try {
+        var v = localStorage.getItem('darkMode');
+        if (v === null) { localStorage.setItem('darkMode', 'true'); v = 'true'; }
+        if (v !== 'false') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
   <body>
