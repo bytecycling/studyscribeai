@@ -34,7 +34,7 @@ const SettingsMenu = ({ onClearHistory }: SettingsMenuProps) => {
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'english');
   const [tempLanguage, setTempLanguage] = useState(language);
   const [aiEnabled, setAiEnabled] = useState(localStorage.getItem('aiEnabled') !== 'false');
-  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') !== 'false');
   const { toast } = useToast();
 
   useEffect(() => {

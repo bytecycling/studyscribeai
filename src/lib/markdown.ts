@@ -8,13 +8,15 @@ export function sanitizeBold(s: string): string {
   if (!s) return s;
   let out = s;
 
-  // Collapse spaces immediately inside ** ... **
-  // "** word **"  → "**word**"
-  // "** -2 **"    → "**-2**"
+  // Collapse spaces immediately inside ** ... ** ("** word **" → "**word**")
   out = out.replace(/\*\*\s+([^*\n]+?)\s+\*\*/g, "**$1**");
-  // Half-open variants like "** word**" or "**word **"
   out = out.replace(/\*\*\s+([^*\n]+?)\*\*/g, "**$1**");
   out = out.replace(/\*\*([^*\n]+?)\s+\*\*/g, "**$1**");
+
+  // Ensure a space between bold runs and adjacent words so they don't
+  // visually collide. "word**bold**word" → "word **bold** word"
+  out = out.replace(/([A-Za-z0-9)\]])\*\*([^*\n]+?)\*\*/g, "$1 **$2**");
+  out = out.replace(/\*\*([^*\n]+?)\*\*([A-Za-z0-9(\[])/g, "**$1** $2");
 
   // Same for single-asterisk italics around short tokens like "*-2*"
   out = out.replace(/\*\s+([^*\n]+?)\s+\*/g, "*$1*");
