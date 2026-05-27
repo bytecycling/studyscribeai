@@ -408,10 +408,11 @@ export default function NoteDetail() {
       />
       <SEO title={`${note.title} · StudyScribe.AI`} description={`Study note: ${note.title}`} path={`/note/${note.id}`} noindex />
       <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none" />
-      <ResizablePanelGroup direction="horizontal" className="relative h-full" onLayout={handleLayoutChange}>
+      <ResizablePanelGroup direction="horizontal" className="relative h-full hidden md:flex" onLayout={handleLayoutChange}>
         {/* Notes Panel */}
         {viewMode !== "sidebar" && (
-          <ResizablePanel defaultSize={viewMode === "both" ? 55 : 100} minSize={5} className="!overflow-visible">
+          <ResizablePanel defaultSize={viewMode === "both" ? 55 : 100} minSize={20} collapsible collapsedSize={0} className="!overflow-visible">
+
             <div className="h-full overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
