@@ -183,8 +183,9 @@ export default function NoteDetail() {
   }, [note, editedContent, toast]);
 
   const handleToggleSidebar = useCallback(() => {
-    setViewMode(prev => (prev === "both" ? "notes" : "both"));
+    setViewMode(prev => (prev === "both" ? "notes" : prev === "notes" ? "sidebar" : "both"));
   }, []);
+
 
   const handleLayoutChange = useCallback((sizes: number[]) => {
     if (sizes.length !== 2) return;
