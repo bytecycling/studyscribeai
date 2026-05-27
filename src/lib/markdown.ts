@@ -8,18 +8,36 @@ export function sanitizeBold(s: string): string {
   if (!s) return s;
   let out = s;
 
+  // Normalize fancy / unicode stars to ASCII *
+  out = out.replace(/[\u2217\u2731\uFF0A]/g, "*");
+
+  // ***word*** (bold+italic) → **word** to avoid mis-parsing
+  out = out.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "**$1**");
+
   // Collapse spaces immediately inside ** ... ** ("** word **" → "**word**")
   out = out.replace(/\*\*\s+([^*\n]+?)\s+\*\*/g, "**$1**");
   out = out.replace(/\*\*\s+([^*\n]+?)\*\*/g, "**$1**");
   out = out.replace(/\*\*([^*\n]+?)\s+\*\*/g, "**$1**");
 
-  // Ensure a space between bold runs and adjacent words so they don't
-  // visually collide. "word**bold**word" → "word **bold** word"
+  // Repair unmatched bold: "**word*" → "**word**" and "*word**" → "**word**"
+  out = out.replace(/\*\*([^*\n]{1,120}?)\*(?!\*)/g, "**$1**");
+  out = out.replace(/(?<!\*)\*([^*\n]{1,120}?)\*\*/g, "**$1**");
+
+  // Ensure a space between bold runs and adjacent words.
   out = out.replace(/([A-Za-z0-9)\]])\*\*([^*\n]+?)\*\*/g, "$1 **$2**");
   out = out.replace(/\*\*([^*\n]+?)\*\*([A-Za-z0-9(\[])/g, "**$1** $2");
 
-  // Same for single-asterisk italics around short tokens like "*-2*"
-  out = out.replace(/\*\s+([^*\n]+?)\s+\*/g, "*$1*");
+  // Italics: "* word *" → "*word*"
+  out = out.replace(/(^|[^*])\*\s+([^*\n]+?)\s+\*(?!\*)/g, "$1*$2*");
+
+  // Strip stray lone "*" surrounded by spaces (e.g. " * " left over from a broken pair)
+  out = out.replace(/(^|\s)\*(\s)/g, "$1$2");
+  // Strip orphan "**" not paired on the same line
+  out = out.replace(/^(.*?)\*\*([^*\n]*)$/gm, (line, pre, rest) => {
+    // if there is no other ** in the rest, drop the orphan
+    if (rest.includes("**")) return line;
+    return pre + rest;
+  });
 
   return out;
 }
