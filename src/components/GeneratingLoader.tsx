@@ -1,4 +1,4 @@
-import { Loader2, BookOpen, Sparkles, Brain, FileText, X, CheckCircle2 } from "lucide-react";
+import { Loader2, BookOpen, Sparkles, Brain, FileText, X, CheckCircle2, Pause, Play, EyeOff, Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -28,6 +28,11 @@ const stages = [
 export default function GeneratingLoader({ progress, title, logs = [], onCancel }: GeneratingLoaderProps) {
   const { t } = useTranslation();
   const [dots, setDots] = useState("");
+  const [paused, setPaused] = useState(() => localStorage.getItem("loader.paused") === "true");
+  const [hidden, setHidden] = useState(() => localStorage.getItem("loader.hidden") === "true");
+
+  useEffect(() => { localStorage.setItem("loader.paused", String(paused)); }, [paused]);
+  useEffect(() => { localStorage.setItem("loader.hidden", String(hidden)); }, [hidden]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,8 +46,37 @@ export default function GeneratingLoader({ progress, title, logs = [], onCancel 
 
   return (
     <div className="flex flex-col items-center justify-center py-6 px-4 space-y-5">
-      {/* Apple → Book → Book loop animation */}
-      <AppleBookLoader />
+      {/* Apple → Newton → Sprout loop animation (can be paused / hidden for focus) */}
+      {!hidden && <AppleBookLoader paused={paused} />}
+
+      {/* Focus controls */}
+      <div className="flex items-center gap-2 -mt-2">
+        {!hidden && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setPaused(p => !p)}
+            aria-label={paused ? "Resume animation" : "Pause animation"}
+          >
+            {paused ? <Play className="w-3.5 h-3.5 mr-1" /> : <Pause className="w-3.5 h-3.5 mr-1" />}
+            {paused ? "Resume" : "Pause"}
+          </Button>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => setHidden(h => !h)}
+          aria-label={hidden ? "Show animation" : "Hide animation"}
+        >
+          {hidden ? <Eye className="w-3.5 h-3.5 mr-1" /> : <EyeOff className="w-3.5 h-3.5 mr-1" />}
+          {hidden ? "Show animation" : "Hide animation"}
+        </Button>
+      </div>
+
 
       {/* Subtle stage chip under the animation */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

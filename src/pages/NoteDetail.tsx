@@ -183,8 +183,9 @@ export default function NoteDetail() {
   }, [note, editedContent, toast]);
 
   const handleToggleSidebar = useCallback(() => {
-    setViewMode(prev => (prev === "both" ? "notes" : "both"));
+    setViewMode(prev => (prev === "both" ? "notes" : prev === "notes" ? "sidebar" : "both"));
   }, []);
+
 
   const handleLayoutChange = useCallback((sizes: number[]) => {
     if (sizes.length !== 2) return;
@@ -411,7 +412,9 @@ export default function NoteDetail() {
       <ResizablePanelGroup direction="horizontal" className="relative h-full" onLayout={handleLayoutChange}>
         {/* Notes Panel */}
         {viewMode !== "sidebar" && (
-          <ResizablePanel defaultSize={viewMode === "both" ? 55 : 100} minSize={5} className="!overflow-visible">
+          <ResizablePanel defaultSize={viewMode === "both" ? 55 : 100} minSize={20} collapsible collapsedSize={0} className="!overflow-visible">
+
+
             <div className="h-full overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -580,10 +583,17 @@ export default function NoteDetail() {
         </ResizablePanel>
         )}
 
-        {viewMode === "both" && <ResizableHandle withHandle />}
+        {viewMode === "both" && <ResizableHandle withHandle className="hidden md:flex" />}
 
         {viewMode !== "notes" && (
-          <ResizablePanel defaultSize={viewMode === "both" ? 45 : 100} minSize={5}>
+          <ResizablePanel
+            defaultSize={viewMode === "both" ? 45 : 100}
+            minSize={20}
+            collapsible
+            collapsedSize={0}
+            /* On mobile we never want two panels side-by-side */
+            className={viewMode === "both" ? "hidden md:block" : ""}
+          >
             <ResizableSidebar
               noteId={id}
               noteContent={note.content}
@@ -597,15 +607,16 @@ export default function NoteDetail() {
 
       {viewMode !== "both" && (
         <Button
-          variant="default"
+          variant="secondary"
           size="sm"
           onClick={() => setViewMode("both")}
-          className="absolute top-4 right-4 z-20 rounded-full shadow-lg gap-2"
+          className="fixed md:absolute bottom-4 right-4 md:top-4 md:bottom-auto z-30 rounded-full shadow-lg gap-2 bg-background/90 backdrop-blur border border-border text-foreground hover:bg-background"
         >
           <Maximize2 className="h-4 w-4" />
           {viewMode === "notes" ? "Show AI panel" : "Show notes"}
         </Button>
       )}
+
     </main>
   );
 }
